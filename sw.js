@@ -1,5 +1,5 @@
-const CACHE = 'gjstore-v1';
-const SHELL = ['./index.html', './config.js'];
+const CACHE = 'gjstore-v2';
+const SHELL = ['./index.html', './admin.html', './config.js', './manifest.json', './manifest-admin.json'];
 
 self.addEventListener('install', e => {
   e.waitUntil(
