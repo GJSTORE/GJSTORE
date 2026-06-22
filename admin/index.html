@@ -6,7 +6,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
   <title>GJ Admin</title>
   <meta name="theme-color" content="#04090f">
-  <link rel="manifest" href="./manifest.json">
+  <link rel="manifest" href="./manifest-admin.json">
   <link rel="apple-touch-icon" href="./icon-512.png">
   <link
     href="https://fonts.googleapis.com/css2?family=Syne:wght@700;800;900&family=DM+Sans:wght@400;500;600&display=swap"
@@ -4058,7 +4058,7 @@
     </div>
   </div>
 
-  <script src="../config.js"></script>
+  <script src="config.js"></script>
   <script>
     // Init tema + sessão antes de qualquer render
     (function() {
@@ -4752,7 +4752,7 @@
     // PRODUTOS
     async function loadProds() {
       if (!allProds.length) {
-        const r = await apiGet("getProdutos").catch(() => ({ produtos: [] }));
+        const r = await apiGet("getProdutos", { verTodos: "1" }).catch(() => ({ produtos: [] }));
         allProds = r.produtos || [];
       }
       renderProds();
@@ -8237,7 +8237,7 @@
     async function loadCategorias() {
       try {
         const r = await apiGet("getCategorias");
-        allCats = (r.categorias || []).filter(c => c.Status !== "Inativo");
+        allCats = r.categorias || [];
         if (!allCats.length) throw new Error("vazio");
         saveCatsToStorage(allCats);
       } catch(e) {
