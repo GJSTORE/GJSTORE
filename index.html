@@ -2490,6 +2490,13 @@
           if (rc.categorias && rc.categorias.length) {
             localStorage.setItem("gj_cats", JSON.stringify(rc.categorias));
             renderDynCats(rc.categorias);
+            // Remove produtos de categorias inativas do allProds
+            const activeCatNames = new Set(
+              rc.categorias.filter(c => c.Status !== "Inativo").map(c => c.Nome)
+            );
+            allProds = allProds.filter(p => !p["Categoria"] || activeCatNames.has(p["Categoria"]));
+            prods = allProds;
+            applyF();
           }
         } catch(e) {}
 
@@ -2630,7 +2637,7 @@
     }
     function applyF() {
       let l = allProds;
-      if (catA) l = l.filter(p => p["Categoria"] === catA);
+      if (catA) l = l.filter(p => (p["Categoria"] || "").trim().toLowerCase() === catA.trim().toLowerCase());
       if (priceMax > 0) l = l.filter(p => pf(p) <= priceMax);
       if (searchQ) l = l.filter(p =>
         (p["Nome do Produto"] || "").toLowerCase().includes(searchQ) ||
