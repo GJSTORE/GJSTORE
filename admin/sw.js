@@ -1,5 +1,5 @@
-const CACHE = 'gjstore-adm-v1';
-const SHELL = ['./admin.html', './gestao_unificada.html', './config.js', './manifest-admin.json'];
+const CACHE = 'gjstore-adm-v2';
+const SHELL = ['./index.html', './config.js', './manifest.json'];
 
 self.addEventListener('install', e => {
   e.waitUntil(
@@ -19,9 +19,7 @@ self.addEventListener('activate', e => {
 
 self.addEventListener('fetch', e => {
   const url = e.request.url;
-  if (url.includes('script.google.com') || url.includes('cloudinary.com')) {
-    return;
-  }
+  if (url.includes('script.google.com') || url.includes('cloudinary.com')) return;
   e.respondWith(
     caches.match(e.request).then(cached => cached || fetch(e.request))
   );
