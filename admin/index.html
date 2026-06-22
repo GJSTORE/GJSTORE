@@ -5002,7 +5002,8 @@
         const params = Object.assign({}, prod, { "Status": novoStatus, id, "ID": id });
         const res = await apiGet("salvarProduto", params);
         if (res.ok) {
-          toast(label); allProds = []; await loadProds();
+          prod["Status"] = novoStatus;
+          toast(label); renderProds();
         } else toast(res.error || "Erro", "err");
       } catch (e) { toast("Erro de conexão", "err"); }
     }
@@ -8777,7 +8778,8 @@
       try {
         const res = await apiGet("salvarCategoria", { id: cat.ID, nome: cat.Nome, emoji: cat.Emoji, cor: cat.Cor_Hex, status: novoStatus });
         if (res.ok) {
-          toast(label); await loadCategorias();
+          cat.Status = novoStatus;
+          toast(label); renderCatPage();
         } else toast(res.error || "Erro", "err");
       } catch (e) { toast("Erro de conexão", "err"); }
     }
