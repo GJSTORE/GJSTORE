@@ -1027,6 +1027,9 @@
       color: var(--r)
     }
 
+    .at-on { background: rgba(244,67,54,.13); color: var(--r); }
+    .at-off { background: rgba(0,200,83,.13); color: #00c853; }
+
     /* MODAL PRODUTO */
     #moverlay {
       position: fixed;
@@ -4789,7 +4792,7 @@
       <div class="pprice">${fmt(p["Preço (R$)"])}</div>
       <div class="pacts">
         <button class="actbtn ae" data-prod-id="${p["ID"]}">✏️</button>
-        <button class="actbtn ad" data-del-id="${p["ID"]}">🗑️</button>
+        <button class="actbtn ${p["Status"] === "Ativo" ? "at-on" : "at-off"}" data-toggle-id="${p["ID"]}" data-toggle-status="${p["Status"] === "Ativo" ? "Inativo" : "Ativo"}" title="${p["Status"] === "Ativo" ? "Inativar" : "Ativar"}">${p["Status"] === "Ativo" ? "🔴" : "🟢"}</button>
       </div>
     </div>`;
       }).join("");
@@ -4989,6 +4992,19 @@
           } catch (e) { toast("Erro de conexão", "err"); }
         }
       );
+    }
+
+    async function toggleProd(id, novoStatus) {
+      const prod = allProds.find(p => p["ID"] === id);
+      if (!prod) return;
+      const label = novoStatus === "Ativo" ? "Ativado ✅" : "Inativado 🔴";
+      try {
+        const params = Object.assign({}, prod, { "Status": novoStatus, id, "ID": id });
+        const res = await apiGet("salvarProduto", params);
+        if (res.ok) {
+          toast(label); allProds = []; await loadProds();
+        } else toast(res.error || "Erro", "err");
+      } catch (e) { toast("Erro de conexão", "err"); }
     }
 
     // KANBAN
@@ -8275,7 +8291,7 @@
           </div>
           <div class="cat-actions">
             <button class="cat-btn cat-edit-btn" data-cat-id="${c.ID}">✏️</button>
-            <button class="cat-btn cat-del-btn" data-cat-id="${c.ID}">🗑️</button>
+            <button class="cat-btn cat-toggle-btn" data-cat-id="${c.ID}" data-cat-status="${c.Status || 'Ativo'}" title="${(c.Status || 'Ativo') === 'Ativo' ? 'Inativar' : 'Ativar'}" style="color:${(c.Status||'Ativo')==='Ativo'?'var(--r)':'#00c853'}">${(c.Status || "Ativo") === "Ativo" ? "🔴" : "🟢"}</button>
           </div>
         </div>`).join("");
     }
@@ -8683,13 +8699,12 @@
     // Lista de produtos
     document.getElementById("plist").addEventListener("click", e => {
       const editBtn = e.target.closest(".ae");
-      const delBtn = e.target.closest(".ad");
+      const toggleBtn = e.target.closest("[data-toggle-id]");
       if (editBtn) {
         const prod = allProds.find(p => p["ID"] === editBtn.dataset.prodId);
         if (prod) editProd(prod);
-      } else if (delBtn) {
-        const prod = allProds.find(p => p["ID"] === delBtn.dataset.delId);
-        if (prod) delProd(prod["ID"], prod["Nome do Produto"] || "");
+      } else if (toggleBtn) {
+        toggleProd(toggleBtn.dataset.toggleId, toggleBtn.dataset.toggleStatus);
       }
     });
 
@@ -8746,15 +8761,26 @@
     // Botões de Categorias
     document.getElementById("page-cat").addEventListener("click", e => {
       const editBtn = e.target.closest(".cat-edit-btn");
-      const delBtn = e.target.closest(".cat-del-btn");
+      const toggleBtn = e.target.closest(".cat-toggle-btn");
       if (editBtn) {
         const cat = (typeof allCats !== "undefined" ? allCats : []).find(c => c.ID === editBtn.dataset.catId);
         if (cat) openCatForm(cat);
-      } else if (delBtn) {
-        const cat = (typeof allCats !== "undefined" ? allCats : []).find(c => c.ID === delBtn.dataset.catId);
-        if (cat) deleteCat(cat.ID, cat.Nome || "");
+      } else if (toggleBtn) {
+        const cat = (typeof allCats !== "undefined" ? allCats : []).find(c => c.ID === toggleBtn.dataset.catId);
+        if (cat) toggleCat(cat);
       }
     });
+
+    async function toggleCat(cat) {
+      const novoStatus = (cat.Status || "Ativo") === "Ativo" ? "Inativo" : "Ativo";
+      const label = novoStatus === "Ativo" ? "Categoria ativada ✅" : "Categoria inativada 🔴";
+      try {
+        const res = await apiGet("salvarCategoria", { id: cat.ID, nome: cat.Nome, emoji: cat.Emoji, cor: cat.Cor_Hex, status: novoStatus });
+        if (res.ok) {
+          toast(label); await loadCategorias();
+        } else toast(res.error || "Erro", "err");
+      } catch (e) { toast("Erro de conexão", "err"); }
+    }
 
     // ═══════════════════════════════════════════════════════════════
     // CONFIG DINÂMICA — aplica CSS vars e nome da loja da planilha
