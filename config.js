@@ -1,6 +1,6 @@
 // GJ Store — configuração central
 // Ao reimplantar o Apps Script, atualize APENAS esta linha:
-const GAS_URL = "https://script.google.com/macros/s/AKfycbzyVGvPVpMNjcqei7niEqUzt5CBBRtt13UrFTOCh1AF6vDYtsEONUU33uPxYipyBAY_/exec";
+const GAS_URL = "https://script.google.com/macros/s/AKfycby9FKpAXvJeAbCzh5ieTFGDrxdmmainr8bNDJddfZVPe2cXxBwMHYE0ilANIa5ABYtj/exec";
 
 // URL pública do site — usada nos links de compartilhar produto
 const CFG_SITE_URL = "https://gjstore.github.io/GJSTORE/";
