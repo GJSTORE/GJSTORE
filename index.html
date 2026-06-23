@@ -2014,6 +2014,48 @@
       transition: transform .18s; color: var(--text);
     }
     #frastrear:active { transform: scale(.88); }
+    #fmc {
+      position: fixed; bottom: calc(136px + var(--sb)); right: 16px; z-index: 200;
+      width: 44px; height: 44px; border-radius: 50%;
+      background: var(--d2); border: 2px solid rgba(0,188,212,.35);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 19px; cursor: pointer;
+      box-shadow: 0 2px 12px rgba(0,188,212,.18);
+      transition: transform .18s; color: var(--text);
+    }
+    #fmc:active { transform: scale(.88); }
+    #modalMC {
+      position: fixed; inset: 0; z-index: 500; background: rgba(0,0,0,.72);
+      display: flex; align-items: flex-end; justify-content: center;
+      backdrop-filter: blur(6px);
+    }
+    #modalMC.hidden { display: none; }
+    .mcbox {
+      background: var(--d2); border: 1px solid var(--border);
+      border-radius: 20px 20px 0 0; padding: 24px 20px 32px;
+      width: 100%; max-width: 480px; position: relative;
+      animation: slideUp .3s ease; max-height: 88vh; overflow-y: auto;
+    }
+    @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
+    .mc-title { font-family: var(--H); font-weight: 900; font-size: 19px; color: var(--text); margin-bottom: 4px; }
+    .mc-sub { font-size: 12px; color: var(--muted); margin-bottom: 18px; }
+    .mc-card {
+      background: var(--d1); border: 1px solid var(--border); border-radius: 14px;
+      padding: 14px; margin-bottom: 10px;
+    }
+    .mc-card-hdr { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px; }
+    .mc-id { font-family: var(--H); font-size: 13px; color: var(--g); font-weight: 700; }
+    .mc-date { font-size: 11px; color: var(--muted); }
+    .mc-status { font-size: 11px; font-weight: 700; padding: 3px 9px; border-radius: 20px; }
+    .mc-total { font-family: var(--H); font-size: 16px; font-weight: 900; color: var(--text); }
+    .mc-itens { font-size: 11px; color: var(--muted); margin-top: 4px; line-height: 1.4; }
+    .mc-rec-btn { margin-top: 10px; width: 100%; padding: 9px; border-radius: 10px; border: 1px solid var(--border); background: rgba(0,230,118,.08); color: var(--g); font-size: 12px; font-weight: 700; cursor: pointer; }
+    .mc-sair { width: 100%; padding: 10px; border-radius: 10px; border: 1px solid rgba(239,68,68,.3); background: transparent; color: #ef4444; font-size: 13px; font-weight: 700; cursor: pointer; margin-top: 6px; }
+    #mcPrint { display: none; }
+    @media print {
+      body > *:not(#mcPrint) { display: none !important; }
+      #mcPrint { display: block !important; padding: 24px; font-family: Arial, sans-serif; }
+    }
     #modalRastrear {
       position: fixed; inset: 0; z-index: 500; background: rgba(0,0,0,.72);
       display: flex; align-items: center; justify-content: center; padding: 16px;
@@ -2096,12 +2138,16 @@
     <a class="logo" href="#">
       <div class="logo-mark"></div><span class="logo-name">GJ Store</span>
     </a>
-    <div style="display:flex;align-items:center;gap:10px">
+    <div style="display:flex;align-items:center;gap:8px">
       <select class="idx-theme-sel" id="idxThemeSel" onchange="applyIdxTheme(this.value)" title="Trocar tema" style="display:none">
         <option value="cyberpunk">🌑 Dark</option>
         <option value="light">☀️ Light</option>
         <option value="gold">⭐ Gold</option>
       </select>
+      <div id="userChip" onclick="openMC()" style="display:none;align-items:center;gap:5px;background:rgba(0,230,118,.1);border:1px solid rgba(0,230,118,.3);border-radius:20px;padding:5px 10px 5px 8px;cursor:pointer;max-width:130px;overflow:hidden;flex-shrink:0">
+        <span style="font-size:13px;flex-shrink:0">👤</span>
+        <span id="userChipName" style="font-size:11px;font-weight:700;color:var(--g);white-space:nowrap;overflow:hidden;text-overflow:ellipsis"></span>
+      </div>
       <div class="hbtn" onclick="openCart()">🛒<span class="cbadge" id="cbadge">0</span></div>
     </div>
   </header>
@@ -2383,6 +2429,8 @@
 
   <!-- RASTREAR PEDIDO -->
   <button id="frastrear" onclick="openRastrear()" aria-label="Rastrear Pedido">📦</button>
+  <!-- MINHAS COMPRAS -->
+  <button id="fmc" onclick="openMC()" aria-label="Minhas Compras" title="Minhas Compras">🛍️</button>
 
   <div id="modalRastrear" class="hidden">
     <div class="rbox">
@@ -2399,6 +2447,32 @@
       <div id="rResult"></div>
     </div>
   </div>
+
+  <!-- MINHAS COMPRAS MODAL -->
+  <div id="modalMC" class="hidden">
+    <div class="mcbox">
+      <button class="wclose" onclick="closeMC()" style="position:absolute;top:14px;right:14px">✕</button>
+      <div class="mc-title">🛍️ Minhas Compras</div>
+      <div class="mc-sub" id="mcSub">Digite seu WhatsApp para ver seus pedidos</div>
+
+      <!-- Login por telefone -->
+      <div id="mcLogin">
+        <label class="fl">Seu WhatsApp</label>
+        <input class="fi" id="mcTel" type="tel" placeholder="(21) 99999-9999"
+          onkeydown="if(event.key==='Enter')buscarMinhasCompras()">
+        <button class="rbtn" id="mcBtn" onclick="buscarMinhasCompras()">🔍 Ver meus pedidos</button>
+      </div>
+
+      <!-- Lista de pedidos -->
+      <div id="mcList" style="display:none"></div>
+
+      <!-- Botão sair (quando logado) -->
+      <button id="mcSairBtn" class="mc-sair" style="display:none" onclick="logoutUser()">🚪 Sair da conta</button>
+    </div>
+  </div>
+
+  <!-- RECIBO PARA IMPRESSÃO -->
+  <div id="mcPrint"></div>
 
   <!-- WELCOME MODAL -->
   <div id="wModal" class="hidden">
@@ -2425,7 +2499,7 @@
     })();
 
     const API = (typeof GAS_URL !== "undefined") ? GAS_URL : "https://script.google.com/macros/s/AKfycbwHPwPB-6YbBSjfbhefrCxwmAdoN1vt6NPLr9BInR3aARtFsMoH87GKR0RUAhaCAyDw/exec";
-    const WPP0 = "5521970363062";
+    const WPP0 = "5521970552698";
     const TTL = 5 * 60 * 1000;
     let cfg = {}, prods = [], allProds = [], fretes = [], banners = [];
     let catA = "", searchQ = "", priceMax = 0, cart = JSON.parse(localStorage.getItem("gjc") || "[]");
@@ -2491,11 +2565,11 @@
     }
 
     // ── TOAST ─────────────────────────────────────────────
-    function showToast(msg) {
+    function showToast(msg, dur) {
       const el = document.createElement("div");
       el.className = "toast-msg"; el.textContent = msg;
       document.body.appendChild(el);
-      setTimeout(() => el.remove(), 2400);
+      setTimeout(() => el.remove(), dur || 2400);
     }
 
     // ── INIT ─────────────────────────────────────────────
@@ -2562,6 +2636,9 @@
 
         // Modal de boas-vindas
         initWelcomeModal();
+
+        // User chip
+        updateUserChip();
 
         // Temas dinâmicos
         loadTemasIndex();
@@ -2965,15 +3042,26 @@
     function chQ(i, d) { cart[i].qty += d; if (cart[i].qty <= 0) cart.splice(i, 1); saveCart(); updateBadge(); renderCart(); }
     function rmI(i) { cart.splice(i, 1); saveCart(); updateBadge(); renderCart(); }
 
+    function parseFreteVal(v) {
+      const n = parseFloat(String(v || "").replace(",", "."));
+      return isNaN(n) ? 0 : n;
+    }
+    function freteLabel(v) {
+      const raw = String(v || "").trim();
+      if (!raw) return "Grátis";
+      const n = parseFloat(raw.replace(",", "."));
+      if (isNaN(n)) return raw; // ex: "a combinar"
+      return n === 0 ? "Grátis" : fmt(n);
+    }
     function renderFretes2() {
       const el = document.getElementById("flist");
       if (!fretes.length) { el.innerHTML = `<div class="fo on"><div class="fo-l"><div class="fnm">Retirada/Combinado</div></div><div class="fpr">Grátis</div></div>`; freteA = { tipo: "Retirada", valor: 0 }; return; }
       el.innerHTML = fretes.map((f, i) => `
-    <div class="fo${i === 0 ? " on" : ""}" onclick="sF(this,'${f["Tipo"]}',${Number(f["Valor (R$)"] || 0)})">
+    <div class="fo${i === 0 ? " on" : ""}" onclick="sF(this,'${f["Tipo"]}',${parseFreteVal(f["Valor (R$)"])})">
       <div class="fo-l"><div class="fnm">${f["Tipo"]}</div><div class="fsub">${f["Descrição"] || ""} · ${f["Prazo"] || ""}</div></div>
-      <div class="fpr">${Number(f["Valor (R$)"] || 0) === 0 ? "Grátis" : fmt(Number(f["Valor (R$)"]))}</div>
+      <div class="fpr">${freteLabel(f["Valor (R$)"])}</div>
     </div>`).join("");
-      if (fretes.length) freteA = { tipo: fretes[0]["Tipo"], valor: Number(fretes[0]["Valor (R$)"] || 0) };
+      if (fretes.length) freteA = { tipo: fretes[0]["Tipo"], valor: parseFreteVal(fretes[0]["Valor (R$)"]) };
     }
     function sF(el, tipo, valor) { document.querySelectorAll(".fo").forEach(f => f.classList.remove("on")); el.classList.add("on"); freteA = { tipo, valor }; renderSum(); }
 
@@ -3091,6 +3179,7 @@
       document.getElementById("okwpp").href = `https://wa.me/${wpp}?text=${msg}`;
       document.getElementById("okrecibo").href = `https://wa.me/me?text=${recibo}`;
       logAcao("ORDER_CREATED", "total:" + tot.toFixed(2));
+      try { localStorage.setItem("gj_user", JSON.stringify({ nome, tel: telDigits, ts: Date.now() })); updateUserChip(); } catch(e) {}
       cart = []; saveCart(); updateBadge(); cup = null;
       try {
         document.getElementById("cupin").value = "";
@@ -3106,10 +3195,12 @@
     function closeOk() { document.getElementById("oklay").classList.add("hidden"); }
 
     // Máscara de Telefone para o Checkout
-    document.getElementById("ctel").addEventListener("input", function (e) {
+    function maskTelInput(e) {
       let x = e.target.value.replace(/\D/g, '').match(/(\d{0,2})(\d{0,5})(\d{0,4})/);
       e.target.value = !x[2] ? x[1] : '(' + x[1] + ') ' + x[2] + (x[3] ? '-' + x[3] : '');
-    });
+    }
+    document.getElementById("ctel").addEventListener("input", maskTelInput);
+    document.getElementById("mcTel").addEventListener("input", maskTelInput);
 
     function maskCep(el) {
       let v = el.value.replace(/\D/g, "").slice(0, 8);
@@ -3149,7 +3240,8 @@
       const nome = document.getElementById("wNome").value.trim();
       const tel = document.getElementById("wTel").value.trim();
       if (!nome) { showToast("Informe seu nome para continuar"); return; }
-      localStorage.setItem("gj_user", JSON.stringify({ nome, tel, ts: Date.now() }));
+      localStorage.setItem("gj_user", JSON.stringify({ nome, tel: tel.replace(/\D/g,""), ts: Date.now() }));
+      updateUserChip();
       dismissWelcome();
       showToast("Bem-vindo(a), " + nome + "! 👋");
       try {
@@ -3302,6 +3394,145 @@
       if (co && !co.classList.contains("hidden")) { co.classList.add("hidden"); document.body.style.overflow = ""; }
     });
 
+    // ── USER CHIP ────────────────────────────────────────────────
+    function updateUserChip() {
+      try {
+        const u = JSON.parse(localStorage.getItem("gj_user") || "null");
+        const chip = document.getElementById("userChip");
+        if (!chip) return;
+        if (u && u.nome) {
+          document.getElementById("userChipName").textContent = u.nome;
+          chip.style.display = "flex";
+        } else {
+          chip.style.display = "none";
+        }
+      } catch(e) {}
+    }
+
+    function logoutUser() {
+      localStorage.removeItem("gj_user");
+      updateUserChip();
+      closeMC();
+      showToast("Saiu da conta 👋");
+    }
+
+    // ── MINHAS COMPRAS ───────────────────────────────────────────
+    function openMC() {
+      const mc = document.getElementById("modalMC");
+      mc.classList.remove("hidden");
+      document.body.style.overflow = "hidden";
+      // Se já tem usuário salvo, busca automaticamente
+      try {
+        const u = JSON.parse(localStorage.getItem("gj_user") || "null");
+        if (u && u.tel) {
+          document.getElementById("mcTel").value = formatTelDisplay(u.tel);
+          buscarMinhasCompras();
+          return;
+        }
+      } catch(e) {}
+      document.getElementById("mcLogin").style.display = "block";
+      document.getElementById("mcList").style.display = "none";
+      document.getElementById("mcSairBtn").style.display = "none";
+      setTimeout(() => document.getElementById("mcTel").focus(), 120);
+    }
+    function closeMC() {
+      document.getElementById("modalMC").classList.add("hidden");
+      document.body.style.overflow = "";
+    }
+    document.getElementById("modalMC").addEventListener("click", function(e) {
+      if (e.target === this) closeMC();
+    });
+    function formatTelDisplay(tel) {
+      const d = String(tel).replace(/\D/g, "");
+      const m = d.match(/^(\d{2})(\d{5})(\d{4})$/);
+      return m ? `(${m[1]}) ${m[2]}-${m[3]}` : tel;
+    }
+
+    async function buscarMinhasCompras() {
+      const rawTel = document.getElementById("mcTel").value.replace(/\D/g, "");
+      if (rawTel.length < 10) { showToast("Informe um WhatsApp com DDD"); return; }
+      const btn = document.getElementById("mcBtn");
+      btn.disabled = true; btn.textContent = "Buscando...";
+      try {
+        const u = new URL(API);
+        u.searchParams.set("action", "getMinhasCompras");
+        u.searchParams.set("telefone", rawTel);
+        const d = await fetch(u.toString()).then(r => r.json());
+        if (!d.ok) { showToast(d.erro || "Erro ao buscar pedidos"); btn.disabled = false; btn.textContent = "🔍 Ver meus pedidos"; return; }
+        const pedidos = d.pedidos || [];
+        // Salvar tel no gj_user se ainda não tiver
+        try {
+          const u2 = JSON.parse(localStorage.getItem("gj_user") || "null");
+          const nome = u2 ? u2.nome : (pedidos.length ? pedidos[0].nome : "");
+          if (nome || rawTel) localStorage.setItem("gj_user", JSON.stringify({ nome, tel: rawTel, ts: Date.now() }));
+          updateUserChip();
+        } catch(e) {}
+        renderMCList(pedidos, rawTel);
+      } catch(e) {
+        showToast("Erro de conexão");
+      }
+      btn.disabled = false; btn.textContent = "🔍 Ver meus pedidos";
+    }
+
+    function renderMCList(pedidos, tel) {
+      document.getElementById("mcLogin").style.display = "none";
+      const list = document.getElementById("mcList");
+      list.style.display = "block";
+      document.getElementById("mcSairBtn").style.display = "block";
+      if (!pedidos.length) {
+        list.innerHTML = `<div style="text-align:center;padding:32px 0;color:var(--muted);font-size:14px">📭 Nenhum pedido encontrado para este número.</div>`;
+        document.getElementById("mcSub").textContent = "WhatsApp: " + formatTelDisplay(tel);
+        return;
+      }
+      document.getElementById("mcSub").textContent = pedidos.length + " pedido(s) encontrado(s)";
+      const sc = {
+        "Pendente":     { bg: "rgba(0,188,212,.12)", color: "#00bcd4" },
+        "Em Andamento": { bg: "rgba(0,188,212,.12)", color: "#00bcd4" },
+        "Enviado":      { bg: "rgba(0,230,118,.12)", color: "#00e676" },
+        "Finalizado":   { bg: "rgba(0,230,118,.18)", color: "#00e676" },
+        "Cancelado":    { bg: "rgba(239,68,68,.12)", color: "#ef4444" },
+      };
+      list.innerHTML = pedidos.map(p => {
+        const s = sc[p.status] || { bg: "rgba(0,230,118,.1)", color: "var(--g)" };
+        let itensStr = "";
+        try { itensStr = JSON.parse(p.itens).map(i => `${i.nome} x${i.qtd}`).join(", "); } catch(e) { itensStr = ""; }
+        return `<div class="mc-card">
+          <div class="mc-card-hdr">
+            <div><div class="mc-id">#${p.id}</div><div class="mc-date">${p.data || ""}</div></div>
+            <span class="mc-status" style="background:${s.bg};color:${s.color}">${p.status}</span>
+          </div>
+          ${itensStr ? `<div class="mc-itens">${itensStr}</div>` : ""}
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-top:8px">
+            <span class="mc-total">${fmt(p.total)}</span>
+            <span style="font-size:11px;color:var(--muted)">${p.formaPagamento || ""}</span>
+          </div>
+          <button class="mc-rec-btn" onclick="imprimirRecibo(${JSON.stringify(p).replace(/"/g,'&quot;')})">🧾 Ver recibo</button>
+        </div>`;
+      }).join("");
+    }
+
+    function imprimirRecibo(p) {
+      let itensStr = "";
+      try { itensStr = JSON.parse(p.itens).map(i => `<tr><td style="padding:6px 0;border-bottom:1px solid #eee">${i.nome}${i.variacao ? " (" + i.variacao + ")" : ""}</td><td style="text-align:right;padding:6px 0;border-bottom:1px solid #eee">x${i.qtd} — ${fmt(i.valor)}</td></tr>`).join(""); } catch(e) {}
+      const pr = document.getElementById("mcPrint");
+      pr.innerHTML = `<div style="max-width:400px;margin:0 auto;font-family:Arial,sans-serif;color:#111">
+        <h2 style="text-align:center;margin-bottom:4px">GJ Store</h2>
+        <div style="text-align:center;font-size:12px;color:#666;margin-bottom:20px">Comprovante de Pedido</div>
+        <table style="width:100%;border-collapse:collapse;font-size:13px">
+          <tr><td><b>Pedido:</b></td><td style="text-align:right">#${p.id}</td></tr>
+          <tr><td><b>Data:</b></td><td style="text-align:right">${p.data || ""}</td></tr>
+          <tr><td><b>Cliente:</b></td><td style="text-align:right">${p.nome || ""}</td></tr>
+          <tr><td><b>Status:</b></td><td style="text-align:right">${p.status}</td></tr>
+          <tr><td><b>Pagamento:</b></td><td style="text-align:right">${p.formaPagamento || ""}</td></tr>
+        </table>
+        <h4 style="margin:16px 0 6px">Itens</h4>
+        <table style="width:100%;border-collapse:collapse;font-size:13px">${itensStr}</table>
+        <div style="margin-top:16px;font-size:16px;font-weight:bold;text-align:right">Total: ${fmt(p.total)}</div>
+        <div style="margin-top:20px;text-align:center;font-size:10px;color:#999">GJ Store — ${new Date().toLocaleDateString("pt-BR")}</div>
+      </div>`;
+      window.print();
+    }
+
     // ── RASTREAR PEDIDO ──────────────────────────────────────────
     function openRastrear() {
       document.getElementById("modalRastrear").classList.remove("hidden");
@@ -3408,6 +3639,8 @@
 
     // ── PWA INSTALL PROMPT ───────────────────────────────
     let _pwaPrompt = null;
+    const _isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
+    const _isStandalone = window.navigator.standalone === true || window.matchMedia('(display-mode: standalone)').matches;
     window.addEventListener('beforeinstallprompt', e => {
       e.preventDefault();
       _pwaPrompt = e;
@@ -3418,9 +3651,28 @@
         }, 4000);
       }
     });
+    // iOS: beforeinstallprompt nunca dispara — mostra banner manualmente
+    if (_isIOS && !_isStandalone && !localStorage.getItem('pwa_dismissed')) {
+      setTimeout(() => {
+        const b = document.getElementById('pwa-bar');
+        if (b) {
+          const btnInst = b.querySelector('button:last-child');
+          if (btnInst) btnInst.textContent = '📲 Como instalar';
+          b.classList.add('show');
+        }
+      }, 5000);
+    }
     function installPWA() {
-      if (_pwaPrompt) { _pwaPrompt.prompt(); _pwaPrompt.userChoice.then(() => { _pwaPrompt = null; dismissPWA(); }); }
-      else { showToast('Toque em ⋮ → "Adicionar à tela inicial"'); dismissPWA(); }
+      if (_pwaPrompt) {
+        _pwaPrompt.prompt();
+        _pwaPrompt.userChoice.then(() => { _pwaPrompt = null; dismissPWA(); });
+      } else if (_isIOS) {
+        showToast('No Safari: toque em 📤 e depois "Adicionar à Tela de Início"', 5000);
+        dismissPWA();
+      } else {
+        showToast('Toque em ⋮ → "Adicionar à tela inicial"');
+        dismissPWA();
+      }
     }
     function dismissPWA() {
       try { localStorage.setItem('pwa_dismissed', '1'); } catch(e) {}
