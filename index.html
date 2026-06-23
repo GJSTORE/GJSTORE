@@ -3577,61 +3577,198 @@
       rastrearPedido();
     }
 
-    // Monta o recibo (tela + impressão) e abre a tab Recibo
+    // Recibo do cliente = mesmo layout do painel admin (itens c/ thumbnail, parcelas,
+    // saldo/quitado). Estilos inline fixos (não usam var(--) do tema) p/ a imagem sair
+    // idêntica em qualquer tema. Único botão: baixar/compartilhar imagem.
+    const _RC_STORE = "GJ STORE";
+    function _rcProdImg(nome) {
+      if (!allProds.length || !nome) return "";
+      const n = String(nome).toLowerCase().trim();
+      const f = allProds.find(p => String(p["Nome do Produto"] || p["Nome"] || "").toLowerCase().trim() === n)
+        || allProds.find(p => { const pn = String(p["Nome do Produto"] || p["Nome"] || "").toLowerCase().trim(); return pn && (pn.includes(n) || n.includes(pn)); });
+      return f ? String(f["Imagem 1 (URL)"] || f["Imagem URL"] || "").trim() : "";
+    }
+    function _rcDate(v) {
+      if (!v) return "—";
+      const s = String(v);
+      if (/^\d{4}-\d{2}-\d{2}T/.test(s)) { try { return new Date(s).toLocaleDateString("pt-BR"); } catch(e) { return s; } }
+      return s;
+    }
+    function _rcCalcSaldo(baixas, totalPed) {
+      const bxs = baixas || [];
+      const pagas = bxs.filter(b => { const st = String(b.Status_Pagamento || ""); return st !== "Pendente" && st !== "Liquidado"; });
+      const pendentes = bxs.filter(b => String(b.Status_Pagamento || "") === "Pendente");
+      const totalPago = pagas.reduce((s, b) => s + Number(b.Valor_Final_Recebido || 0), 0);
+      const saldo = Math.max(0, totalPed - totalPago);
+      const pct = totalPed > 0 ? Math.min(100, Math.round(totalPago / totalPed * 100)) : 0;
+      return { pagas, pendentes, totalPago, saldo, pct, quitado: saldo <= 0.01 };
+    }
+
     function verRecibo(id) {
       const p = _mcPedidos[id];
       if (!p) return;
-      let itensRows = "", itensTxt = "";
+      const nome = p.nome || "—";
+      const pag = p.formaPagamento || "—";
+      const dtPed = p.data || "—";
+      const total = Number(p.total || 0);
+      const sub = Number(p.subtotal || total);
+      const desc = Number(p.desconto || 0);
+      const obs = String(p.obs || "");
+      const endereco = String(p.endereco || "").trim();
+      const cep = String(p.cep || "").trim();
+      const enderecoFmt = [endereco, cep ? `CEP ${cep}` : ""].filter(Boolean).join(" — ");
+      const qtdParc = Number(p.qtdParcelas || 0);
+
+      // Itens c/ thumbnail
+      let itensHtml = "";
       try {
         const arr = JSON.parse(p.itens);
-        itensRows = arr.map(i => `<div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.06);font-size:13px"><span>${i.nome}${i.variacao ? " (" + i.variacao + ")" : ""} <span style="color:var(--muted)">x${i.qtd}</span></span><span style="font-weight:700">${fmt(i.valor)}</span></div>`).join("");
-        itensTxt = arr.map(i => `• ${i.nome}${i.variacao ? " (" + i.variacao + ")" : ""} x${i.qtd} — ${fmt(i.valor)}`).join("\n");
+        if (Array.isArray(arr) && arr.length) {
+          itensHtml = arr.map(i => {
+            const n = (i.nome || i.name || "?") + (i.variacao ? ` (${i.variacao})` : "");
+            const q = Number(i.qtd || i.qty || 1);
+            const v = Number(i.valor || i.preco || 0);
+            const tot = v * q;
+            const img = _rcProdImg(i.nome || i.name);
+            const thumb = img
+              ? `<img src="${img}?_nc=1" crossorigin="anonymous" style="width:100%;height:100%;object-fit:cover;border-radius:8px;display:block" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">`
+              : "";
+            const fb = `<div style="display:${img ? "none" : "flex"};align-items:center;justify-content:center;height:100%;font-size:20px;color:#8899aa">📦</div>`;
+            return `<div style="display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid rgba(255,255,255,.05)">
+              <div style="width:54px;height:54px;border-radius:8px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);flex-shrink:0;overflow:hidden">${thumb}${fb}</div>
+              <div style="flex:1;min-width:0">
+                <div style="font-size:12px;color:#e2f4ff;font-weight:700;line-height:1.35">${n}</div>
+                ${v > 0 ? `<div style="font-size:10px;color:#8899aa;margin-top:3px">${fmt(v)} × ${q} un.</div>` : ""}
+              </div>
+              <div style="text-align:right;flex-shrink:0">
+                <div style="font-size:14px;font-weight:900;color:#00e676">${tot > 0 ? fmt(tot) : "—"}</div>
+                ${q > 1 ? `<div style="font-size:9px;color:#8899aa">unit. ${fmt(v)}</div>` : ""}
+              </div>
+            </div>`;
+          }).join("");
+        }
       } catch(e) {}
+
+      // Saldo / parcelas
+      const { pagas, pendentes, totalPago, saldo, pct, quitado } = _rcCalcSaldo(p.baixas, total);
+      const nPagas = pagas.length, nPend = pendentes.length;
+      const totalParc = qtdParc || (nPagas + nPend) || 0;
+      const mkBxRow = (b, isPend, num) => {
+        const vl = Number(isPend ? (b.Saldo_Restante || b.Valor_Original || 0) : (b.Valor_Final_Recebido || 0));
+        const st = b.Status_Pagamento || "";
+        const dt = _rcDate(isPend ? b.Proxima_Vencimento : b.Data_Baixa_Efetiva);
+        const taxa = Number(b.Taxa_Aplicada_RS || 0);
+        const isAtras = st.includes("Atraso");
+        const cor = isPend ? "#f44336" : (isAtras ? "#ffb74d" : st.includes("Antecip") ? "#ab47bc" : "#00e676");
+        const icon = isPend ? "⏳" : isAtras ? "⚠️" : st.includes("Antecip") ? "⚡" : "✅";
+        const stLabel = isPend ? "A pagar" : st.replace("Atrasado ", "").replace("SEM Taxa", "s/ juros").replace("COM Taxa", "c/ juros");
+        const parcLabel = totalParc > 1 ? `Parc. ${num}/${totalParc}` : (isPend ? "A pagar" : "Pagamento");
+        return `<div style="display:flex;align-items:flex-start;gap:8px;padding:7px 0;border-bottom:1px solid rgba(255,255,255,.04)">
+          <div style="min-width:28px;height:22px;border-radius:6px;background:${cor}22;border:1.5px solid ${cor}55;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:800;color:${cor};flex-shrink:0;padding:0 3px">${totalParc > 1 ? `${num}/${totalParc}` : num}</div>
+          <div style="flex:1;min-width:0">
+            <div style="font-size:11px;font-weight:700;color:${cor}">${icon} ${isPend ? "Vence " : "Pago "}${dt}</div>
+            <div style="font-size:10px;color:#8899aa;margin-top:1px">${parcLabel} · ${stLabel}${taxa > 0 ? ` · Juros: ${fmt(taxa)}` : ""}</div>
+          </div>
+          <div style="text-align:right;flex-shrink:0">
+            <div style="font-size:13px;font-weight:800;color:${cor}">${fmt(vl)}</div>
+            <div style="font-size:9px;color:#8899aa">${isPend ? "a pagar" : "recebido"}</div>
+          </div>
+        </div>`;
+      };
+      const bxHtml = [...pagas.map((b, i) => mkBxRow(b, false, i + 1)), ...pendentes.map((b, i) => mkBxRow(b, true, nPagas + i + 1))].join("");
+      const temHist = (nPagas + nPend) > 0;
+
+      const card = `
+        <div class="rc-header" style="background:linear-gradient(135deg,#0a1628,#04090f);padding:16px;text-align:center;border-bottom:1px solid #1a2840">
+          <div style="font-family:'Syne',sans-serif;font-weight:900;font-size:22px;color:#00e676">🏪 ${_RC_STORE}</div>
+          <div style="font-size:10px;color:#8899aa;letter-spacing:1px;margin-top:2px">RECIBO DE VENDA  •  #${p.id}</div>
+        </div>
+        <div style="padding:12px 16px;border-bottom:1px solid #1a2840">
+          <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px">
+            <div>
+              <div style="font-size:13px;font-weight:800;color:#e2f4ff;line-height:1.2">👤 ${nome}</div>
+              ${enderecoFmt ? `<div style="font-size:10px;color:#8899aa;margin-top:2px">📍 ${enderecoFmt}</div>` : ""}
+            </div>
+            <div style="text-align:right;flex-shrink:0">
+              <div style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:6px;background:rgba(0,188,212,.15);color:#00bcd4;border:1px solid rgba(0,188,212,.3)">${pag}</div>
+              <div style="font-size:10px;color:#8899aa;margin-top:3px">📅 ${dtPed}</div>
+            </div>
+          </div>
+          ${obs ? `<div style="font-size:10px;color:#8899aa;margin-top:6px;padding:5px 8px;background:rgba(255,255,255,.03);border-radius:6px;border-left:2px solid rgba(255,255,255,.1)">📝 ${obs}</div>` : ""}
+        </div>
+        ${itensHtml ? `<div style="padding:12px 16px;border-bottom:1px solid #1a2840">
+          <div style="font-size:9px;font-weight:800;color:#8899aa;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px">🛒 ITENS DO PEDIDO</div>
+          ${itensHtml}
+        </div>` : ""}
+        <div style="padding:12px 16px;border-bottom:1px solid #1a2840;background:rgba(6,12,24,.6)">
+          <div style="font-size:9px;font-weight:800;color:#8899aa;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px">💰 VALORES</div>
+          ${sub !== total && desc > 0 ? `
+          <div style="display:flex;justify-content:space-between;font-size:12px;padding:3px 0;color:#8899aa"><span>Subtotal</span><span>${fmt(sub)}</span></div>
+          <div style="display:flex;justify-content:space-between;font-size:12px;padding:3px 0;color:#00bcd4"><span>🏷️ Desconto aplicado</span><span>— ${fmt(desc)}</span></div>` : ""}
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-top:${sub !== total && desc > 0 ? "6" : "0"}px;padding-top:${sub !== total && desc > 0 ? "6" : "0"}px;${sub !== total && desc > 0 ? "border-top:1px solid rgba(255,255,255,.08);" : ""}">
+            <span style="font-size:12px;color:#8899aa;font-weight:700">TOTAL DO PEDIDO</span>
+            <span style="font-size:20px;font-weight:900;color:#e2f4ff;font-family:'Syne',sans-serif">${fmt(total)}</span>
+          </div>
+        </div>
+        ${temHist ? `<div style="padding:12px 16px;border-bottom:1px solid #1a2840">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+            <span style="font-size:9px;font-weight:800;color:#8899aa;text-transform:uppercase;letter-spacing:1px">💳 HISTÓRICO DE PAGAMENTOS</span>
+            <span style="font-size:11px;font-weight:800;background:rgba(255,255,255,.07);padding:2px 8px;border-radius:8px;color:${quitado ? "#00e676" : "#ffb74d"}">${pct}%</span>
+          </div>
+          <div style="height:5px;background:rgba(255,255,255,.08);border-radius:3px;overflow:hidden;margin-bottom:10px">
+            <div style="width:${pct}%;height:100%;background:${quitado ? "linear-gradient(90deg,#00e676,#00bcd4)" : "linear-gradient(90deg,#00bcd4,#ffb74d)"};border-radius:3px"></div>
+          </div>
+          ${bxHtml}
+        </div>
+        <div style="padding:14px 16px;background:${quitado ? "rgba(0,230,118,.1)" : "rgba(244,67,54,.08)"};border-bottom:1px solid ${quitado ? "rgba(0,230,118,.2)" : "rgba(244,67,54,.2)"}">
+          <div style="display:flex;justify-content:space-between;align-items:center">
+            <div>
+              <div style="font-size:10px;color:#8899aa;margin-bottom:3px">✅ Total pago</div>
+              <div style="font-size:18px;font-weight:900;color:#00e676;font-family:'Syne',sans-serif">${fmt(totalPago)}</div>
+            </div>
+            <div style="text-align:right">
+              ${quitado
+                ? `<div style="font-size:22px;font-weight:900;color:#00e676;font-family:'Syne',sans-serif">✅ QUITADO</div>`
+                : `<div><div style="font-size:10px;color:#8899aa;margin-bottom:3px">⚠️ Saldo devedor</div><div style="font-size:22px;font-weight:900;color:#f44336;font-family:'Syne',sans-serif">${fmt(saldo)}</div></div>`}
+            </div>
+          </div>
+        </div>` : ""}
+        <div style="padding:12px 16px;text-align:center;background:rgba(0,0,0,.2)">
+          <div style="font-size:9px;color:#8899aa;letter-spacing:.5px;text-transform:uppercase">${_RC_STORE} · Obrigado pela preferência 🙏</div>
+          <div style="font-size:8px;color:rgba(136,153,170,.5);margin-top:3px">${new Date().toLocaleDateString("pt-BR")} ${new Date().toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}</div>
+        </div>`;
+
       const area = document.getElementById("reciboArea");
       area.innerHTML = `
-        <div class="pd-card-glass">
-          <div style="text-align:center;margin-bottom:14px">
-            <div style="font-family:var(--H);font-weight:900;font-size:22px;color:var(--g)">GJ Store</div>
-            <div style="font-size:11px;color:var(--muted)">🧾 Comprovante de Pedido</div>
-          </div>
-          <div class="rinfo-row"><span class="rinfo-label">Pedido</span><span class="rinfo-val" style="color:var(--g);font-family:var(--H)">#${p.id}</span></div>
-          <div class="rinfo-row"><span class="rinfo-label">Data</span><span class="rinfo-val">${p.data || "—"}</span></div>
-          <div class="rinfo-row"><span class="rinfo-label">Cliente</span><span class="rinfo-val">${p.nome || "—"}</span></div>
-          <div class="rinfo-row"><span class="rinfo-label">Status</span><span class="rinfo-val">${p.status}</span></div>
-          <div class="rinfo-row"><span class="rinfo-label">Pagamento</span><span class="rinfo-val">${p.formaPagamento || "—"}</span></div>
-          <div style="font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin:14px 0 4px">Itens</div>
-          ${itensRows || '<div style="font-size:12px;color:var(--muted)">—</div>'}
-          <div style="display:flex;justify-content:space-between;align-items:center;margin-top:14px;padding-top:12px;border-top:1px solid rgba(255,255,255,.1)">
-            <span style="font-weight:700">Total</span>
-            <span style="font-family:var(--H);font-weight:900;font-size:20px;color:var(--g)">${fmt(p.total)}</span>
-          </div>
-          <button class="rbtn" onclick="printRecibo('${p.id}')">🖨️ Imprimir / Salvar PDF</button>
-          <button class="mc-rec-btn" style="margin-top:8px" onclick="shareReciboWpp('${p.id}')">💬 Enviar por WhatsApp</button>
-        </div>`;
-      // preparar versão de impressão
-      const pr = document.getElementById("mcPrint");
-      pr.innerHTML = `<div style="max-width:400px;margin:0 auto;font-family:Arial,sans-serif;color:#111">
-        <h2 style="text-align:center;margin-bottom:4px">GJ Store</h2>
-        <div style="text-align:center;font-size:12px;color:#666;margin-bottom:20px">Comprovante de Pedido</div>
-        <table style="width:100%;border-collapse:collapse;font-size:13px">
-          <tr><td><b>Pedido:</b></td><td style="text-align:right">#${p.id}</td></tr>
-          <tr><td><b>Data:</b></td><td style="text-align:right">${p.data || ""}</td></tr>
-          <tr><td><b>Cliente:</b></td><td style="text-align:right">${p.nome || ""}</td></tr>
-          <tr><td><b>Status:</b></td><td style="text-align:right">${p.status}</td></tr>
-          <tr><td><b>Pagamento:</b></td><td style="text-align:right">${p.formaPagamento || ""}</td></tr>
-        </table>
-        <h4 style="margin:16px 0 6px">Itens</h4>
-        <div style="font-size:13px;white-space:pre-line">${itensTxt}</div>
-        <div style="margin-top:16px;font-size:16px;font-weight:bold;text-align:right">Total: ${fmt(p.total)}</div>
-        <div style="margin-top:20px;text-align:center;font-size:10px;color:#999">GJ Store — ${new Date().toLocaleDateString("pt-BR")}</div>
-      </div>`;
-      _reciboTxt = `🧾 *GJ Store — Comprovante*\n─────────────\n📦 Pedido: #${p.id}\n📅 ${p.data || ""}\n👤 ${p.nome || ""}\n📍 Status: ${p.status}\n💳 ${p.formaPagamento || ""}\n─────────────\n${itensTxt}\n─────────────\n💰 *Total: ${fmt(p.total)}*`;
+        <div id="rcCardCli" style="max-width:420px;margin:0 auto;background:#04090f;border:1px solid #1a2840;border-radius:16px;overflow:hidden;font-family:Inter,system-ui,sans-serif">${card}</div>
+        <button class="rbtn" id="rcImgBtnCli" style="max-width:420px;margin:14px auto 0;display:block;width:100%" onclick="gerarImagemReciboCli()">📸 Baixar / Compartilhar imagem</button>`;
       pdTab("recibo");
     }
-    function printRecibo() { window.print(); }
-    function shareReciboWpp() {
-      if (navigator.share) { navigator.share({ text: _reciboTxt }).catch(() => {}); }
-      else { window.open(`https://wa.me/?text=${encodeURIComponent(_reciboTxt)}`, "_blank"); }
+
+    async function gerarImagemReciboCli() {
+      if (!window.html2canvas) {
+        const s = document.createElement("script");
+        s.src = "https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js";
+        document.head.appendChild(s);
+        await new Promise((res, rej) => { s.onload = res; s.onerror = rej; });
+      }
+      const btn = document.getElementById("rcImgBtnCli");
+      if (btn) { btn.textContent = "⏳ Gerando..."; btn.disabled = true; }
+      try {
+        const canvas = await html2canvas(document.getElementById("rcCardCli"), { backgroundColor: "#04090f", scale: 2, useCORS: true });
+        canvas.toBlob(blob => {
+          const file = new File([blob], "recibo-gj.png", { type: "image/png" });
+          if (navigator.canShare && navigator.canShare({ files: [file] })) {
+            navigator.share({ files: [file], title: "Recibo GJ Store" }).catch(() => {});
+          } else {
+            const a = document.createElement("a");
+            a.href = URL.createObjectURL(blob);
+            a.download = "recibo-gj.png";
+            a.click();
+          }
+        });
+      } catch(e) { showToast("Erro ao gerar imagem"); }
+      if (btn) { btn.textContent = "📸 Baixar / Compartilhar imagem"; btn.disabled = false; }
     }
 
     async function rastrearPedido() {
