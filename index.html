@@ -2537,7 +2537,7 @@
       if (t !== "cyberpunk") document.documentElement.className = "theme-" + t;
     })();
 
-    const API = (typeof GAS_URL !== "undefined") ? GAS_URL : "https://script.google.com/macros/s/AKfycbwHPwPB-6YbBSjfbhefrCxwmAdoN1vt6NPLr9BInR3aARtFsMoH87GKR0RUAhaCAyDw/exec";
+    const API = (typeof GAS_URL !== "undefined") ? GAS_URL : "https://script.google.com/macros/s/AKfycbz9ELiSp5Nq3vnjbEs0iEpPv0l51hE8lUYTh_Jj_nglGZzEQDONq3Z3icmS3AfYcFa2/exec";
     const WPP0 = "5521970552698";
     const WPP_OLD = "5521970363062"; // número antigo — ignorar se ainda estiver na planilha
     // Número da loja: usa cfg.WHATSAPP, mas ignora o número antigo desativado
@@ -3546,17 +3546,10 @@
         return;
       }
       document.getElementById("mcSub").textContent = pedidos.length + " pedido(s) encontrado(s)";
-      const sc = {
-        "Pendente":     { bg: "rgba(0,188,212,.12)", color: "#00bcd4" },
-        "Em Andamento": { bg: "rgba(0,188,212,.12)", color: "#00bcd4" },
-        "Enviado":      { bg: "rgba(0,230,118,.12)", color: "#00e676" },
-        "Finalizado":   { bg: "rgba(0,230,118,.18)", color: "#00e676" },
-        "Cancelado":    { bg: "rgba(239,68,68,.12)", color: "#ef4444" },
-      };
       _mcPedidos = {};
       list.innerHTML = pedidos.map(p => {
         _mcPedidos[p.id] = p;
-        const s = sc[p.status] || { bg: "rgba(0,230,118,.1)", color: "var(--g)" };
+        const s = gjStatusMeta(p.status);
         let itensStr = "";
         try { itensStr = JSON.parse(p.itens).map(i => `${i.nome} x${i.qtd}`).join(", "); } catch(e) { itensStr = ""; }
         return `<div class="mc-card">
@@ -3672,17 +3665,27 @@
       btn.disabled = false; btn.textContent = "🔍 Rastrear";
     }
 
-    function buildRastreioCard(p) {
-      const sc = {
-        "Pendente":     { bg: "rgba(0,188,212,.18)",   color: "#00bcd4", icon: "⏳", step: 0 },
-        "Em Andamento": { bg: "rgba(0,188,212,.18)",   color: "#00bcd4", icon: "🔄", step: 1 },
-        "Enviado":      { bg: "rgba(0,230,118,.18)",   color: "#00e676", icon: "🚚", step: 2 },
-        "Finalizado":   { bg: "rgba(0,230,118,.25)",   color: "#00e676", icon: "✅", step: 3 },
-        "Cancelado":    { bg: "rgba(239,68,68,.18)",   color: "#ef4444", icon: "❌", step: -1 },
-      }[p.status] || { bg: "rgba(0,230,118,.12)", color: "var(--g)", icon: "📦", step: 0 };
+    // Pipeline único do pedido (igual admin/gestao): Pendente→Em andamento→Entregue→Finalizado
+    // Normaliza sem acento + case-insensitive para nunca falhar match (ex: "Em andamento" vs "Em Andamento")
+    function gjStatusMeta(raw) {
+      const norm = String(raw || "Pendente")
+        .normalize("NFD").replace(/[̀-ͯ]/g, "").trim().toLowerCase();
+      const map = {
+        "pendente":     { bg: "rgba(0,188,212,.18)", color: "#00bcd4", icon: "⏳", step: 0 },
+        "em andamento": { bg: "rgba(0,188,212,.18)", color: "#00bcd4", icon: "🔄", step: 1 },
+        "entregue":     { bg: "rgba(171,71,188,.18)", color: "#ab47bc", icon: "📦", step: 2 },
+        "finalizado":   { bg: "rgba(0,230,118,.25)", color: "#00e676", icon: "✅", step: 3 },
+        "cancelado":    { bg: "rgba(239,68,68,.18)", color: "#ef4444", icon: "❌", step: -1 },
+      };
+      return map[norm] || map["pendente"];
+    }
 
-      const steps = ["Recebido","Em Andamento","Enviado","Finalizado"];
-      const stepsHtml = p.status === "Cancelado" ? "" : `
+    function buildRastreioCard(p) {
+      const sc = gjStatusMeta(p.status);
+      const cancelado = gjStatusMeta(p.status).step === -1;
+
+      const steps = ["Recebido", "Em andamento", "Entregue", "Finalizado"];
+      const stepsHtml = cancelado ? "" : `
         <div class="rsteps">${steps.map((s, i) => {
           const cls = i < sc.step ? "done" : i === sc.step ? "active" : "";
           return `<div class="rstep ${cls}"><div class="rstep-dot"></div>${s}</div>`;
