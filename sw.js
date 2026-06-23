@@ -1,4 +1,4 @@
-const CACHE = 'gjstore-v5';
+const CACHE = 'gjstore-v6';
 const SHELL = ['./index.html', './config.js', './manifest.json'];
 
 self.addEventListener('install', e => {
@@ -26,9 +26,10 @@ self.addEventListener('fetch', e => {
     return;
   }
 
-  // HTML / navegação: network-first (sempre versão nova, fallback cache offline)
+  // HTML + config.js: network-first (config.js carrega GAS_URL — nunca pode ficar velho em cache,
+  // senão aponta pro GAS antigo e quebra getMinhasCompras/rastrear no celular)
   const isHTML = req.mode === 'navigate' || (req.headers.get('accept') || '').includes('text/html');
-  if (isHTML) {
+  if (isHTML || url.includes('config.js')) {
     e.respondWith(
       fetch(req).then(res => {
         const copy = res.clone();
