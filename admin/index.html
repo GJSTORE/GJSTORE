@@ -4147,7 +4147,7 @@
       if (SITE_URL) return SITE_URL.replace(/\/?$/, "/");
       return location.origin + location.pathname.replace(/admin\.html?$/i, "");
     }
-    const WPP = "5521970363062";
+    const WPP = "5521970552698";
 
     let TOKEN = "";
     let _loginTipo = "admin";
@@ -8723,7 +8723,7 @@
 
     // ═══════════════════════════════════════════════
     // CONTACT MANAGER (AGENDA WPP)
-    const MEU_NUMERO = "21970363062";
+    const MEU_NUMERO = "21970552698";
     function getContacts() {
       try { return JSON.parse(localStorage.getItem("gj_contacts") || "[]"); } catch(e) { return []; }
     }
@@ -8845,6 +8845,10 @@
 
     async function toggleCat(cat) {
       const novoStatus = (cat.Status || "Ativo") === "Ativo" ? "Inativo" : "Ativo";
+      if (novoStatus === "Inativo") {
+        const qtd = (allProds || []).filter(p => p["Status"] !== "Inativo" && (p["Categoria"] || "").trim() === cat.Nome).length;
+        if (qtd > 0 && !confirm(`⚠️ Inativar "${cat.Nome}" vai ocultar ${qtd} produto(s) do site até você reativar. Continuar?`)) return;
+      }
       const label = novoStatus === "Ativo" ? "Categoria ativada ✅" : "Categoria inativada 🔴";
       try {
         const res = await apiGet("salvarCategoria", { id: cat.ID, nome: cat.Nome, emoji: cat.Emoji, cor: cat.Cor_Hex, status: novoStatus });
