@@ -2542,7 +2542,7 @@
     const WPP_OLD = "5521970363062"; // número antigo — ignorar se ainda estiver na planilha
     // Número da loja: usa cfg.WHATSAPP, mas ignora o número antigo desativado
     function getWpp() {
-      const c = (cfg.WHATSAPP || "").replace(/\D/g, "");
+      const c = String(cfg.WHATSAPP || "").replace(/\D/g, "");
       return (c && c !== WPP_OLD) ? c : WPP0;
     }
     let _mcPedidos = {}, _reciboTxt = "";
@@ -2769,7 +2769,7 @@
         const sec = document.getElementById("viewedSec");
         const track = document.getElementById("viewedTrack");
         if (!sec || !track) return;
-        const nome = cfg.OWNER ? cfg.OWNER.split(" ")[0] : "";
+        const nome = cfg.OWNER ? String(cfg.OWNER).split(" ")[0] : "";
         const titleEl = document.getElementById("viewedTitle");
         if (titleEl) titleEl.textContent = nome ? `Especialmente para você, ${nome} 👋` : "Vistos Recentemente";
         track.innerHTML = viewed.slice(0, 8).map(p => {
