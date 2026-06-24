@@ -2488,11 +2488,39 @@
         <section class="pd-pane" id="pane-compras">
           <div class="pd-card-glass" id="mcLogin">
             <div class="pd-title">🛍️ Minhas compras</div>
-            <p class="pd-sub" id="mcSub">Entre com seu WhatsApp para ver seu histórico.</p>
-            <label class="fl">Seu WhatsApp</label>
-            <input class="fi" id="mcTel" type="tel" placeholder="(21) 99999-9999"
-              onkeydown="if(event.key==='Enter')buscarMinhasCompras()">
-            <button class="rbtn" id="mcBtn" onclick="buscarMinhasCompras()">🔍 Ver meus pedidos</button>
+            <p class="pd-sub" id="mcSub">Acesse com seu WhatsApp e senha para ver seu histórico com segurança.</p>
+
+            <!-- Toggle Entrar / Criar conta -->
+            <div style="display:flex;gap:6px;background:rgba(255,255,255,.05);border-radius:12px;padding:4px;margin:4px 0 14px">
+              <button type="button" id="mcTabLogin" class="mc-auth-tab on" onclick="mcSwitchAuth('login')" style="flex:1;border:none;background:transparent;color:var(--muted);font-weight:700;font-size:13px;padding:9px;border-radius:9px;cursor:pointer">Entrar</button>
+              <button type="button" id="mcTabCad" class="mc-auth-tab" onclick="mcSwitchAuth('cadastro')" style="flex:1;border:none;background:transparent;color:var(--muted);font-weight:700;font-size:13px;padding:9px;border-radius:9px;cursor:pointer">Criar conta</button>
+            </div>
+
+            <!-- LOGIN -->
+            <div id="mcPaneLogin">
+              <label class="fl">Seu WhatsApp</label>
+              <input class="fi" id="mcLogTel" type="tel" placeholder="(21) 99999-9999">
+              <label class="fl" style="margin-top:10px">Senha</label>
+              <input class="fi" id="mcLogSenha" type="password" placeholder="Sua senha"
+                onkeydown="if(event.key==='Enter')mcDoLogin()">
+              <button class="rbtn" id="mcLogBtn" onclick="mcDoLogin()">🔓 Entrar</button>
+            </div>
+
+            <!-- CADASTRO -->
+            <div id="mcPaneCadastro" style="display:none">
+              <label class="fl">Nome</label>
+              <input class="fi" id="mcCadNome" type="text" placeholder="Seu nome">
+              <label class="fl" style="margin-top:10px">WhatsApp</label>
+              <input class="fi" id="mcCadTel" type="tel" placeholder="(21) 99999-9999">
+              <label class="fl" style="margin-top:10px">Senha (mín. 4)</label>
+              <input class="fi" id="mcCadSenha" type="password" placeholder="Crie uma senha">
+              <label class="fl" style="margin-top:10px">Confirmar senha</label>
+              <input class="fi" id="mcCadSenha2" type="password" placeholder="Repita a senha"
+                onkeydown="if(event.key==='Enter')mcDoCadastro()">
+              <label class="fl" style="margin-top:10px">Foto de perfil (opcional)</label>
+              <input class="fi" id="mcCadFoto" type="file" accept="image/*" style="padding:8px">
+              <button class="rbtn" id="mcCadBtn" onclick="mcDoCadastro()">✨ Criar conta</button>
+            </div>
           </div>
           <div id="mcList" style="display:none"></div>
           <button id="mcSairBtn" class="mc-sair" style="display:none" onclick="logoutUser()">🚪 Sair da conta</button>
@@ -3246,7 +3274,7 @@
       e.target.value = !x[2] ? x[1] : '(' + x[1] + ') ' + x[2] + (x[3] ? '-' + x[3] : '');
     }
     document.getElementById("ctel").addEventListener("input", maskTelInput);
-    document.getElementById("mcTel").addEventListener("input", maskTelInput);
+    ["mcLogTel", "mcCadTel"].forEach(id => { const el = document.getElementById(id); if (el) el.addEventListener("input", maskTelInput); });
 
     function maskCep(el) {
       let v = el.value.replace(/\D/g, "").slice(0, 8);
@@ -3459,12 +3487,15 @@
 
     function logoutUser() {
       localStorage.removeItem("gj_user");
+      gjSessClear();
       updateUserChip();
       document.getElementById("mcLogin").style.display = "block";
       document.getElementById("mcList").style.display = "none";
       document.getElementById("mcSairBtn").style.display = "none";
-      document.getElementById("mcTel").value = "";
-      document.getElementById("mcSub").textContent = "Entre com seu WhatsApp para ver seu histórico.";
+      const lt = document.getElementById("mcLogTel"); if (lt) lt.value = "";
+      const ls = document.getElementById("mcLogSenha"); if (ls) ls.value = "";
+      document.getElementById("mcSub").textContent = "Acesse com seu WhatsApp e senha para ver seu histórico com segurança.";
+      mcSwitchAuth("login");
       showToast("Saiu da conta 👋");
     }
 
@@ -3474,10 +3505,10 @@
       document.body.style.overflow = "hidden";
       try { history.pushState({ modalPedidos: 1 }, ""); } catch(e) {}
       pdTab(tab || "rastreio");
-      // Minhas Compras: se já identificado, pré-carrega
+      // Minhas Compras: pré-preenche o telefone do login se houver sessão
       try {
-        const u = JSON.parse(localStorage.getItem("gj_user") || "null");
-        if (u && u.tel) document.getElementById("mcTel").value = formatTelDisplay(u.tel);
+        const s = gjSess();
+        if (s && s.tel) document.getElementById("mcLogTel").value = formatTelDisplay(s.tel);
       } catch(e) {}
     }
     function closePedidos() {
@@ -3493,10 +3524,10 @@
       setTimeout(() => {
         if (name === "rastreio") { const i = document.getElementById("rInput"); if (i) i.focus(); }
         if (name === "compras") {
-          const u = (() => { try { return JSON.parse(localStorage.getItem("gj_user") || "null"); } catch(e) { return null; } })();
-          // auto-busca se identificado e ainda não listou
-          if (u && u.tel && document.getElementById("mcList").style.display === "none") buscarMinhasCompras();
-          else { const i = document.getElementById("mcTel"); if (i && !i.value) i.focus(); }
+          const s = gjSess();
+          // logado → carrega pedidos; senão mostra login/cadastro
+          if (s && s.token && document.getElementById("mcList").style.display === "none") loadMinhasCompras();
+          else { mcShowAuth(); const i = document.getElementById("mcLogTel"); if (i && !i.value) i.focus(); }
         }
       }, 140);
     }
@@ -3509,30 +3540,106 @@
       return m ? `(${m[1]}) ${m[2]}-${m[3]}` : tel;
     }
 
-    async function buscarMinhasCompras() {
-      const rawTel = document.getElementById("mcTel").value.replace(/\D/g, "");
-      if (rawTel.length < 10) { showToast("Informe um WhatsApp com DDD"); return; }
-      const btn = document.getElementById("mcBtn");
-      btn.disabled = true; btn.textContent = "Buscando...";
+    // ── AUTH CLIENTE (G3) ──────────────────────────────────────
+    // POST text/plain p/ não vazar senha/token na query string (GAS loga query).
+    async function apiPost(action, body) {
+      const r = await fetch(API, { method: "POST", headers: { "Content-Type": "text/plain;charset=utf-8" }, body: JSON.stringify(Object.assign({ action }, body || {})) });
+      return r.json();
+    }
+    function gjSess() { try { return JSON.parse(localStorage.getItem("gj_cliente_session") || "null"); } catch(e) { return null; } }
+    function gjSessSet(o) { localStorage.setItem("gj_cliente_session", JSON.stringify(o)); }
+    function gjSessClear() { localStorage.removeItem("gj_cliente_session"); }
+
+    function mcSwitchAuth(mode) {
+      const isLogin = mode !== "cadastro";
+      document.getElementById("mcPaneLogin").style.display = isLogin ? "block" : "none";
+      document.getElementById("mcPaneCadastro").style.display = isLogin ? "none" : "block";
+      document.getElementById("mcTabLogin").classList.toggle("on", isLogin);
+      document.getElementById("mcTabLogin").style.background = isLogin ? "rgba(0,230,118,.12)" : "transparent";
+      document.getElementById("mcTabLogin").style.color = isLogin ? "var(--g)" : "var(--muted)";
+      document.getElementById("mcTabCad").classList.toggle("on", !isLogin);
+      document.getElementById("mcTabCad").style.background = !isLogin ? "rgba(0,230,118,.12)" : "transparent";
+      document.getElementById("mcTabCad").style.color = !isLogin ? "var(--g)" : "var(--muted)";
+    }
+
+    async function mcDoLogin() {
+      const tel = document.getElementById("mcLogTel").value.replace(/\D/g, "");
+      const senha = document.getElementById("mcLogSenha").value;
+      if (tel.length < 10) { showToast("Informe um WhatsApp com DDD"); return; }
+      if (!senha) { showToast("Informe a senha"); return; }
+      const btn = document.getElementById("mcLogBtn");
+      btn.disabled = true; btn.textContent = "Entrando...";
       try {
-        const u = new URL(API);
-        u.searchParams.set("action", "getMinhasCompras");
-        u.searchParams.set("telefone", rawTel);
-        const d = await fetch(u.toString()).then(r => r.json());
-        if (!d.ok) { showToast(d.erro || "Erro ao buscar pedidos"); btn.disabled = false; btn.textContent = "🔍 Ver meus pedidos"; return; }
-        const pedidos = d.pedidos || [];
-        // Salvar tel no gj_user se ainda não tiver
-        try {
-          const u2 = JSON.parse(localStorage.getItem("gj_user") || "null");
-          const nome = u2 ? u2.nome : (pedidos.length ? pedidos[0].nome : "");
-          if (nome || rawTel) localStorage.setItem("gj_user", JSON.stringify({ nome, tel: rawTel, ts: Date.now() }));
-          updateUserChip();
-        } catch(e) {}
-        renderMCList(pedidos, rawTel);
-      } catch(e) {
-        showToast("Erro de conexão");
-      }
-      btn.disabled = false; btn.textContent = "🔍 Ver meus pedidos";
+        const d = await apiPost("loginCliente", { telefone: tel, senha });
+        if (!d.ok) { showToast(d.erro || "Não foi possível entrar"); if (d.naoCadastrado) mcSwitchAuth("cadastro"); return; }
+        mcOnAuth(d, tel);
+      } catch(e) { showToast("Erro de conexão"); }
+      finally { btn.disabled = false; btn.textContent = "🔓 Entrar"; }
+    }
+
+    async function mcDoCadastro() {
+      const nome = document.getElementById("mcCadNome").value.trim();
+      const tel = document.getElementById("mcCadTel").value.replace(/\D/g, "");
+      const senha = document.getElementById("mcCadSenha").value;
+      const senha2 = document.getElementById("mcCadSenha2").value;
+      if (!nome) { showToast("Informe seu nome"); return; }
+      if (tel.length < 10) { showToast("WhatsApp inválido (com DDD)"); return; }
+      if (senha.length < 4) { showToast("Senha mínima de 4 caracteres"); return; }
+      if (senha !== senha2) { showToast("As senhas não conferem"); return; }
+      const btn = document.getElementById("mcCadBtn");
+      btn.disabled = true; btn.textContent = "Criando...";
+      try {
+        let fotoUrl = "";
+        const f = document.getElementById("mcCadFoto").files[0];
+        if (f) { btn.textContent = "Enviando foto..."; try { fotoUrl = await mcUploadFoto(f); } catch(e) { showToast("Falha na foto, seguindo sem ela"); } }
+        btn.textContent = "Criando...";
+        const d = await apiPost("cadastrarCliente", { nome, telefone: tel, senha, fotoUrl });
+        if (!d.ok) { showToast(d.erro || "Não foi possível cadastrar"); if (d.jaCadastrado) mcSwitchAuth("login"); return; }
+        mcOnAuth(d, tel);
+      } catch(e) { showToast("Erro de conexão"); }
+      finally { btn.disabled = false; btn.textContent = "✨ Criar conta"; }
+    }
+
+    // Upload foto perfil → Cloudinary (unsigned, mesma conta do admin)
+    async function mcUploadFoto(file) {
+      const fd = new FormData();
+      fd.append("file", file);
+      fd.append("upload_preset", (typeof CFG_CLOUDINARY_PRESET !== "undefined") ? CFG_CLOUDINARY_PRESET : "gj_store");
+      const cloud = (typeof CFG_CLOUDINARY_CLOUD !== "undefined") ? CFG_CLOUDINARY_CLOUD : "dxffbx07d";
+      const r = await fetch(`https://api.cloudinary.com/v1_1/${cloud}/image/upload`, { method: "POST", body: fd });
+      const j = await r.json();
+      if (!j.secure_url) throw new Error("upload falhou");
+      return j.secure_url;
+    }
+
+    function mcOnAuth(d, tel) {
+      gjSessSet({ token: d.token, nome: d.nome || "", fotoUrl: d.fotoUrl || "", tel });
+      try { localStorage.setItem("gj_user", JSON.stringify({ nome: d.nome || "", tel, foto: d.fotoUrl || "", ts: Date.now() })); } catch(e) {}
+      updateUserChip();
+      loadMinhasCompras();
+    }
+
+    // Carrega pedidos do cliente logado (token). Sem sessão → mostra login.
+    async function loadMinhasCompras() {
+      const s = gjSess();
+      if (!s || !s.token) { mcShowAuth(); return; }
+      document.getElementById("mcSub").textContent = "Carregando seus pedidos...";
+      try {
+        const d = await apiPost("getMinhasCompras", { token: s.token });
+        if (!d.ok) {
+          if (d.authRequired) { gjSessClear(); updateUserChip(); showToast("Sessão expirada, entre de novo"); mcShowAuth(); return; }
+          showToast(d.erro || "Erro ao buscar pedidos"); return;
+        }
+        renderMCList(d.pedidos || [], s.tel);
+      } catch(e) { showToast("Erro de conexão"); }
+    }
+
+    function mcShowAuth() {
+      document.getElementById("mcLogin").style.display = "block";
+      document.getElementById("mcList").style.display = "none";
+      document.getElementById("mcSairBtn").style.display = "none";
+      const s = gjSess();
+      if (s && s.tel) document.getElementById("mcLogTel").value = formatTelDisplay(s.tel);
     }
 
     function renderMCList(pedidos, tel) {
