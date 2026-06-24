@@ -2504,6 +2504,7 @@
               <input class="fi" id="mcLogSenha" type="password" placeholder="Sua senha"
                 onkeydown="if(event.key==='Enter')mcDoLogin()">
               <button class="rbtn" id="mcLogBtn" onclick="mcDoLogin()">🔓 Entrar</button>
+              <button type="button" onclick="mcEsqueciSenha()" style="background:none;border:none;color:var(--c,#0bd);font-size:13px;margin-top:10px;cursor:pointer;text-decoration:underline;width:100%">Esqueci minha senha</button>
             </div>
 
             <!-- CADASTRO -->
@@ -2517,8 +2518,6 @@
               <label class="fl" style="margin-top:10px">Confirmar senha</label>
               <input class="fi" id="mcCadSenha2" type="password" placeholder="Repita a senha"
                 onkeydown="if(event.key==='Enter')mcDoCadastro()">
-              <label class="fl" style="margin-top:10px">Foto de perfil (opcional)</label>
-              <input class="fi" id="mcCadFoto" type="file" accept="image/*" style="padding:8px">
               <button class="rbtn" id="mcCadBtn" onclick="mcDoCadastro()">✨ Criar conta</button>
             </div>
           </div>
@@ -2839,8 +2838,30 @@
         (p["Tags_Personalizadas"] || "").toLowerCase().includes(searchQ)
       );
       l = sortProds(l);
+      // "Tudo" sem sort/busca: intercalar categorias (senão a planilha agrupa tudo, ex. só iPhones no topo)
+      if (!catA && !searchQ && !sortMode) l = interleaveByCat(l);
       document.getElementById("stitle").innerHTML = `<div class="pip"></div>${l.length} produto${l.length !== 1 ? "s" : ""}`;
       renderProds(l);
+    }
+
+    // Round-robin entre categorias (1 de cada por volta). Destaques sobem ao topo preservando a intercalação.
+    function interleaveByCat(list) {
+      const buckets = new Map();
+      list.forEach(p => {
+        const c = (p["Categoria"] || "_").trim().toLowerCase();
+        if (!buckets.has(c)) buckets.set(c, []);
+        buckets.get(c).push(p);
+      });
+      const arrs = [...buckets.values()];
+      const out = [];
+      let added = true;
+      while (added) {
+        added = false;
+        for (const a of arrs) { if (a.length) { out.push(a.shift()); added = true; } }
+      }
+      const dest = out.filter(p => p["Destaque?"] === "Sim");
+      const rest = out.filter(p => p["Destaque?"] !== "Sim");
+      return [...dest, ...rest];
     }
 
     // ── PRODUCTS (lazy loading) ───────────────────────────
@@ -3587,34 +3608,28 @@
       if (senha.length < 4) { showToast("Senha mínima de 4 caracteres"); return; }
       if (senha !== senha2) { showToast("As senhas não conferem"); return; }
       const btn = document.getElementById("mcCadBtn");
-      btn.disabled = true; btn.textContent = "Criando...";
+      btn.disabled = true; btn.textContent = "Verificando...";
       try {
-        let fotoUrl = "";
-        const f = document.getElementById("mcCadFoto").files[0];
-        if (f) { btn.textContent = "Enviando foto..."; try { fotoUrl = await mcUploadFoto(f); } catch(e) { showToast("Falha na foto, seguindo sem ela"); } }
+        // checa duplicata antes (v3 1.2)
+        const v = await apiPost("verificarCliente", { telefone: tel });
+        if (v && v.ok && v.temSenha) { showToast("Você já tem cadastro. Faça login."); mcSwitchAuth("login"); return; }
         btn.textContent = "Criando...";
-        const d = await apiPost("cadastrarCliente", { nome, telefone: tel, senha, fotoUrl });
+        const d = await apiPost("cadastrarCliente", { nome, telefone: tel, senha });
         if (!d.ok) { showToast(d.erro || "Não foi possível cadastrar"); if (d.jaCadastrado) mcSwitchAuth("login"); return; }
         mcOnAuth(d, tel);
       } catch(e) { showToast("Erro de conexão"); }
       finally { btn.disabled = false; btn.textContent = "✨ Criar conta"; }
     }
 
-    // Upload foto perfil → Cloudinary (unsigned, mesma conta do admin)
-    async function mcUploadFoto(file) {
-      const fd = new FormData();
-      fd.append("file", file);
-      fd.append("upload_preset", (typeof CFG_CLOUDINARY_PRESET !== "undefined") ? CFG_CLOUDINARY_PRESET : "gj_store");
-      const cloud = (typeof CFG_CLOUDINARY_CLOUD !== "undefined") ? CFG_CLOUDINARY_CLOUD : "dxffbx07d";
-      const r = await fetch(`https://api.cloudinary.com/v1_1/${cloud}/image/upload`, { method: "POST", body: fd });
-      const j = await r.json();
-      if (!j.secure_url) throw new Error("upload falhou");
-      return j.secure_url;
+    function mcEsqueciSenha() {
+      const wpp = "5521970552698";
+      const msg = encodeURIComponent("Olá! Esqueci minha senha do site da GJ Store e gostaria de redefinir.");
+      window.open(`https://wa.me/${wpp}?text=${msg}`, "_blank");
     }
 
     function mcOnAuth(d, tel) {
-      gjSessSet({ token: d.token, nome: d.nome || "", fotoUrl: d.fotoUrl || "", tel });
-      try { localStorage.setItem("gj_user", JSON.stringify({ nome: d.nome || "", tel, foto: d.fotoUrl || "", ts: Date.now() })); } catch(e) {}
+      gjSessSet({ token: d.token, nome: d.nome || "", tel });
+      try { localStorage.setItem("gj_user", JSON.stringify({ nome: d.nome || "", tel, ts: Date.now() })); } catch(e) {}
       updateUserChip();
       loadMinhasCompras();
     }
