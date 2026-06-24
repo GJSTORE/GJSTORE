@@ -1263,6 +1263,50 @@
       justify-content: center
     }
 
+    .prevord {
+      position: absolute;
+      left: -6px;
+      top: -6px;
+      display: flex;
+      flex-direction: column;
+      gap: 2px
+    }
+
+    .prevmv {
+      width: 20px;
+      height: 18px;
+      background: var(--g);
+      border: none;
+      border-radius: 5px;
+      color: #04210f;
+      font-size: 11px;
+      font-weight: 700;
+      line-height: 1;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center
+    }
+
+    .prevmv:disabled {
+      opacity: .3;
+      cursor: default
+    }
+
+    .prevcap {
+      position: absolute;
+      bottom: -6px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: var(--g);
+      color: #04210f;
+      font-size: 8px;
+      font-weight: 700;
+      padding: 1px 6px;
+      border-radius: 6px;
+      white-space: nowrap
+    }
+
     .urlinp {
       display: flex;
       gap: 8px;
@@ -4205,6 +4249,17 @@
       return res.json();
     }
 
+    // POST text/plain (dados sensíveis fora da query, que o GAS loga). action vai no body.
+    async function apiPost(action, params = {}) {
+      const res = await fetch(API, {
+        method: "POST",
+        headers: { "Content-Type": "text/plain;charset=utf-8" },
+        body: JSON.stringify(Object.assign({ action }, params)),
+      });
+      if (!res.ok) throw new Error("HTTP " + res.status);
+      return res.json();
+    }
+
     function fmt(v) { const n = Number(v); return "R$ " + (isNaN(n) ? "0,00" : n.toLocaleString("pt-BR", { minimumFractionDigits: 2 })); }
     function fmtDate(s) { try { return String(s).split(" ")[0]; } catch (e) { return s; } }
     function fmtDT(s, dateOnly) {
@@ -4819,7 +4874,7 @@
         if (inativos > 0) { cntEl.textContent = inativos + " inativos"; cntEl.style.display = "inline-block"; }
         else { cntEl.style.display = "none"; }
       }
-      const semCat = allProds.filter(p => p["Status"] !== "Inativo" && !String(p["Categoria"] || "").trim());
+      const semCat = allProds.filter(_isOrfao);
       const alertEl = document.getElementById("nocatAlert");
       const cntNc = document.getElementById("nocatCount");
       if (alertEl) {
@@ -4973,16 +5028,51 @@
       btn.disabled = false; btn.textContent = "💾 Salvar Produto";
     }
 
+    function _isVideoUrl(url) { return !!(String(url).match(/\.(mp4|webm|mov)/i) || String(url).includes("video")); }
+
+    const _PREV_PH = "this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2268%22 height=%2268%22><rect width=%2268%22 height=%2268%22 fill=%22%230b1728%22/><text x=%2234%22 y=%2242%22 text-anchor=%22middle%22 fill=%22%2300e676%22 font-size=%2226%22>📦</text></svg>'";
+
+    // Reordena imagens (não-vídeo) dentro de mediaUrls. dir = -1 (sobe) / +1 (desce).
+    function moveMedia(idx, dir) {
+      const imgIdxs = mediaUrls.map((u, i) => _isVideoUrl(u) ? -1 : i).filter(i => i >= 0);
+      const pos = imgIdxs.indexOf(idx);
+      const target = imgIdxs[pos + dir];
+      if (target === undefined) return; // já no limite
+      const tmp = mediaUrls[idx]; mediaUrls[idx] = mediaUrls[target]; mediaUrls[target] = tmp;
+      renderPreviews();
+    }
+
+    function renderPreviews() {
+      const cont = document.getElementById("previews");
+      if (!cont) return;
+      cont.innerHTML = "";
+      const imgIdxs = mediaUrls.map((u, i) => _isVideoUrl(u) ? -1 : i).filter(i => i >= 0);
+      mediaUrls.forEach((url, i) => {
+        const isV = _isVideoUrl(url);
+        const wrap = document.createElement("div"); wrap.className = "previtem";
+        wrap.innerHTML = isV
+          ? `<video src="${url}" muted></video>`
+          : `<img src="${url}" onerror="${_PREV_PH}">`;
+        if (!isV) {
+          const isFirst = imgIdxs[0] === i, isLast = imgIdxs[imgIdxs.length - 1] === i;
+          const ord = document.createElement("div"); ord.className = "prevord";
+          ord.innerHTML =
+            `<button type="button" class="prevmv" ${isFirst ? "disabled" : ""} onclick="moveMedia(${i},-1)">↑</button>` +
+            `<button type="button" class="prevmv" ${isLast ? "disabled" : ""} onclick="moveMedia(${i},1)">↓</button>`;
+          wrap.appendChild(ord);
+          if (imgIdxs[0] === i) { const b = document.createElement("span"); b.className = "prevcap"; b.textContent = "capa"; wrap.appendChild(b); }
+        }
+        const rm = document.createElement("button"); rm.type = "button"; rm.className = "prevrem"; rm.textContent = "✕";
+        rm.onclick = () => { mediaUrls.splice(i, 1); renderPreviews(); };
+        wrap.appendChild(rm);
+        cont.appendChild(wrap);
+      });
+    }
+
     function addPreview(url) {
       if (mediaUrls.includes(url)) return;
       mediaUrls.push(url);
-      const isV = url.match(/\.(mp4|webm|mov)/i) || url.includes("video");
-      const wrap = document.createElement("div"); wrap.className = "previtem";
-      wrap.innerHTML = isV ? `<video src="${url}" muted></video>` : `<img src="${url}" onerror="this.src='data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 width=%2268%22 height=%2268%22><rect width=%2268%22 height=%2268%22 fill=%22%230b1728%22/><text x=%2234%22 y=%2242%22 text-anchor=%22middle%22 fill=%22%2300e676%22 font-size=%2226%22>📦</text></svg>'">`;
-      const rm = document.createElement("button"); rm.className = "prevrem"; rm.textContent = "✕";
-      rm.onclick = () => { mediaUrls = mediaUrls.filter(u => u !== url); wrap.remove(); };
-      wrap.appendChild(rm);
-      document.getElementById("previews").appendChild(wrap);
+      renderPreviews();
     }
 
     function addUrl() {
@@ -5003,6 +5093,8 @@
       if (!nome || !cat || !preco) { toast("Preencha Nome, Categoria e Preço", "err"); return; }
       const btn = document.getElementById("savebtn");
       btn.disabled = true; btn.textContent = "⏳ Salvando...";
+      const _imgs = mediaUrls.filter(u => !_isVideoUrl(u)).slice(0, 3); // ordem do reorder = Imagem 1/2/3
+      const _vid = mediaUrls.find(_isVideoUrl) || "";
       const params = {
         "ID": document.getElementById("fid").value || "",
         "id": document.getElementById("fid").value || "",
@@ -5020,10 +5112,10 @@
         "Fornecedores_JSON": document.getElementById("fforn").value,
         "Garantia_Padrao": document.getElementById("fgarantia").value,
         "Tags_Personalizadas": document.getElementById("ftags").value,
-        "Imagem 1 (URL)": mediaUrls[0] || "",
-        "Imagem 2 (URL)": mediaUrls[1] || "",
-        "Imagem 3 (URL)": mediaUrls[2] || "",
-        "Vídeo (URL)": mediaUrls[3] || "",
+        "Imagem 1 (URL)": _imgs[0] || "",
+        "Imagem 2 (URL)": _imgs[1] || "",
+        "Imagem 3 (URL)": _imgs[2] || "",
+        "Vídeo (URL)": _vid || "",
       };
       try {
         const res = await apiGet("salvarProduto", params);
@@ -5049,19 +5141,72 @@
       );
     }
 
+    // Nomes de categorias ATIVAS (allCats carregado no boot)
+    function _activeCatNames() {
+      return (allCats || [])
+        .filter(c => String(c.Status || "Ativo") !== "Inativo")
+        .map(c => String(c.Nome || "").trim());
+    }
+    // Órfão = produto ativo SEM categoria OU com categoria inexistente/inativa
+    function _isOrfao(p) {
+      if (p["Status"] === "Inativo") return false;
+      const cat = String(p["Categoria"] || "").trim();
+      if (!cat) return true;
+      return !_activeCatNames().includes(cat);
+    }
+
     function openNoCatModal() {
-      const semCat = allProds.filter(p => p["Status"] !== "Inativo" && !String(p["Categoria"] || "").trim());
+      const semCat = allProds.filter(_isOrfao);
       const list = document.getElementById("nocatList");
       if (!list) return;
-      list.innerHTML = semCat.length ? semCat.map(p => `
+      const opts = _activeCatNames().map(n => `<option value="${n}">${n}</option>`).join("");
+      list.innerHTML = semCat.length ? semCat.map(p => {
+        const cat = String(p["Categoria"] || "").trim();
+        const motivo = !cat ? "sem categoria" : `categoria "${cat}" inativa/removida`;
+        return `
         <div class="nm-item">
           <div class="nm-item-info">
             <div class="nm-item-name">${p["Nome do Produto"] || "—"}</div>
-            <div class="nm-item-meta">Estoque: ${p["Estoque"] || 0} · ${fmt(p["Preço (R$)"])}</div>
+            <div class="nm-item-meta">${motivo} · Est: ${p["Estoque"] || 0} · ${fmt(p["Preço (R$)"])}</div>
           </div>
-          <button class="nm-edit-btn" onclick="closeNoCatModal();editProd(allProds.find(x=>x['ID']==='${p["ID"]}'))">✏️ Editar</button>
-        </div>`).join("") : `<div class="empty">Nenhum produto sem categoria 🎉</div>`;
+          <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
+            <select id="oc_${p["ID"]}" style="padding:5px;border-radius:8px;background:var(--card,#0b1728);color:var(--text,#fff);border:1px solid rgba(255,255,255,.15);font-size:12px">
+              <option value="">Categoria…</option>${opts}
+            </select>
+            <button class="nm-edit-btn" onclick="atribuirCat('${p["ID"]}')">✅ Atribuir</button>
+            <button class="nm-edit-btn" style="background:var(--r,#e53935)" onclick="inativarOrfao('${p["ID"]}')">🔴 Inativar</button>
+          </div>
+        </div>`;
+      }).join("") : `<div class="empty">Nenhum produto órfão 🎉</div>`;
       document.getElementById("nocatModal").classList.add("open");
+    }
+
+    // Atribui categoria a um órfão. Manda o produto COMPLETO (salvarProduto sobrescreve
+    // toda a linha — enviar parcial apagaria os outros campos).
+    async function atribuirCat(prodId) {
+      const sel = document.getElementById("oc_" + prodId);
+      const cat = sel ? sel.value : "";
+      if (!cat) { toast("Escolha uma categoria", "err"); return; }
+      const p = allProds.find(x => String(x["ID"]) === String(prodId));
+      if (!p) return;
+      const params = Object.assign({}, p, { id: prodId, ID: prodId, "Categoria": cat });
+      try {
+        const res = await apiGet("salvarProduto", params);
+        if (res.ok) {
+          toast("Categoria atribuída ✅"); allProds = []; await loadProds();
+          openNoCatModal();
+        } else toast(res.error || "Erro", "err");
+      } catch (e) { toast("Erro de conexão", "err"); }
+    }
+
+    async function inativarOrfao(prodId) {
+      try {
+        const res = await apiGet("deletarProduto", { id: prodId });
+        if (res.ok) {
+          toast("Produto inativado"); allProds = []; await loadProds();
+          openNoCatModal();
+        } else toast(res.error || "Erro", "err");
+      } catch (e) { toast("Erro de conexão", "err"); }
     }
     function closeNoCatModal() { document.getElementById("nocatModal").classList.remove("open"); }
 
@@ -8550,7 +8695,11 @@
         <button onclick="verComprasCliente(${idx})"
           style="padding:8px 14px;border-radius:10px;background:rgba(156,39,176,.12);color:#ce93d8;border:1px solid rgba(156,39,176,.3);font:600 13px var(--B);cursor:pointer;width:100%;margin-top:4px">
           📋 Ver Compras
-        </button>`;
+        </button>
+        ${wppNum ? `<button onclick="resetSenhaCliente('${wppNum}','${nome.replace(/'/g,"\\'")}')"
+          style="padding:8px 14px;border-radius:10px;background:rgba(255,193,7,.12);color:#ffc107;border:1px solid rgba(255,193,7,.3);font:600 13px var(--B);cursor:pointer;width:100%;margin-top:4px">
+          🔑 Redefinir senha
+        </button>` : ""}`;
 
       document.getElementById("scoreModalContent").innerHTML = `
         ${email ? `<div style="font-size:12px;color:var(--muted);margin-bottom:4px">✉️ ${email}</div>` : ""}
@@ -8580,6 +8729,20 @@
 
       document.getElementById("scoreModal").classList.remove("hidden");
       document.body.style.overflow = "hidden";
+    }
+
+    // Admin redefine senha do cliente (cliente pediu via WhatsApp). Hash é irreversível → só reset.
+    async function resetSenhaCliente(tel, nome) {
+      const nova = prompt(`Nova senha para ${nome || tel} (mín. 4 caracteres):`);
+      if (nova === null) return;
+      if (String(nova).length < 4) { toast("Senha mínima de 4 caracteres", "err"); return; }
+      const adminSenha = prompt("Confirme a SENHA DE ADMIN para autorizar:");
+      if (adminSenha === null) return;
+      try {
+        const res = await apiPost("resetarSenhaCliente", { telefone: tel, novaSenha: nova, adminSenha });
+        if (res.ok) toast(`Senha de ${res.nome || nome || "cliente"} redefinida ✅`);
+        else toast(res.erro || "Não autorizado", "err");
+      } catch (e) { toast("Erro de conexão", "err"); }
     }
 
     // Mantém compatibilidade com chamadas antigas de openScoreModal (ex: page-score legada)
@@ -8849,12 +9012,16 @@
         const qtd = (allProds || []).filter(p => p["Status"] !== "Inativo" && (p["Categoria"] || "").trim() === cat.Nome).length;
         if (qtd > 0 && !confirm(`⚠️ Inativar "${cat.Nome}" vai ocultar ${qtd} produto(s) do site até você reativar. Continuar?`)) return;
       }
-      const label = novoStatus === "Ativo" ? "Categoria ativada ✅" : "Categoria inativada 🔴";
       try {
-        const res = await apiGet("salvarCategoria", { id: cat.ID, nome: cat.Nome, emoji: cat.Emoji, cor: cat.Cor_Hex, status: novoStatus });
+        const res = await apiGet("toggleCategoria", { id: cat.ID, nome: cat.Nome, emoji: cat.Emoji, cor: cat.Cor_Hex, status: novoStatus });
         if (res.ok) {
           cat.Status = novoStatus;
+          const n = res.afetados || 0;
+          const label = novoStatus === "Ativo"
+            ? `Categoria ativada ✅${n ? ` · ${n} produto(s) reativado(s)` : ""}`
+            : `Categoria inativada 🔴${n ? ` · ${n} produto(s) ocultado(s)` : ""}`;
           toast(label); renderCatPage();
+          allProds = []; await loadProds(); // cascata mexeu nos produtos
         } else toast(res.error || "Erro", "err");
       } catch (e) { toast("Erro de conexão", "err"); }
     }
@@ -8996,11 +9163,6 @@
 
         <!-- BLOCO COMPORTAMENTAL -->
         <div style="font-family:var(--H);font-weight:800;font-size:14px;margin-bottom:8px">🌐 Comportamento da Loja</div>
-        ${semDados ? `<div style="padding:12px 14px;background:rgba(0,188,212,.06);border:1px solid rgba(0,188,212,.2);border-radius:12px;margin-bottom:12px;font-size:12px;line-height:1.6">
-          <div style="font-weight:700;color:var(--c);margin-bottom:6px">📡 Aguardando visitas dos clientes</div>
-          <div style="color:var(--muted)">Acessos, carrinhos e conversão são registrados automaticamente quando clientes visitam a loja online. Compartilhe o link da loja para começar a coletar dados.</div>
-          ${storeBaseUrl ? `<div style="margin-top:8px;background:var(--d3);border-radius:8px;padding:6px 10px;font-size:11px;font-family:monospace;color:var(--fg);word-break:break-all">${storeBaseUrl}</div>` : ""}
-        </div>` : ""}
         <div class="an-cards">
           <div class="an-card"><div class="an-card-v" style="color:${m.totalAcessos?'var(--g)':'var(--muted)'}">${m.totalAcessos || 0}</div><div class="an-card-l">Acessos</div></div>
           <div class="an-card"><div class="an-card-v" style="color:${m.totalProdutosVistos?'var(--c)':'var(--muted)'}">${m.totalProdutosVistos || 0}</div><div class="an-card-l">Vistos</div></div>
