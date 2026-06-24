@@ -8701,7 +8701,11 @@
           🔑 Redefinir senha
         </button>` : ""}`;
 
+      const temSenha = c.temSenha === true || c.temSenha === "TRUE";
       document.getElementById("scoreModalContent").innerHTML = `
+        <div style="display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:700;padding:3px 10px;border-radius:20px;margin-bottom:8px;background:${temSenha?'rgba(0,230,118,.12)':'rgba(255,255,255,.06)'};color:${temSenha?'var(--g)':'var(--muted)'};border:1px solid ${temSenha?'rgba(0,230,118,.3)':'var(--border)'}">
+          ${temSenha ? '🔐 Conta com senha' : '○ Sem senha (não cadastrou)'}
+        </div>
         ${email ? `<div style="font-size:12px;color:var(--muted);margin-bottom:4px">✉️ ${email}</div>` : ""}
         ${end ? `<div style="font-size:12px;color:var(--muted);margin-bottom:${cidade ? "2px" : "10px"}">📍 ${end}</div>` : ""}
         ${cidade ? `<div style="font-size:12px;color:var(--muted);margin-bottom:10px">🏙️ ${cidade}${estado ? " - " + estado : ""}</div>` : ""}
