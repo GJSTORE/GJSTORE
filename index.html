@@ -596,6 +596,10 @@
       border-color: rgba(0, 230, 118, .3)
     }
 
+    @media (hover: hover) {
+      .rpc:hover { transform: scale(1.04); border-color: rgba(0,230,118,.4); box-shadow: 0 4px 16px rgba(0,230,118,.12); }
+    }
+
     .rpc-img {
       width: 100%;
       aspect-ratio: 1/1;
@@ -762,6 +766,11 @@
       border-color: rgba(0, 230, 118, .3)
     }
 
+    @media (hover: hover) {
+      .pc:hover { transform: scale(1.025); border-color: rgba(0,230,118,.4); box-shadow: 0 8px 28px rgba(0,230,118,.15); }
+      .pc:hover .pm img { transform: scale(1.08); }
+    }
+
     .pb {
       position: absolute;
       top: 7px;
@@ -924,6 +933,11 @@
       max-height: 94dvh;
       overflow-y: auto;
       animation: su .32s cubic-bezier(.16, 1, .3, 1)
+    }
+
+    @media (min-width: 600px) {
+      #po { align-items: center; justify-content: center; padding: 20px; }
+      #pm2 { border-radius: 22px; max-width: 500px; width: 100%; max-height: 88dvh; border-top: none; border: 1px solid var(--border); }
     }
 
     @keyframes su {
@@ -2574,7 +2588,7 @@
     }
     let _mcPedidos = {}, _reciboTxt = "";
     const TTL = 5 * 60 * 1000;
-    let cfg = {}, prods = [], allProds = [], fretes = [], banners = [];
+    let cfg = {}, prods = [], allProds = [], allCats = [], fretes = [], banners = [];
     let catA = "", searchQ = "", priceMax = 0, cart = JSON.parse(localStorage.getItem("gjc") || "[]");
     let cup = null, freteA = null, pagS = "PIX", prodA = null, cIdx = 0, cMedia = [];
     let banIdx = 0;
@@ -2674,17 +2688,12 @@
         // Categorias dinâmicas
         try {
           const cats = JSON.parse(localStorage.getItem("gj_cats") || "[]");
-          if (cats.length) renderDynCats(cats);
+          if (cats.length) { allCats = cats; renderDynCats(cats); applyF(); }
           const rc = await apiG("getCategorias");
           if (rc.categorias && rc.categorias.length) {
             localStorage.setItem("gj_cats", JSON.stringify(rc.categorias));
+            allCats = rc.categorias;
             renderDynCats(rc.categorias);
-            // Remove produtos de categorias inativas do allProds
-            const activeCatNames = new Set(
-              rc.categorias.filter(c => c.Status !== "Inativo").map(c => c.Nome)
-            );
-            allProds = allProds.filter(p => !p["Categoria"] || activeCatNames.has(p["Categoria"]));
-            prods = allProds;
             applyF();
           }
         } catch(e) {}
@@ -2829,6 +2838,10 @@
     }
     function applyF() {
       let l = allProds;
+      if (allCats.length) {
+        const activeCatSet = new Set(allCats.filter(c => String(c.Status || "Ativo") !== "Inativo").map(c => String(c.Nome || "").trim()));
+        l = l.filter(p => { const cat = String(p["Categoria"] || "").trim(); return cat && activeCatSet.has(cat); });
+      }
       if (catA) l = l.filter(p => (p["Categoria"] || "").trim().toLowerCase() === catA.trim().toLowerCase());
       if (priceMax > 0) l = l.filter(p => pf(p) <= priceMax);
       if (searchQ) l = l.filter(p =>
