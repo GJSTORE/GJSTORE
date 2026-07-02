@@ -4601,15 +4601,15 @@
           document.getElementById("s3").textContent = rp.pendentesTotal ?? "—";
           document.getElementById("s4").textContent = rp.estoqueBaixo ?? "—";
 
-          const lbl = homeFilter === "hoje" ? " (hoje)" : homeFilter === "7" ? " (7d)" : homeFilter === "90" ? " (90d)" : " (30d)";
+          const lbl = homeFilter === "hoje" ? "hoje" : homeFilter === "7" ? "7d" : homeFilter === "90" ? "90d" : "30d";
           const s5 = document.getElementById("s5"); if (s5) s5.textContent = (rp.ticketMedio || 0) > 0 ? fmt(rp.ticketMedio) : "—";
           const s6 = document.getElementById("s6"); if (s6) s6.textContent = rp.taxaConversao != null ? rp.taxaConversao + "%" : "—";
           const s7 = document.getElementById("s7"); if (s7) s7.textContent = rp.pedidosPeriodo ?? "—";
-          const s8 = document.getElementById("s8"); if (s8) s8.textContent = (rp.pedidosPeriodo ? Math.round(rp.pedidosPeriodo * (rp.taxaConversao || 0) / 100) : "—");
-          const el5 = document.getElementById("sl5"); if (el5) el5.textContent = "🎯 Ticket Médio" + lbl;
-          const el6 = document.getElementById("sl6"); if (el6) el6.textContent = "📈 Conversão" + lbl;
-          const el7 = document.getElementById("sl7"); if (el7) el7.textContent = "📦 Pedidos" + lbl;
-          const el8 = document.getElementById("sl8"); if (el8) el8.textContent = "✅ Finalizados" + lbl;
+          const s8 = document.getElementById("s8"); if (s8) s8.textContent = rp.pedidosFinalizados ?? "—";
+          const el5 = document.getElementById("sl5"); if (el5) el5.textContent = "🎯 TM " + lbl;
+          const el6 = document.getElementById("sl6"); if (el6) el6.textContent = "📈 Conv " + lbl;
+          const el7 = document.getElementById("sl7"); if (el7) el7.textContent = "📦 Ped " + lbl;
+          const el8 = document.getElementById("sl8"); if (el8) el8.textContent = "✅ Finaliz " + lbl;
 
           const pct = Math.min(100, Number(rp.progresso || 0));
           const fill = document.getElementById("metaBarFill"); if (fill) fill.style.width = pct + "%";
