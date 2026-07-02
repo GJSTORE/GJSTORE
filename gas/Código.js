@@ -1783,7 +1783,7 @@ function getMetricas(p) {
   // Combina e filtra pelo período
   const todas = rowsMetricas.concat(acessosNorm);
   const filtradas = todas.filter(function(r) {
-    const ts = r["Timestamp"] ? parseDateBR(String(r["Timestamp"]).split(" ")[0]) : null;
+    const ts = r["Timestamp"] ? parseDateBR(normalizarDataHora(r["Timestamp"]).split(" ")[0]) : null;
     if (!ts || ts < cutoff) return false;
     if (cutoffFim && ts > cutoffFim) return false;
     return true;
@@ -1798,7 +1798,7 @@ function getMetricas(p) {
   // Acessos por dia
   const diaMap = {};
   filtradas.filter(function(r) { return r["Acao"] === "PAGE_VIEW"; }).forEach(function(r) {
-    const d = String(r["Timestamp"] || "").split(" ")[0];
+    const d = normalizarDataHora(r["Timestamp"]).split(" ")[0];
     if (d) diaMap[d] = (diaMap[d] || 0) + 1;
   });
   const acessosPorDia = Object.entries(diaMap)
@@ -1824,7 +1824,8 @@ function getMetricas(p) {
   const horaMap = {};
   for (var h = 0; h < 24; h++) horaMap[h] = 0;
   filtradas.forEach(function(r) {
-    const partes = String(r["Timestamp"] || "").split(" ");
+    const n = normalizarDataHora(r["Timestamp"]);
+    const partes = n ? n.split(" ") : [];
     if (partes.length >= 2) {
       const hora = Number(partes[1].split(":")[0]);
       if (!isNaN(hora)) horaMap[hora] = (horaMap[hora] || 0) + 1;
@@ -2252,9 +2253,9 @@ function getKPIs() {
 
     // Faturamento real = soma das baixas do mês (pagas) — Liquidado também é recebido
     const baixasMes = baixas.filter(function(b) {
-      const dt = String(b["Data_Baixa_Efetiva"] || "");
+      const dt = normalizarDataHora(b["Data_Baixa_Efetiva"]);
       if (!dt) return false;
-      const parts = dt.split("/");
+      const parts = dt.split(" ")[0].split("/");
       if (parts.length < 3) return false;
       return Number(parts[1]) - 1 === mesAtual && Number(parts[2]) === anoAtual
              && String(b["Status_Pagamento"] || "") !== "Pendente";
@@ -2267,7 +2268,8 @@ function getKPIs() {
 
     // Pedidos do mês
     const pedidosMes = pedidos.filter(function(p) {
-      const dt = String(p["Data/Hora"] || "");
+      const dt = normalizarDataHora(p["Data/Hora"]);
+      if (!dt) return false;
       const parts = dt.split("/");
       if (parts.length < 2) return false;
       return Number(parts[1]) - 1 === mesAtual && (parts[2] && Number(parts[2].split(" ")[0]) === anoAtual);
@@ -2331,7 +2333,7 @@ function getResumoPeriodo(p) {
   const baixas = getSheet("Financeiro_Fluxo") ? sheetToObjects("Financeiro_Fluxo") : [];
 
   const hojeStr = Utilities.formatDate(new Date(), "America/Sao_Paulo", "dd/MM/yyyy");
-  const pedsHoje = pedidos.filter(function(p) { return String(p["Data/Hora"] || "").startsWith(hojeStr) && p["Status"] !== "Cancelado"; });
+  const pedsHoje = pedidos.filter(function(p) { return normalizarDataHora(p["Data/Hora"]).startsWith(hojeStr) && p["Status"] !== "Cancelado"; });
   const fatHoje = pedsHoje.reduce(function(s,p) { return s + Number(p["Total (R$)"] || 0); }, 0);
   const pendentesTotal = pedidos.filter(function(p) { return p["Status"] === "Pendente"; }).length;
   const estoqueBaixo = prods.filter(function(p) { return p["Estoque"] !== null && p["Estoque"] !== undefined && Number(p["Estoque"]) <= 3; });
@@ -3197,7 +3199,9 @@ function getAnalytics(p) {
   if (!dataInicio || !dataFim) return { error: "Datas inválidas" };
   function noRange(dtStr) {
     if (!dtStr) return false;
-    const parts = String(dtStr).split(" ")[0].split("/");
+    if (dtStr instanceof Date) return dtStr >= dataInicio && dtStr <= dataFim;
+    const s = String(dtStr).trim();
+    const parts = s.split(" ")[0].split("/");
     if (parts.length < 3) return false;
     const dt = new Date(Number(parts[2]),Number(parts[1])-1,Number(parts[0]));
     return dt >= dataInicio && dt <= dataFim;
@@ -3240,11 +3244,11 @@ function getAnalytics(p) {
     .map(function(e){return{nome:e[0],qtd:e[1].qtd,faturamento:e[1].fat};});
   const diaFatMap = {};
   baixasFilt.filter(function(b){return b["Status_Pagamento"]!=="Pendente"&&b["Status_Pagamento"]!=="Liquidado";})
-    .forEach(function(b){const dt=String(b["Data_Baixa_Efetiva"]||"").split(" ")[0];if(dt)diaFatMap[dt]=(diaFatMap[dt]||0)+Number(b["Valor_Final_Recebido"]||0);});
+    .forEach(function(b){const dt=normalizarDataHora(b["Data_Baixa_Efetiva"]).split(" ")[0];if(dt)diaFatMap[dt]=(diaFatMap[dt]||0)+Number(b["Valor_Final_Recebido"]||0);});
   const faturamentoDiario = Object.entries(diaFatMap).sort(function(a,b){return a[0].localeCompare(b[0]);})
     .map(function(e){return{data:e[0],valor:e[1]};});
   const pedsPorMes = {};
-  pedidos.forEach(function(pd){const parts=String(pd["Data/Hora"]||"").split(" ")[0].split("/");if(parts.length<3)return;const k=parts[1]+"/"+parts[2];pedsPorMes[k]=(pedsPorMes[k]||0)+1;});
+  pedidos.forEach(function(pd){const parts=normalizarDataHora(pd["Data/Hora"]).split(" ")[0].split("/");if(parts.length<3)return;const k=parts[1]+"/"+parts[2];pedsPorMes[k]=(pedsPorMes[k]||0)+1;});
   const pedidosPorMes = Object.entries(pedsPorMes).sort(function(a,b){return a[0].localeCompare(b[0]);}).slice(-6).map(function(e){return{mes:e[0],qtd:e[1]};});
   const totalClientes = getSheet("CLIENTES") ? (getSheet("CLIENTES").getLastRow()-1) : 0;
   const meta = Number(getConfigValue("META_MENSAL_RS")||5000);
@@ -3253,7 +3257,7 @@ function getAnalytics(p) {
   const em30=new Date(agora2);em30.setDate(agora2.getDate()+30);
   let prev7=0, prev30=0;
   baixas.filter(function(b){return b["Status_Pagamento"]==="Pendente";}).forEach(function(b){
-    const dv=parseDateBR(String(b["Proxima_Vencimento"]||""));if(!dv)return;
+    const dv=parseDateBR(normalizarDataHora(b["Proxima_Vencimento"]).split(" ")[0]);if(!dv)return;
     dv.setHours(0,0,0,0);
     const val=Number(b["Saldo_Restante"]||b["Valor_Original"]||0);
     if(dv>=agora2&&dv<=em7)prev7+=val;else if(dv>em7&&dv<=em30)prev30+=val;
