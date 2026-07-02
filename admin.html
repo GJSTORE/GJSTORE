@@ -504,6 +504,13 @@
     }
 
     /* DASHBOARD */
+    .hp-filter {
+      background: var(--d2); border: 1px solid var(--border); color: var(--muted);
+      border-radius: 20px; padding: 5px 14px; font-size: 12px; font-weight: 600;
+      cursor: pointer; transition: all .15s; font-family: var(--H);
+    }
+    .hp-filter.on { background: rgba(0,230,118,.15); border-color: var(--g); color: var(--g); }
+    .hp-filter:active { transform: scale(.94); }
     .sgrid {
       display: grid;
       grid-template-columns: 1fr 1fr;
@@ -2863,6 +2870,8 @@
     .meta-bar-val { color: var(--g); font-family: var(--H); font-weight: 800; }
     .meta-bar-track { height: 8px; background: var(--d3); border-radius: 6px; overflow: hidden; }
     .meta-bar-fill { height: 100%; border-radius: 6px; transition: width .5s ease; }
+    .meta-edit-btn { background: none; border: 1px solid var(--border); border-radius: 8px; cursor: pointer; font-size: 13px; padding: 2px 6px; line-height: 1; color: var(--muted); transition: all .15s; }
+    .meta-edit-btn:hover { background: var(--d3); color: var(--g); }
 
     /* KPI extras */
     .sgrid-ext { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 10px; }
@@ -2981,6 +2990,13 @@
     <div class="page on" id="page-home">
       <!-- Saudação -->
       <div id="homeGreeting"></div>
+      <!-- Filtro de período -->
+      <div style="display:flex;gap:5px;margin-bottom:10px;flex-wrap:wrap">
+        <button class="hp-filter on" data-p="30" onclick="loadHome('30')">30d</button>
+        <button class="hp-filter" data-p="hoje" onclick="loadHome('hoje')">Hoje</button>
+        <button class="hp-filter" data-p="7" onclick="loadHome('7')">7d</button>
+        <button class="hp-filter" data-p="90" onclick="loadHome('90')">90d</button>
+      </div>
       <!-- Stats -->
       <div class="sgrid">
         <div class="scard sc-g clickable" onclick="window.location.href=CFG_GESTAO_URL"><div class="sico">📦</div><div class="sval" id="s1">—</div><div class="slbl">Pedidos Hoje</div></div>
@@ -2990,16 +3006,24 @@
       </div>
       <!-- KPIs extras -->
       <div class="sgrid-ext">
-        <div class="scard-sm"><div class="sv" id="s5" style="color:var(--c)">—</div><div class="sl">🎯 Ticket Médio/mês</div></div>
-        <div class="scard-sm"><div class="sv" id="s6" style="color:var(--g)">—</div><div class="sl">📈 Conversão do mês</div></div>
-        <div class="scard-sm"><div class="sv" id="s7" style="color:var(--o)">—</div><div class="sl">📦 Pedidos do mês</div></div>
-        <div class="scard-sm"><div class="sv" id="s8" style="color:var(--g)">—</div><div class="sl">✅ Finalizados/mês</div></div>
+        <div class="scard-sm"><div class="sv" id="s5" style="color:var(--c)">—</div><div class="sl" id="sl5">🎯 Ticket Médio</div></div>
+        <div class="scard-sm"><div class="sv" id="s6" style="color:var(--g)">—</div><div class="sl" id="sl6">📈 Conversão</div></div>
+        <div class="scard-sm"><div class="sv" id="s7" style="color:var(--o)">—</div><div class="sl" id="sl7">📦 Pedidos</div></div>
+        <div class="scard-sm"><div class="sv" id="s8" style="color:var(--g)">—</div><div class="sl" id="sl8">✅ Finalizados</div></div>
       </div>
       <!-- Meta Mensal -->
       <div class="meta-bar-wrap" id="metaBarWrap">
         <div class="meta-bar-hdr">
-          <span class="meta-bar-lbl">🎯 Meta Mensal</span>
-          <span class="meta-bar-val" id="metaValTxt">—</span>
+          <span class="meta-bar-lbl">🎯 Meta</span>
+          <span style="display:flex;align-items:center;gap:6px">
+            <span class="meta-bar-val" id="metaValTxt">—</span>
+            <button class="meta-edit-btn" id="metaEditBtn" onclick="toggleMetaEdit()" title="Editar meta">⚙️</button>
+          </span>
+        </div>
+        <div id="metaEditRow" style="display:none;margin-bottom:6px;gap:6px;align-items:center">
+          <input class="fi" id="metaEditInput" type="number" step="100" style="flex:1;padding:6px 10px;font-size:13px" placeholder="Valor da meta mensal">
+          <button class="savebtn" style="padding:6px 12px;font-size:12px" onclick="salvarMeta()">Salvar</button>
+          <button style="background:transparent;border:none;color:var(--muted);cursor:pointer;font-size:12px" onclick="toggleMetaEdit()">Cancelar</button>
         </div>
         <div class="meta-bar-track"><div class="meta-bar-fill" id="metaBarFill" style="width:0%;background:linear-gradient(90deg,var(--g),var(--c))"></div></div>
         <div style="display:flex;justify-content:space-between;font-size:10px;color:var(--muted);margin-top:5px">
@@ -3569,6 +3593,16 @@
   <!-- ══ PAGE: AUTOMAÇÕES ═══════════════════════════════════════════ -->
   <div class="page" id="page-automacoes">
     <div style="font-family:var(--H);font-weight:800;font-size:17px;margin-bottom:14px">🤖 Automações</div>
+
+    <!-- META MENSAL -->
+    <div style="background:var(--d2);border-radius:14px;padding:16px;border:1px solid var(--border);margin-bottom:14px">
+      <div style="font-family:var(--H);font-weight:700;font-size:13px;margin-bottom:8px">🎯 Meta Mensal de Faturamento</div>
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+        <input class="fi" id="autoMetaInput" type="number" step="100" style="flex:1;min-width:140px;padding:7px 10px;font-size:13px" placeholder="Valor da meta (R$)">
+        <button class="savebtn" style="padding:7px 14px;font-size:12px" onclick="salvarMetaAuto()">💾 Salvar Meta</button>
+      </div>
+      <div style="font-size:11px;color:var(--muted);margin-top:6px">Define o valor da meta mensal usada na barra de progresso do dashboard. Padrão: R$ 5.000.</div>
+    </div>
 
     <!-- TRIGGERS -->
     <div style="background:var(--d2);border-radius:14px;padding:16px;border:1px solid var(--border);margin-bottom:14px">
@@ -4338,6 +4372,59 @@
       if (chev) { if (open) chev.classList.add("open"); else chev.classList.remove("open"); }
     }
 
+    // META EDITOR
+    function toggleMetaEdit() {
+      const row = document.getElementById("metaEditRow");
+      const show = row.style.display !== "flex";
+      row.style.display = show ? "flex" : "none";
+      if (show) {
+        const inp = document.getElementById("metaEditInput");
+        const valTxt = document.getElementById("metaValTxt");
+        const cur = (valTxt.textContent || "").split("/").pop().trim();
+        const metaVal = cur ? Number(cur.replace(/[^0-9.,]/g, "").replace(",", ".")) : "";
+        inp.value = metaVal || "";
+        inp.focus();
+      }
+    }
+    let _savingMeta = false;
+    async function salvarMeta() {
+      if (_savingMeta) return;
+      const inp = document.getElementById("metaEditInput");
+      const val = inp.value.trim();
+      if (!val || isNaN(Number(val)) || Number(val) <= 0) { toast("Valor inválido", "err"); return; }
+      _savingMeta = true;
+      try {
+        const r = await apiGet("salvarConfigValor", { chave: "META_MENSAL_RS", valor: String(Math.round(Number(val))) });
+        if (r.ok) { toast("Meta salva: R$ " + fmt(Number(val))); toggleMetaEdit(); loadHome(homeFilter); }
+        else toast(r.error || "Erro", "err");
+      } catch(e) { toast("Erro de conexão", "err"); }
+      _savingMeta = false;
+    }
+    async function loadAutoMeta() {
+      try {
+        const r = await apiGet("getConfig");
+        if (r && r.config) {
+          const metaVal = r.config.META_MENSAL_RS || "";
+          const inp = document.getElementById("autoMetaInput");
+          if (inp) inp.value = metaVal;
+        }
+      } catch(e) {}
+    }
+    let _savingMetaAuto = false;
+    async function salvarMetaAuto() {
+      if (_savingMetaAuto) return;
+      const inp = document.getElementById("autoMetaInput");
+      const val = inp.value.trim();
+      if (!val || isNaN(Number(val)) || Number(val) <= 0) { toast("Valor inválido", "err"); return; }
+      _savingMetaAuto = true;
+      try {
+        const r = await apiGet("salvarConfigValor", { chave: "META_MENSAL_RS", valor: String(Math.round(Number(val))) });
+        if (r.ok) toast("🎯 Meta salva: R$ " + fmt(Number(val)));
+        else toast(r.error || "Erro", "err");
+      } catch(e) { toast("Erro de conexão", "err"); }
+      _savingMetaAuto = false;
+    }
+
     // LOGIN
     function setLoginTipo(tipo) {
       _loginTipo = tipo;
@@ -4424,7 +4511,7 @@
       if (hash && document.getElementById("page-" + hash)) {
         goPage(hash, document.getElementById("nav-" + hash));
       } else {
-        loadHome();
+        loadHome('30');
       }
     }
 
@@ -4450,7 +4537,7 @@
     }
 
     // NAVIGATION
-    const MAIS_PAGES = ["doc", "mkt", "cat", "analytics", "cupons", "op", "clientes"];
+    const MAIS_PAGES = ["doc", "mkt", "cat", "analytics", "cupons", "op", "clientes", "automacoes"];
     function goPage(id, btn) {
       // score foi unificado em clientes
       if (id === "score") { goPage("clientes", btn); return; }
@@ -4466,7 +4553,7 @@
       } else if (btn) {
         btn.classList.add("on");
       }
-      if (id === "home") loadHome();
+      if (id === "home") loadHome(homeFilter);
       if (id === "prod") loadProds();
       if (id === "ped") loadPeds();
       if (id === "fin") loadFin();
@@ -4477,6 +4564,7 @@
       if (id === "cupons") loadCupons();
       if (id === "op") loadOperadores();
       if (id === "clientes") loadClientes();
+      if (id === "automacoes") loadAutoMeta();
     }
 
     function openMaisSheet() {
@@ -4489,75 +4577,83 @@
     }
 
     // HOME
-    async function loadHome() {
+    let homeFilter = "30";
+    async function loadHome(periodo) {
+      if (periodo) {
+        homeFilter = periodo;
+        document.querySelectorAll(".hp-filter").forEach(b => b.classList.toggle("on", b.dataset.p === periodo));
+      }
       renderGreeting();
       updateOnlineStatus();
       try {
-        const [pr, pp, cf, kpis] = await Promise.all([
+        const [pr, pp, rp] = await Promise.all([
           apiGet("getProdutos"),
           apiGet("getPedidos"),
-          apiGet("getPrevisaoCaixa"),
-          apiGet("getKPIs").catch(() => null)
+          apiGet("getResumoPeriodo", { periodo: homeFilter }).catch(() => null)
         ]);
         const prods = (pr && Array.isArray(pr.produtos)) ? pr.produtos : [];
         const peds  = (pp && Array.isArray(pp.pedidos))  ? pp.pedidos  : [];
         allProds = prods; allPeds = peds;
 
-        const hoje = new Date().toLocaleDateString("pt-BR");
-        const hojeP = peds.filter(p => String(p["Data/Hora"] || "").startsWith(hoje));
-        const fat = hojeP.reduce((s, p) => s + Number(p["Total (R$)"] || 0), 0);
-        const pend = peds.filter(p => p["Status"] === "Pendente");
-        const low = prods.filter(p => p["Estoque"] !== null && p["Estoque"] !== undefined && Number(p["Estoque"]) <= 3);
+        if (rp && !rp.error) {
+          document.getElementById("s1").textContent = rp.pedidosHoje ?? "—";
+          document.getElementById("s2").textContent = (rp.faturamentoHoje || 0) > 0 ? fmt(rp.faturamentoHoje) : "R$ 0";
+          document.getElementById("s3").textContent = rp.pendentesTotal ?? "—";
+          document.getElementById("s4").textContent = rp.estoqueBaixo ?? "—";
 
-        document.getElementById("s1").textContent = hojeP.length;
-        document.getElementById("s2").textContent = fat > 0 ? fmt(fat) : "R$ 0";
-        document.getElementById("s3").textContent = pend.length;
-        document.getElementById("s4").textContent = low.length;
+          const lbl = homeFilter === "hoje" ? " (hoje)" : homeFilter === "7" ? " (7d)" : homeFilter === "90" ? " (90d)" : " (30d)";
+          const s5 = document.getElementById("s5"); if (s5) s5.textContent = (rp.ticketMedio || 0) > 0 ? fmt(rp.ticketMedio) : "—";
+          const s6 = document.getElementById("s6"); if (s6) s6.textContent = rp.taxaConversao != null ? rp.taxaConversao + "%" : "—";
+          const s7 = document.getElementById("s7"); if (s7) s7.textContent = rp.pedidosPeriodo ?? "—";
+          const s8 = document.getElementById("s8"); if (s8) s8.textContent = (rp.pedidosPeriodo ? Math.round(rp.pedidosPeriodo * (rp.taxaConversao || 0) / 100) : "—");
+          const el5 = document.getElementById("sl5"); if (el5) el5.textContent = "🎯 Ticket Médio" + lbl;
+          const el6 = document.getElementById("sl6"); if (el6) el6.textContent = "📈 Conversão" + lbl;
+          const el7 = document.getElementById("sl7"); if (el7) el7.textContent = "📦 Pedidos" + lbl;
+          const el8 = document.getElementById("sl8"); if (el8) el8.textContent = "✅ Finalizados" + lbl;
 
-        // KPIs extras
-        if (kpis && !kpis.error) {
-          const s5 = document.getElementById("s5"); if (s5) s5.textContent = kpis.ticketMedio ? fmt(kpis.ticketMedio) : "—";
-          const s6 = document.getElementById("s6"); if (s6) s6.textContent = kpis.taxaConversao != null ? kpis.taxaConversao.toFixed(1) + "%" : "—";
-          const s7 = document.getElementById("s7"); if (s7) s7.textContent = kpis.pedidosMes ?? "—";
-          const s8 = document.getElementById("s8"); if (s8) s8.textContent = kpis.pedidosFinalizados ?? "—";
-          // Meta bar
-          const pct = Math.min(100, Number(kpis.progresso || 0));
+          const pct = Math.min(100, Number(rp.progresso || 0));
           const fill = document.getElementById("metaBarFill"); if (fill) fill.style.width = pct + "%";
           const pctEl = document.getElementById("metaProgPct"); if (pctEl) pctEl.textContent = pct.toFixed(0) + "%";
-          const tgt = document.getElementById("metaTarget"); if (tgt) tgt.textContent = "Meta: " + fmt(kpis.meta || 0);
-          const valTxt = document.getElementById("metaValTxt"); if (valTxt) valTxt.textContent = fmt(kpis.fatMes || 0) + " / " + fmt(kpis.meta || 0);
+          const tgt = document.getElementById("metaTarget"); if (tgt) tgt.textContent = "Meta: " + fmt(Math.round(rp.meta || 0));
+          const valTxt = document.getElementById("metaValTxt"); if (valTxt) valTxt.textContent = fmt(Math.round(rp.fatPeriodo || 0)) + " / " + fmt(Math.round(rp.meta || 0));
           const wrap = document.getElementById("metaBarWrap"); if (wrap) wrap.style.display = "block";
-        }
 
-        if (cf) {
-          const p7 = cf.previsao7 || {}; const p30 = cf.previsao30 || {};
+          const p7 = rp.previsao7 || {}; const p30 = rp.previsao30 || {};
           document.getElementById("cf7").textContent = fmt(p7.total || 0);
           document.getElementById("cf7c").textContent = (p7.count || 0) + " pedidos";
           document.getElementById("cf30").textContent = fmt(p30.total || 0);
           document.getElementById("cf30c").textContent = (p30.count || 0) + " pedidos";
+
+          const tp = rp.topProdutos || [];
+          const tpEl = document.getElementById("homeTopProd");
+          tpEl.innerHTML = tp.length ? tp.map(t => `<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--border);font-size:13px"><span>${t.nome}</span><span style="color:var(--g);font-weight:700">${t.qtd} un.</span></div>`).join("") : `<div class="empty" style="color:var(--muted)">Nenhum produto vendido no período</div>`;
+
+          const rec = document.getElementById("drecentes");
+          const recentes = rp.pedidosRecentes || [];
+          rec.innerHTML = recentes.slice(0, 6).map(p => `
+            <div class="rcard" data-ped-id="${p.id || ""}" style="cursor:pointer">
+              <div class="rc-l"><div class="rc-nm">${p.cliente || "—"}</div><div class="rc-dt">${p.data || ""}</div></div>
+              <div class="rc-val">${fmt(p.total)}</div>
+              <div class="badge ${bc(p.status)}">${p.status || ""}</div>
+            </div>`).join("") || `<div class="empty">Nenhum pedido no período</div>`;
         }
 
-        buildHomeAlertas(prods, peds);
-        buildTopProds(peds);
+        const pend = peds.filter(p => p["Status"] === "Pendente");
+        const low = prods.filter(p => p["Estoque"] !== null && p["Estoque"] !== undefined && Number(p["Estoque"]) <= 3);
 
-        const rec = document.getElementById("drecentes");
-        rec.innerHTML = peds.slice(0, 6).map(p => {
-          return `<div class="rcard" data-ped-id="${p["ID Pedido"] || ""}" style="cursor:pointer">
-        <div class="rc-l">
-          <div class="rc-nm">${p["Nome Cliente"] || "—"}</div>
-          <div class="rc-dt">${p["Data/Hora"] || ""}</div>
-        </div>
-        <div class="rc-val">${fmt(p["Total (R$)"])}</div>
-        <div class="badge ${bc(p["Status"])}">${p["Status"] || ""}</div>
-      </div>`;
-        }).join("") || `<div class="empty">Nenhum pedido ainda</div>`;
+        buildHomeAlertas(prods, peds);
+        if (!rp || rp.error) {
+          document.getElementById("s1").textContent = "—";
+          document.getElementById("s2").textContent = "—";
+          document.getElementById("s3").textContent = pend.length;
+          document.getElementById("s4").textContent = low.length;
+          buildTopProds(peds);
+          const rec = document.getElementById("drecentes");
+          rec.innerHTML = peds.slice(0, 6).map(p => `<div class="rcard" data-ped-id="${p["ID Pedido"] || ""}" style="cursor:pointer"><div class="rc-l"><div class="rc-nm">${p["Nome Cliente"] || "—"}</div><div class="rc-dt">${p["Data/Hora"] || ""}</div></div><div class="rc-val">${fmt(p["Total (R$)"])}</div><div class="badge ${bc(p["Status"])}">${p["Status"] || ""}</div></div>`).join("") || `<div class="empty">Nenhum pedido ainda</div>`;
+        }
 
         const ls = document.getElementById("dlowstock");
-        ls.innerHTML = low.map(p => `
-      <div class="ls-row">
-        <div class="ls-nm">${p["Nome do Produto"] || "—"}</div>
-        <div class="ls-qty">${p["Estoque"]} un.</div>
-      </div>`).join("") || `<div class="empty" style="color:var(--g)">✅ Estoque OK</div>`;
+        ls.innerHTML = low.map(p => `<div class="ls-row"><div class="ls-nm">${p["Nome do Produto"] || "—"}</div><div class="ls-qty">${p["Estoque"]} un.</div></div>`).join("") || `<div class="empty" style="color:var(--g)">✅ Estoque OK</div>`;
 
         loadCRM();
         loadAband();
