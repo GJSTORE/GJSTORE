@@ -2673,10 +2673,14 @@
           if (cats.length) { allCats = cats; renderDynCats(cats); applyF(); }
           const rc = await apiG("getCategorias");
           if (rc.categorias && rc.categorias.length) {
-            localStorage.setItem("gj_cats", JSON.stringify(rc.categorias));
-            allCats = rc.categorias;
-            renderDynCats(rc.categorias);
-            applyF();
+            const novo = JSON.stringify(rc.categorias);
+            // E5.2 anti-flicker: só re-renderiza se categorias mudaram de fato
+            if (novo !== JSON.stringify(cats)) {
+              localStorage.setItem("gj_cats", novo);
+              allCats = rc.categorias;
+              renderDynCats(rc.categorias);
+              applyF();
+            }
           }
         } catch(e) {}
 
@@ -3264,7 +3268,7 @@
       const msg = `🛒 *GJ Store*%0A%0A👤 *${encodeURIComponent(nome)}*%0A📱 ${encodeURIComponent(tel)}${endInfo}${obsInfo}%0A%0A📦 ${encodeURIComponent(itensLeg)}%0A%0A🚚 ${encodeURIComponent(freteA?.tipo || "")} | 💳 ${encodeURIComponent(pagS + parcelaInfo)}%0A💰 *Total: ${encodeURIComponent(fmt(tot))}*`;
       const dataHoje = new Date().toLocaleDateString("pt-BR");
       const itensFmt = cart.map(c => `• ${c.nome}${c.v ? " (" + c.v + ")" : ""} x${c.qty} — ${fmt(c.pfv)}`).join("%0A");
-      const recibo = encodeURIComponent(`🛒 GJ Store — Pedido Confirmado ✅\n─────────────────────\n👤 ${nome}\n📱 ${tel}${endVal ? "\n📍 " + endVal : ""}\n─────────────────────\n📦 ITENS:\n`) + itensFmt + encodeURIComponent(`\n─────────────────────\n🚚 ${freteA?.tipo || "Retirada"}${fv > 0 ? " (" + fmt(fv) + ")" : ""}\n💳 ${pagS + parcelaInfo}\n💰 Total: ${fmt(tot)}\n─────────────────────\n📅 Data: ${dataHoje}\nGuarde como comprovante! 📎`);
+      const recibo = encodeURIComponent(`🛒 GJ Store — Pedido Confirmado ✅\n─────────────────────\n👤 ${nome}\n📱 ${tel}${endVal ? "\n📍 " + endVal : ""}\n─────────────────────\n📦 ITENS:\n`) + itensFmt + encodeURIComponent(`\n─────────────────────\n🚚 ${freteA?.tipo || "Retirada"}${fv > 0 ? " (" + fmt(fv) + ")" : ""}\n💳 ${pagS + parcelaInfo}\n💰 Total: ${fmt(tot)}\n─────────────────────\n📅 Data: ${dataHoje}\nGuarde como comprovante! 📎\n\n_MENSAGEM AUTOMÁTICA — SISTEMA GJ STORE_`);
       document.getElementById("okmsg").textContent = `Pedido de ${fmt(tot)} recebido! Guilherme entrará em contato pelo WhatsApp em breve.${!orderSynced ? " ⚠️ (confirme pelo WhatsApp)" : ""}`;
       document.getElementById("okwpp").href = `https://wa.me/${wpp}?text=${msg}`;
       document.getElementById("okrecibo").href = `https://wa.me/me?text=${recibo}`;
