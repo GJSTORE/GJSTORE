@@ -1,0 +1,24 @@
+# === REPO GJSTORE (catálogo/loja) — só serve index.html ===
+# Arquivos do painel admin vivem no repo GJSTORE-ADM.
+# Ficam nesta pasta (mono-workspace) só como fonte de edição;
+# vão pro ar via deploy.sh, NUNCA por push deste repo.
+# Ver REPO-MAP.md.
+
+admin.html
+gestao_unificada.html
+admin/
+sw-admin.js
+manifest-admin.json
+admin-icon-192.png
+admin-icon-512.png
+
+# cérebro / docs internas — NUNCA publicar no GitHub Pages público
+mind/
+CLAUDE.md
+MIND.md
+_assets/
+gas/.clasp.json
+
+# scratch / backups locais
+*.original.md
+*.sync-conflict*
