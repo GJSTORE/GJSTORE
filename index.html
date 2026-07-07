@@ -3337,7 +3337,7 @@
       localStorage.setItem("gj_user", JSON.stringify({ nome, tel: tel.replace(/\D/g,""), ts: Date.now() }));
       updateUserChip();
       dismissWelcome();
-      showToast("Bem-vindo(a), " + nome + "! 👋");
+      showToast("Bem-vindo(a), " + nome.split(" ")[0] + "! 👋");
       try {
         const u = new URL(API);
         u.searchParams.set("action", "logAcesso");
@@ -3497,7 +3497,7 @@
         const chip = document.getElementById("userChip");
         if (!chip) return;
         if (u && u.nome) {
-          document.getElementById("userChipName").textContent = u.nome;
+          document.getElementById("userChipName").textContent = u.nome.split(" ")[0];
           chip.style.display = "flex";
         } else {
           chip.style.display = "none";

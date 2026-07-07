@@ -104,7 +104,20 @@ function handleAction(p) {
       case "testarSLA":            verificarSLA(); result = { ok: true, msg: "SLA verificado" }; break;
       case "testarDigest":         enviarMorningDigest(); result = { ok: true, msg: "Digest enviado" }; break;
       case "testarVencimento":     alertaVencimentoAmanha(); result = { ok: true, msg: "Alerta D-1 enviado" }; break;
+      case "excluirPedidoHard":    result = excluirPedidoHard(p);               break;
+      case "getLogAcoes":          result = getLogAcoes(p);                     break;
+      case "analyticsHealth":      result = analyticsHealth();                  break;
       default:                     result = { error: "Ação desconhecida: " + action };
+    }
+    // E1.2: auditoria automática de toda escrita sensível (excluirPedidoHard registra interno)
+    const AUDIT = { novoPedido: "Pedido", atualizarStatus: "Pedido", editarPedido: "Pedido",
+      darBaixa: "Baixa", deletarPedido: "Pedido", salvarProduto: "Produto", deletarProduto: "Produto",
+      toggleCategoria: "Categoria", salvarCategoria: "Categoria", deletarCategoria: "Categoria",
+      salvarCliente: "Cliente", deletarCliente: "Cliente", salvarCupom: "Cupom", vendaPDV: "Pedido" };
+    if (AUDIT[action] && result && result.ok) {
+      registrarAcao(p.operador, action, AUDIT[action],
+        p.id || p.idPedido || (result.idPedido || result.id) || "",
+        p.status ? "status→" + p.status : (p.valorPago ? "valor R$" + p.valorPago : ""));
     }
   } catch (err) {
     result = { error: err.message };
@@ -768,6 +781,95 @@ function deletarPedido(id) {
   if (col < 1) return { error: "Coluna Status não encontrada" };
   found.sh.getRange(found.rowNum, col).setValue("Deletado");
   return { ok: true };
+}
+
+// ── E1.2: AUDITORIA (Log_Acoes — quem/quando/oquê; separado de Logs_Metricas) ──
+function registrarAcao(operador, acao, entidade, ref, detalhe) {
+  try {
+    let sh = SS.getSheetByName("Log_Acoes");
+    if (!sh) {
+      sh = SS.insertSheet("Log_Acoes");
+      sh.getRange(1, 1, 1, 6).setValues([["Timestamp", "Operador", "Acao", "Entidade", "ID_Ref", "Detalhe"]]);
+      sh.setFrozenRows(1);
+    }
+    sh.appendRow([nowBR(), String(operador || "—"), String(acao || ""), String(entidade || ""), String(ref || ""), String(detalhe || "")]);
+  } catch (e) { /* auditoria nunca derruba a operação */ }
+}
+
+function getLogAcoes(p) {
+  const rows = sheetToObjects("Log_Acoes") || [];
+  const lim = Number((p && p.limite) || 300);
+  return { ok: true, logs: rows.slice(-lim).reverse() };
+}
+
+// ── E1.1 + E1.5: EXCLUSÃO REAL (linha some da aba; backup em _Lixeira_*) ──
+function excluirPedidoHard(p) {
+  if (!_checkAdmin(p)) return { ok: false, erro: "Não autorizado — senha admin incorreta" };
+  const id = String(p.id || "");
+  const found = findRow("Pedidos", 0, id);
+  if (!found) return { ok: false, erro: "Pedido não encontrado" };
+
+  const headers = getHeaders("Pedidos");
+  let lix = SS.getSheetByName("_Lixeira_Pedidos");
+  if (!lix) {
+    lix = SS.insertSheet("_Lixeira_Pedidos");
+    lix.getRange(1, 1, 1, headers.length + 1).setValues([["Excluido_Em"].concat(headers)]);
+    lix.setFrozenRows(1);
+  }
+  const rowVals = found.sh.getRange(found.rowNum, 1, 1, headers.length).getValues()[0];
+  lix.appendRow([nowBR()].concat(rowVals));
+  found.sh.deleteRow(found.rowNum);
+
+  // E1.5: baixas do pedido → backup em _Lixeira_Financeiro + remoção (sem órfãs)
+  let baixasRemovidas = 0;
+  const fin = SS.getSheetByName("Financeiro_Fluxo");
+  if (fin && fin.getLastRow() > 1) {
+    const fh = fin.getRange(1, 1, 1, fin.getLastColumn()).getValues()[0].map(String);
+    const colPed = fh.indexOf("ID_Pedido");
+    if (colPed >= 0) {
+      let lixF = SS.getSheetByName("_Lixeira_Financeiro");
+      if (!lixF) {
+        lixF = SS.insertSheet("_Lixeira_Financeiro");
+        lixF.getRange(1, 1, 1, fh.length + 1).setValues([["Excluido_Em"].concat(fh)]);
+        lixF.setFrozenRows(1);
+      }
+      const data = fin.getDataRange().getValues();
+      for (let i = data.length - 1; i >= 1; i--) {
+        if (String(data[i][colPed]) === id) {
+          lixF.appendRow([nowBR()].concat(data[i]));
+          fin.deleteRow(i + 1);
+          baixasRemovidas++;
+        }
+      }
+    }
+  }
+  registrarAcao(p.operador, "EXCLUIR_PEDIDO_HARD", "Pedido", id,
+    "linha removida + " + baixasRemovidas + " baixa(s) → backup em _Lixeira_Pedidos/_Lixeira_Financeiro");
+  return { ok: true, baixasRemovidas };
+}
+
+// ── E2.4: HEALTH-CHECK do analytics (diagnóstico em 1 chamada, sem caça-fantasma) ──
+function analyticsHealth() {
+  const req = {
+    "Logs_Metricas": ["Timestamp", "Acao"],
+    "Acessos_Log": ["Data_Hora", "Tipo_Acao"],
+    "Pedidos": ["ID Pedido", "Data/Hora", "Total (R$)", "Status"],
+    "Financeiro_Fluxo": ["ID_Pedido", "Status_Pagamento", "Valor_Final_Recebido"],
+    "CARRINHOS_ABANDONADOS": []
+  };
+  const problemas = [];
+  const linhas = {};
+  Object.keys(req).forEach(function (aba) {
+    const sh = SS.getSheetByName(aba);
+    if (!sh) { problemas.push("Aba ausente: " + aba); return; }
+    linhas[aba] = sh.getLastRow() - 1;
+    if (sh.getLastRow() < 1) { problemas.push("Aba sem header: " + aba); return; }
+    const hs = sh.getRange(1, 1, 1, sh.getLastColumn()).getValues()[0].map(String);
+    req[aba].forEach(function (col) {
+      if (hs.indexOf(col) < 0) problemas.push(aba + ": coluna ausente '" + col + "'");
+    });
+  });
+  return { ok: problemas.length === 0, problemas: problemas, linhas: linhas };
 }
 
 // \u2500\u2500 PEDIDOS \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
