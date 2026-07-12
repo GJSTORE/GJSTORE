@@ -2128,6 +2128,38 @@
     .rstep.active .rstep-dot { background: var(--g); border-color: var(--g); box-shadow: 0 0 0 3px rgba(0,230,118,.2); }
     .rstep.done, .rstep.active { color: var(--text); }
     .rerr { text-align: center; padding: 18px; color: var(--muted); font-size: 13px; }
+    /* ── BANNERS CAPTACAO ─────────────────────────────────── */
+    #igBanner {
+      position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(calc(100% + 40px));
+      z-index: 499; background: linear-gradient(135deg,#833ab4,#fd1d1d,#fcb045);
+      border-radius: 16px; padding: 14px 18px; width: calc(100% - 32px); max-width: 480px;
+      box-shadow: 0 8px 32px rgba(0,0,0,.5); transition: transform .4s cubic-bezier(.34,1.56,.64,1);
+      display: flex; align-items: center; gap: 12px; color: #fff;
+    }
+    #igBanner.show { transform: translateX(-50%) translateY(0); }
+    #igBanner .ig-ico { font-size: 28px; flex-shrink: 0; }
+    #igBanner .ig-txt { flex: 1; font-size: 13px; font-weight: 700; line-height: 1.4; }
+    #igBanner .ig-txt small { font-weight: 400; opacity: .85; }
+    #igBanner a.ig-cta { background:#fff;color:#833ab4;border:none;border-radius:10px;padding:8px 14px;font-size:12px;font-weight:800;cursor:pointer;white-space:nowrap;text-decoration:none; }
+    #igBanner .ig-close { background:rgba(255,255,255,.2);border:none;color:#fff;width:28px;height:28px;border-radius:50%;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0; }
+    #fvOverlay {
+      position:fixed;inset:0;z-index:600;background:rgba(0,0,0,.7);backdrop-filter:blur(4px);
+      display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;
+      transition:opacity .3s;
+    }
+    #fvOverlay.show { opacity:1;pointer-events:auto; }
+    #fvCard {
+      background:var(--d1);border:1px solid var(--border);border-radius:24px;
+      padding:28px 24px;max-width:340px;width:calc(100% - 32px);text-align:center;
+      box-shadow:0 16px 48px rgba(0,0,0,.6);transform:scale(.9);transition:transform .3s;
+    }
+    #fvOverlay.show #fvCard { transform:scale(1); }
+    #fvCard .fv-ico { font-size:48px;margin-bottom:12px; }
+    #fvCard h3 { font-size:18px;font-weight:800;margin:0 0 8px;font-family:var(--H); }
+    #fvCard p { font-size:13px;color:var(--muted);margin:0 0 20px;line-height:1.5; }
+    #fvCard .fv-btns { display:flex;flex-direction:column;gap:10px; }
+    #fvCard .fv-cta { background:linear-gradient(135deg,#833ab4,#fd1d1d);color:#fff;border:none;border-radius:12px;padding:13px;font-weight:800;font-size:14px;cursor:pointer;text-decoration:none;display:block; }
+    #fvCard .fv-skip { background:transparent;border:none;color:var(--muted);font-size:13px;cursor:pointer;padding:6px; }
   </style>
 </head>
 
@@ -2657,6 +2689,9 @@
         if (cfg.HERO_PILL) document.getElementById("heroPill").textContent = cfg.HERO_PILL;
         // Sort bar: ocultar se cfg.ORDENACAO_HABILITADA = "NAO"
         if (cfg.ORDENACAO_HABILITADA === "NAO") document.getElementById("sortBar").style.display = "none";
+        // Instagram: preenche links dos banners de captacao
+        const igUrl = cfg.INSTAGRAM || "https://instagram.com/gjstore.oficial";
+        ["igFollowLink", "fvFollowLink"].forEach(id => { const el = document.getElementById(id); if (el) el.href = igUrl; });
         const wpp = getWpp();
         document.getElementById("fwpp").href = `https://wa.me/${wpp}?text=Olá!+Vim+pelo+site+GJ+Store!`;
         document.getElementById("hcta").href = `https://wa.me/${wpp}?text=Olá!+Quero+conhecer+os+produtos+GJ+Store!`;
@@ -4091,7 +4126,68 @@
 
     // ── START ────────────────────────────────────────────
     init();
+
+    // ── BANNERS CAPTACAO ──────────────────────────────────
+    // Banner Instagram: exibe se veio de instagram.com e ainda não dispensou
+    (function() {
+      const ref = document.referrer || "";
+      const dismissed = localStorage.getItem("gj_ig_dismissed");
+      if (!dismissed && ref.includes("instagram.com")) {
+        setTimeout(() => {
+          const b = document.getElementById("igBanner");
+          if (b) b.classList.add("show");
+        }, 2000);
+      }
+    })();
+
+    function dismissIgBanner() {
+      const b = document.getElementById("igBanner");
+      if (b) b.classList.remove("show");
+      try { localStorage.setItem("gj_ig_dismissed", "1"); } catch(e) {}
+    }
+
+    // Pop-up first-visit: aparece 1× por dispositivo
+    (function() {
+      if (localStorage.getItem("gj_fv_ig")) return;
+      const ref = document.referrer || "";
+      // Não exibir se veio do instagram (já tem o banner específico)
+      if (ref.includes("instagram.com")) return;
+      setTimeout(() => {
+        const ov = document.getElementById("fvOverlay");
+        if (ov) ov.classList.add("show");
+      }, 4000);
+    })();
+
+    function dismissFv(seguiu) {
+      const ov = document.getElementById("fvOverlay");
+      if (ov) ov.classList.remove("show");
+      try { localStorage.setItem("gj_fv_ig", "1"); } catch(e) {}
+    }
   </script>
+
+  <!-- Banner Instagram referrer -->
+  <div id="igBanner">
+    <div class="ig-ico">📸</div>
+    <div class="ig-txt">
+      Você veio pelo Instagram!<br>
+      <small>Segue a gente pra não perder as novidades</small>
+    </div>
+    <a class="ig-cta" id="igFollowLink" href="#" target="_blank" rel="noopener" onclick="dismissIgBanner()">Seguir</a>
+    <button class="ig-close" onclick="dismissIgBanner()">×</button>
+  </div>
+
+  <!-- Pop-up first visit -->
+  <div id="fvOverlay" onclick="if(event.target===this)dismissFv(false)">
+    <div id="fvCard">
+      <div class="fv-ico">🛍️</div>
+      <h3>Bem-vindo à GJ Store!</h3>
+      <p>Nos siga no Instagram e fique por dentro das novidades, promoções e lançamentos exclusivos!</p>
+      <div class="fv-btns">
+        <a class="fv-cta" id="fvFollowLink" href="#" target="_blank" rel="noopener" onclick="dismissFv(true)">📸 Seguir no Instagram</a>
+        <button class="fv-skip" onclick="dismissFv(false)">Agora não</button>
+      </div>
+    </div>
+  </div>
 </body>
 
 </html>
