@@ -2690,7 +2690,7 @@
         // Sort bar: ocultar se cfg.ORDENACAO_HABILITADA = "NAO"
         if (cfg.ORDENACAO_HABILITADA === "NAO") document.getElementById("sortBar").style.display = "none";
         // Instagram: preenche links dos banners de captacao
-        const igUrl = cfg.INSTAGRAM || "https://instagram.com/gjstore.oficial";
+        const igUrl = cfg.INSTAGRAM || "https://www.instagram.com/guilherme_juraci";
         ["igFollowLink", "fvFollowLink"].forEach(id => { const el = document.getElementById(id); if (el) el.href = igUrl; });
         const wpp = getWpp();
         document.getElementById("fwpp").href = `https://wa.me/${wpp}?text=Olá!+Vim+pelo+site+GJ+Store!`;
