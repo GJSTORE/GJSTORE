@@ -8,6 +8,51 @@
 // URL atual (v8): AKfycbzBuqMeTDLoFie4yTaMmwm6GufE3HRnpqQ7r3v1emlWLoUp1DDxWxRjbbKA4xfW6Xuh
 const SS = SpreadsheetApp.openById("1z1pP3q95qk906MpdVP5ymNwx9Vr3B6-6VimtuaROu30");
 
+// ── GEMINI VISION (identificação de produtos) ──
+const GEMINI_API = 'https://generativelanguage.googleapis.com/v1beta/models';
+const GEMINI_MODEL_VISION = 'gemini-1.5-flash';
+function getGeminiKey() { return PropertiesService.getScriptProperties().getProperty('GEMINI_KEY'); }
+
+function geminiVisionRequest(imageBase64, mimeType, prompt, maxTokens = 1024) {
+  const key = getGeminiKey();
+  if (!key) return { error: 'GEMINI_KEY não configurada nas Script Properties' };
+  const url = GEMINI_API + '/' + GEMINI_MODEL_VISION + ':generateContent?key=' + key;
+  const payload = {
+    contents: [{
+      role: 'user',
+      parts: [
+        { inlineData: { mimeType: mimeType, data: imageBase64 } },
+        { text: prompt }
+      ]
+    }],
+    generationConfig: {
+      maxOutputTokens: maxTokens,
+      temperature: 0.2,
+      responseMimeType: 'application/json',
+    }
+  };
+  for (let attempt = 0; attempt <= 2; attempt++) {
+    try {
+      const res = UrlFetchApp.fetch(url, {
+        method: 'post',
+        headers: { 'Content-Type': 'application/json' },
+        payload: JSON.stringify(payload),
+        muteHttpExceptions: true,
+      });
+      const code = res.getResponseCode();
+      const json = JSON.parse(res.getContentText());
+      if (code === 200) {
+        const text = json.candidates?.[0]?.content?.parts?.[0]?.text || '';
+        return { text: text, usage: { input: json.usageMetadata?.promptTokenCount || 0, output: json.usageMetadata?.candidatesTokenCount || 0 } };
+      }
+      if (code === 429 && attempt < 2) { Utilities.sleep(2000 * Math.pow(2, attempt)); continue; }
+      throw new Error('Gemini ' + code + ': ' + (json.error?.message || JSON.stringify(json)));
+    } catch (e) { if (attempt === 2) throw e; Utilities.sleep(500); }
+  }
+}
+
+const IDENTIFY_PROMPT = 'Analise esta foto de tênis/calçado. Identifique: marca, modelo, cor predominante, estilo (casual/esportivo/infantil/social), e gera um nome de produto profissional para e-commerce.\n\nRetorne APENAS JSON válido:\n{\n  "marca": "Nike",\n  "modelo": "Air Force 1",\n  "cor": "Branco",\n  "estilo": "Casual",\n  "nome_produto": "Tênis Nike Air Force 1 Branco",\n  "descricao": "Tênis Nike Air Force 1 casual em couro branco. Palmilha confortável, solado em borracha. Perfeito para o dia a dia."\n}\n\nSe não conseguir identificar marca/modelo, use descrição genérica mas precisa (ex: "Tênis Casual Masculino Preto com Sola Branca").';
+
 function jsonResponse(data) {
   return ContentService
     .createTextOutput(JSON.stringify(data))
@@ -60,6 +105,8 @@ function handleAction(p) {
       case "novoPedido":           result = novoPedido(p);                      break;
       case "salvarProduto":        result = salvarProduto(p);                   break;
       case "deletarProduto":       result = deletarProduto(p.id);               break;
+      case "excluirProdutoHard":   result = excluirProdutoHard(p);              break;
+      case "addColunasProdutos":   result = addColunasProdutos();               break;
       case "deletarPedido":        result = deletarPedido(p.id);               break;
       case "atualizarStatus":      result = atualizarStatus(p.id, p.status, p); break;
       case "setPedDates":          result = setPedDates(p);                    break;
@@ -107,6 +154,11 @@ function handleAction(p) {
       case "excluirPedidoHard":    result = excluirPedidoHard(p);               break;
       case "getLogAcoes":          result = getLogAcoes(p);                     break;
       case "analyticsHealth":      result = analyticsHealth();                  break;
+      case "identificarProduto":   result = identificarProduto(p);              break;
+      case "atualizarNomeProduto": result = atualizarNomeProduto(p);            break;
+      case "salvarProdutosBatch":  result = salvarProdutosBatch(p);             break;
+      case "atualizarProdutosBatch": result = atualizarProdutosBatch(p);        break;
+      case "excluirProdutosBatch":  result = excluirProdutosBatch(p);            break;
       default:                     result = { error: "Ação desconhecida: " + action };
     }
     // E1.2: auditoria automática de toda escrita sensível (excluirPedidoHard registra interno)
@@ -497,8 +549,11 @@ function findRow(sheetName, colIdx, val) {
   const sh = getSheet(sheetName);
   if (!sh) return null;
   const data = sh.getDataRange().getValues();
+  const sv = String(val);
+  const svNum = sv.replace(/^P/, "");
   for (let i = 1; i < data.length; i++) {
-    if (String(data[i][colIdx]) === String(val)) return { sh, rowNum: i + 1, row: data[i] };
+    const cell = String(data[i][colIdx]);
+    if (cell === sv || cell === svNum || String(Number(cell)) === svNum) return { sh, rowNum: i + 1, row: data[i] };
   }
   return null;
 }
@@ -771,6 +826,46 @@ function deletarProduto(id) {
   const col = headers.indexOf("Status") + 1;
   found.sh.getRange(found.rowNum, col).setValue("Inativo");
   return { ok: true };
+}
+
+// Adiciona colunas extras em Produtos sem apagar dados existentes
+function addColunasProdutos() {
+  const sh = getSheet("Produtos");
+  if (!sh) return { ok: false, erro: "Aba Produtos não encontrada" };
+  const headers = getHeaders("Produtos");
+  const extras = ["Custo_Unitario", "Publicado", "Data_Cadastro"];
+  const added = [];
+  extras.forEach(function(col) {
+    if (!headers.includes(col)) {
+      const nextCol = sh.getLastColumn() + 1;
+      sh.getRange(1, nextCol).setValue(col);
+      added.push(col);
+    }
+  });
+  return { ok: true, adicionadas: added, jaExistiam: extras.filter(function(c) { return !added.includes(c); }) };
+}
+
+function excluirProdutoHard(p) {
+  const id = String(p.id || "");
+  if (!id) {
+    // Delete rows without ID by name match (for cleanup)
+    const name = String(p.nome || "").trim();
+    if (!name) return { ok: false, erro: "ID ou nome obrigatório" };
+    const sh = getSheet("Produtos");
+    const data = sh.getDataRange().getValues();
+    let deleted = 0;
+    for (let i = data.length - 1; i >= 1; i--) {
+      if (String(data[i][0]).trim() === "" && String(data[i][1] || "").trim().toUpperCase() === name.toUpperCase()) {
+        sh.deleteRow(i + 1);
+        deleted++;
+      }
+    }
+    return { ok: true, deleted };
+  }
+  const found = findRow("Produtos", 0, id);
+  if (!found) return { ok: false, erro: "Produto não encontrado" };
+  found.sh.deleteRow(found.rowNum);
+  return { ok: true, deleted: 1 };
 }
 
 function deletarPedido(id) {
@@ -1935,7 +2030,24 @@ function getMetricas(p) {
   });
   const acessosPorHora = Object.entries(horaMap).map(function(e) { return { hora: Number(e[0]), total: e[1] }; });
 
-  return { metricas: { totalAcessos, totalProdutosVistos, totalCarrinhos, totalCheckouts, totalPedidos, acessosPorDia, topProdutos, acessosPorHora } };
+  // Referrers: PAGE_VIEW onde Detalhe começa com "referrer:"
+  const refMap = { direct: 0, instagram: 0, facebook: 0, google: 0, outros: 0 };
+  filtradas.filter(function(r) { return r["Acao"] === "PAGE_VIEW"; }).forEach(function(r) {
+    const d = String(r["Detalhe"] || "").toLowerCase();
+    if (!d || d === "direct") refMap.direct++;
+    else if (d.includes("instagram")) refMap.instagram++;
+    else if (d.includes("facebook")) refMap.facebook++;
+    else if (d.includes("google")) refMap.google++;
+    else refMap.outros++;
+  });
+  const referrers = Object.entries(refMap).filter(function(e) { return e[1] > 0; }).map(function(e) { return { origem: e[0], total: e[1] }; });
+
+  // Sessões únicas no período
+  const sessaoSet = new Set();
+  filtradas.forEach(function(r) { if (r["ID_Sessao"]) sessaoSet.add(r["ID_Sessao"]); });
+  const totalSessoes = sessaoSet.size;
+
+  return { metricas: { totalAcessos, totalProdutosVistos, totalCarrinhos, totalCheckouts, totalPedidos, acessosPorDia, topProdutos, acessosPorHora, referrers, totalSessoes } };
 }
 
 // \u2500\u2500 FRETE \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
@@ -3740,4 +3852,125 @@ function alertaVencimentoAmanha() {
   GmailApp.sendEmail(emailDest, "\uD83D\uDCB0 [D-1] " + cobrar.length + " cobrança(s) vencem amanhã \u2014 " + nomeLoja, "", {
     htmlBody: htmlBody, name: nomeLoja
   });
+}
+
+// ── IDENTIFICAÇÃO DE PRODUTOS POR IMAGEM (Gemini Vision) ──
+
+function identificarProduto(p) {
+  const url = p.cloudinaryUrl || p.url || '';
+  if (!url) return { ok: false, erro: 'cloudinaryUrl obrigatório' };
+  try {
+    const res = UrlFetchApp.fetch(url, { muteHttpExceptions: true });
+    if (res.getResponseCode() !== 200) return { ok: false, erro: 'Falha ao baixar imagem: ' + res.getResponseCode() };
+    const blob = res.getBlob();
+    const base64 = Utilities.base64Encode(blob.getBytes());
+    const mimeType = blob.getContentType() || 'image/jpeg';
+    const result = geminiVisionRequest(base64, mimeType, IDENTIFY_PROMPT, 1024);
+    if (result.error) return { ok: false, erro: result.error };
+    const parsed = JSON.parse(extractJSONGemini(result.text));
+    return {
+      ok: true,
+      marca: parsed.marca || '',
+      modelo: parsed.modelo || '',
+      cor: parsed.cor || '',
+      estilo: parsed.estilo || '',
+      nome_produto: parsed.nome_produto || '',
+      descricao: parsed.descricao || '',
+      usage: result.usage
+    };
+  } catch (e) {
+    return { ok: false, erro: e.message };
+  }
+}
+
+function extractJSONGemini(text) {
+  const match = text.match(/\{[\s\S]*\}/);
+  return match ? match[0] : '{}';
+}
+
+function atualizarNomeProduto(p) {
+  const id = p.id || '';
+  if (!id) return { ok: false, erro: 'ID obrigatório' };
+  const found = findRow("Produtos", 0, id);
+  if (!found) return { ok: false, erro: 'Produto não encontrado: ' + id };
+  const headers = getHeaders("Produtos");
+  const updates = {};
+  if (p.nome_produto) updates['Nome do Produto'] = p.nome_produto;
+  if (p.descricao) updates['Descrição'] = p.descricao;
+  for (const [campo, valor] of Object.entries(updates)) {
+    const col = headers.indexOf(campo) + 1;
+    if (col > 0) found.sh.getRange(found.rowNum, col).setValue(valor);
+  }
+  return { ok: true, id: id, atualizados: Object.keys(updates) };
+}
+
+// ── BATCH INSERT PRODUTOS (upload em lote) ──
+
+function salvarProdutosBatch(p) {
+  const itens = p.itens || [];
+  if (!itens.length) return { ok: false, erro: 'itens obrigatório' };
+  const sh = getSheet("Produtos");
+  const headers = getHeaders("Produtos");
+  const baseTs = Date.now();
+  const rows = itens.map((item, idx) => {
+    return headers.map(h => {
+      if (h === "ID") return "P" + (baseTs + idx);
+      if (item[h] !== undefined) return item[h];
+      return "";
+    });
+  });
+  const startRow = sh.getLastRow() + 1;
+  sh.getRange(startRow, 1, rows.length, headers.length).setValues(rows);
+  const ids = rows.map(r => r[0]);
+  return { ok: true, inseridos: ids.length, ids: ids };
+}
+
+function atualizarProdutosBatch(p) {
+  const itens = p.itens || [];
+  if (!itens.length) return { ok: false, erro: 'itens obrigatório' };
+  const sh = getSheet("Produtos");
+  const headers = getHeaders("Produtos");
+  const idCol = headers.indexOf("ID") + 1;
+  const allRows = sh.getDataRange().getValues();
+  const idMap = {};
+  for (let i = 1; i < allRows.length; i++) {
+    const rowId = String(allRows[i][idCol - 1]);
+    if (rowId) idMap[rowId] = i + 1;
+  }
+  let updated = 0;
+  let notFound = 0;
+  for (const item of itens) {
+    const itemId = item.id || item["ID"] || "";
+    const rowNum = idMap[itemId];
+    if (!rowNum) { notFound++; continue; }
+    for (const h of headers) {
+      if (h === "ID") continue;
+      if (item[h] !== undefined && item[h] !== "") {
+        const col = headers.indexOf(h) + 1;
+        sh.getRange(rowNum, col).setValue(item[h]);
+      }
+    }
+    updated++;
+  }
+  return { ok: true, updated: updated, notFound: notFound };
+}
+
+function excluirProdutosBatch(p) {
+  const ids = p.ids || [];
+  if (!ids.length) return { ok: false, erro: 'ids obrigatório' };
+  const sh = getSheet("Produtos");
+  const headers = getHeaders("Produtos");
+  const idCol = headers.indexOf("ID") + 1;
+  const allRows = sh.getDataRange().getValues();
+  const rowNums = [];
+  for (let i = 1; i < allRows.length; i++) {
+    if (ids.includes(String(allRows[i][idCol - 1]))) {
+      rowNums.push(i + 1);
+    }
+  }
+  rowNums.sort((a, b) => b - a);
+  for (const rn of rowNums) {
+    sh.deleteRow(rn);
+  }
+  return { ok: true, deletados: rowNums.length, naoEncontrados: ids.length - rowNums.length };
 }
