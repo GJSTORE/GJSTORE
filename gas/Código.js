@@ -774,6 +774,13 @@ function getProdutos(p) {
   });
   if (p.verTodos !== "1") {
     list = list.filter(r => String(r["Status"]).toLowerCase() === "ativo");
+    // Coluna Publicado: vazio = legado = exibe; "Nao" = rascunho = oculta
+    if (p.verRascunhos !== "1") {
+      list = list.filter(r => {
+        const pub = String(r["Publicado"] || "").trim().toLowerCase();
+        return pub === "" || pub === "sim";
+      });
+    }
   }
   if (p.categoria && p.categoria !== "todos") {
     list = list.filter(r => String(r["Categoria"]).trim().toLowerCase() === p.categoria.trim().toLowerCase());
@@ -785,18 +792,20 @@ function getProdutos(p) {
       String(r["Descrição"]).toLowerCase().includes(q)
     );
   }
-  // Produtos recentes: retorna últimos 8 na ordem inversa das linhas
+  // Recentes: ultimos 8 ja filtrados (ativos + publicados)
   if (p.recentes === "1") {
     const exibir = getConfigValue("EXIBIR_PRODUTOS_RECENTES");
     if (exibir === "SIM") {
-      const recentes = rows
-        .filter(r => String(r["Status"]).toLowerCase() === "ativo")
-        .slice(-8)
-        .reverse();
+      const recentes = list.slice(-8).reverse();
       return { produtos: recentes, total: recentes.length };
     }
   }
-  return { produtos: list, total: list.length };
+  const total = list.length;
+  const offset = Number(p.offset) || 0;
+  const limit = Number(p.limit) || 0;
+  if (offset) list = list.slice(offset);
+  if (limit) list = list.slice(0, limit);
+  return { produtos: list, total };
 }
 
 function salvarProduto(p) {

@@ -2307,6 +2307,10 @@
       <div class="sk sk-c"></div>
       <div class="sk sk-c"></div>
     </div>
+    <div id="loadMoreWrap" style="display:none;text-align:center;padding:24px 16px">
+      <button id="loadMoreBtn" onclick="loadMoreProds()" style="padding:12px 32px;background:var(--g);color:#000;border:none;border-radius:12px;font-family:var(--H);font-size:14px;font-weight:700;cursor:pointer;transition:opacity .2s">Ver mais produtos</button>
+      <div id="loadMoreInfo" style="margin-top:8px;font-size:12px;color:var(--muted)"></div>
+    </div>
   </div>
   <!-- VISTOS RECENTEMENTE -->
   <div id="viewedSec" style="display:none">
@@ -2571,6 +2575,7 @@
     let _mcPedidos = {}, _reciboTxt = "";
     const TTL = 5 * 60 * 1000;
     let cfg = {}, prods = [], allProds = [], allCats = [], fretes = [], banners = [];
+    let _prodsTotal = 0, _prodsLimit = 100;
     let catA = "", searchQ = "", priceMax = 0, cart = JSON.parse(localStorage.getItem("gjc") || "[]");
     let cup = null, freteA = null, pagS = "PIX", prodA = null, cIdx = 0, cMedia = [];
     let banIdx = 0;
@@ -2644,7 +2649,7 @@
     // ── INIT ─────────────────────────────────────────────
     async function init() {
       try {
-        const [cr, br, pr, fr] = await Promise.all([apiG("getConfig"), apiG("getBanners"), apiG("getProdutos"), apiG("getFrete")]);
+        const [cr, br, pr, fr] = await Promise.all([apiG("getConfig"), apiG("getBanners"), apiG("getProdutos", {limit: _prodsLimit}), apiG("getFrete")]);
         cfg = cr.config || {};
         // Hero configurável via planilha (chaves: HERO_TITULO, HERO_SUBTITULO, HERO_PILL)
         if (cfg.HERO_TITULO) document.getElementById("heroTitle").innerHTML = cfg.HERO_TITULO;
@@ -2658,9 +2663,11 @@
         banners = (br.banners || []).filter(b => String(b["Ativo?"]).toLowerCase() === "sim").sort((a, z) => Number(a["Ordem"]) - Number(z["Ordem"]));
         renderBanners();
         allProds = pr.produtos || [];
+        _prodsTotal = pr.total || allProds.length;
         prods = allProds;
         fretes = fr.fretes || [];
         renderProds(prods);
+        updateLoadMore();
         updateBadge();
         if (!sessionStorage.getItem('_pv')) {
           sessionStorage.setItem('_pv', '1');
@@ -2941,6 +2948,36 @@
           if (_lazyOffset >= _lazyList.length) { _lazyObs.disconnect(); sentinel.remove(); }
         }, { rootMargin: "200px" });
         _lazyObs.observe(sentinel);
+      }
+    }
+
+    function updateLoadMore() {
+      const wrap = document.getElementById("loadMoreWrap");
+      if (!wrap) return;
+      if (allProds.length < _prodsTotal) {
+        const restante = _prodsTotal - allProds.length;
+        wrap.style.display = "block";
+        document.getElementById("loadMoreInfo").textContent =
+          `Exibindo ${allProds.length} de ${_prodsTotal} produtos`;
+        document.getElementById("loadMoreBtn").textContent =
+          `Ver mais ${Math.min(restante, _prodsLimit)} produtos`;
+      } else {
+        wrap.style.display = "none";
+      }
+    }
+
+    async function loadMoreProds() {
+      const btn = document.getElementById("loadMoreBtn");
+      if (btn) { btn.disabled = true; btn.textContent = "Carregando..."; }
+      try {
+        const r = await apiG("getProdutos", { limit: _prodsLimit, offset: allProds.length });
+        const novos = r.produtos || [];
+        if (r.total) _prodsTotal = r.total;
+        allProds = allProds.concat(novos);
+        applyF();
+        updateLoadMore();
+      } catch(e) {
+        if (btn) { btn.disabled = false; btn.textContent = "Tentar novamente"; }
       }
     }
 
