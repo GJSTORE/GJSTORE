@@ -2484,12 +2484,8 @@ function getKPIs() {
              && String(b["Status_Pagamento"] || "") !== "Pendente";
     });
     const fatMes = baixasMes.reduce(function(s, b) { return s + Number(b["Valor_Final_Recebido"] || b["Valor_Original"] || 0); }, 0);
-    // Fallback: se não há baixas, calcula dos pedidos finalizados do mês
-    const fatMesFallback = pedidosMes.filter(function(p) { return p["Status"] === "Finalizado"; })
-      .reduce(function(s, p) { return s + Number(p["Total (R$)"] || 0); }, 0);
-    const fatMesFinal = fatMes > 0 ? fatMes : fatMesFallback;
 
-    // Pedidos do mês
+    // Pedidos do mês — declarado ANTES do fallback que o usa
     const pedidosMes = pedidos.filter(function(p) {
       const dt = normalizarDataHora(p["Data/Hora"]);
       if (!dt) return false;
@@ -2497,6 +2493,11 @@ function getKPIs() {
       if (parts.length < 2) return false;
       return Number(parts[1]) - 1 === mesAtual && (parts[2] && Number(parts[2].split(" ")[0]) === anoAtual);
     });
+    // Fallback: se não há baixas, calcula dos pedidos finalizados do mês
+    const fatMesFallback = pedidosMes.filter(function(p) { return p["Status"] === "Finalizado"; })
+      .reduce(function(s, p) { return s + Number(p["Total (R$)"] || 0); }, 0);
+    const fatMesFinal = fatMes > 0 ? fatMes : fatMesFallback;
+
     const pedidosFinalizados = pedidosMes.filter(function(p) { return p["Status"] === "Finalizado"; });
     const pedidosPendentes   = pedidos.filter(function(p) { return p["Status"] === "Pendente"; });
 
@@ -2519,12 +2520,61 @@ function getKPIs() {
       .filter(function(p) { return String(p["Data/Hora"] || "").startsWith(hojeStr) && p["Status"] !== "Cancelado"; })
       .reduce(function(s, p) { return s + Number(p["Total (R$)"] || 0); }, 0);
 
+    // Produtos para custo/lucro
+    const produtosKPI = sheetToObjects("Produtos") || [];
+    const produtosMapKPI = {};
+    produtosKPI.forEach(function(pr) { produtosMapKPI[String(pr["ID"] || "")] = pr; });
+
+    // Ano atual
+    const pedidosAno = pedidos.filter(function(p) {
+      const dt = normalizarDataHora(p["Data/Hora"]);
+      if (!dt) return false;
+      const parts = dt.split("/");
+      return parts.length >= 3 && Number(parts[2].split(" ")[0]) === anoAtual;
+    });
+    const fatAno = pedidosAno.filter(function(p) { return p["Status"] !== "Cancelado"; })
+      .reduce(function(s, p) { return s + Number(p["Total (R$)"] || 0); }, 0);
+    const custoAno = pedidosAno.reduce(function(s, p) { return s + calcCustoPedido(p, produtosMapKPI); }, 0);
+    const lucroAno = fatAno - custoAno;
+
+    // Custo e lucro do mês
+    const custoMes = pedidosMes.reduce(function(s, p) { return s + calcCustoPedido(p, produtosMapKPI); }, 0);
+    const lucroMes = fatMesFinal - custoMes;
+    const margemMes = fatMesFinal > 0 ? Number((lucroMes / fatMesFinal * 100).toFixed(1)) : 0;
+
+    // Custo hoje
+    const custoHoje = pedidos
+      .filter(function(p) { return String(p["Data/Hora"] || "").startsWith(hojeStr) && p["Status"] !== "Cancelado"; })
+      .reduce(function(s, p) { return s + calcCustoPedido(p, produtosMapKPI); }, 0);
+    const lucroHoje = fatHoje - custoHoje;
+
     return {
       fatMes: fatMesFinal, fatHoje, pedidosMes: pedidosMes.length, pedidosFinalizados: pedidosFinalizados.length,
       pedidosPendentes: pedidosPendentes.length, ticketMedio, taxaConversao, meta,
-      progresso: meta > 0 ? Math.min(100, fatMesFinal / meta * 100) : 0
+      progresso: meta > 0 ? Math.min(100, fatMesFinal / meta * 100) : 0,
+      custoMes, lucroMes, margemMes,
+      fatAno, custoAno, lucroAno,
+      custoHoje, lucroHoje
     };
   } catch(e) { return { error: e.message }; }
+}
+
+function calcCustoPedido(pedido, produtosMap) {
+  try {
+    const raw = String(pedido["Itens (JSON)"] || pedido["Itens"] || "");
+    if (!raw || raw === "[]") return 0;
+    const itens = JSON.parse(raw);
+    if (!Array.isArray(itens)) return 0;
+    return itens.reduce(function(sum, it) {
+      const id = String(it.id || "");
+      const nomeLower = String(it.nome || it.name || "").trim().toLowerCase();
+      const prod = produtosMap[id] || Object.values(produtosMap).find(function(pr) {
+        return String(pr["Nome do Produto"] || "").trim().toLowerCase() === nomeLower;
+      });
+      const custo = Number(prod ? (prod["Custo_Unitario"] || 0) : 0);
+      return sum + custo * Number(it.qty || it.quantidade || 1);
+    }, 0);
+  } catch(e) { return 0; }
 }
 
 // ══ RESUMO PERIODICO (DASHBOARD HOME) ══════════════════════════════════════════════════════════════════════
@@ -2553,6 +2603,8 @@ function getResumoPeriodo(p) {
 
   const pedidos = sheetToObjects("Pedidos");
   const prods = sheetToObjects("Produtos") || [];
+  const produtosMapRP = {};
+  prods.forEach(function(pr) { produtosMapRP[String(pr["ID"] || "")] = pr; });
   const baixas = getSheet("Financeiro_Fluxo") ? sheetToObjects("Financeiro_Fluxo") : [];
 
   const hojeStr = Utilities.formatDate(new Date(), "America/Sao_Paulo", "dd/MM/yyyy");
@@ -2627,7 +2679,10 @@ function getResumoPeriodo(p) {
     meta: Math.round(meta), progresso: Number(progresso.toFixed(1)),
     previsao7: { total: prev7, count: prev7c },
     previsao30: { total: prev30, count: prev30c },
-    topProdutos, pedidosRecentes: pedsRecentes
+    topProdutos, pedidosRecentes: pedsRecentes,
+    custoPeriodo: (function() { return finalizados.reduce(function(s,pd) { return s + calcCustoPedido(pd, produtosMapRP); }, 0); })(),
+    lucroPeriodo: (function() { var fat = fatFinal; var custo = finalizados.reduce(function(s,pd) { return s + calcCustoPedido(pd, produtosMapRP); }, 0); return fat - custo; })(),
+    margemPct: (function() { var fat = fatFinal; var custo = finalizados.reduce(function(s,pd) { return s + calcCustoPedido(pd, produtosMapRP); }, 0); return fat > 0 ? Number(((fat - custo) / fat * 100).toFixed(1)) : 0; })()
   };
 }
 
@@ -3454,7 +3509,7 @@ function getAnalytics(p) {
         });
         parsed = true;
       }
-    } catch(e) {}
+    } catch(e) { /* silent: parse fallback */ }
     if (!parsed) {
       raw.split("|").forEach(function(item){
         const m=item.trim().match(/^(.+?)\s+x(\d+)$/);
