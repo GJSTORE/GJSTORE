@@ -2952,7 +2952,7 @@
     }
 
     // ── PRODUCTS (lazy loading) ───────────────────────────
-    const LAZY_PAGE = 15;
+    const LAZY_PAGE = 30;
     let _lazyList = [], _lazyOffset = 0, _lazyObs = null;
 
     function buildPCard(p) {
@@ -3027,6 +3027,36 @@
       }
     }
 
+    // ── APPEND cards (used by loadMoreProds without full re-render) ──
+    function appendCards(list) {
+      const g = document.getElementById("pgrid");
+      // Remove sentinel + lazy observer before appending
+      if (_lazyObs) { _lazyObs.disconnect(); _lazyObs = null; }
+      const oldSentinel = document.getElementById("lazy-sentinel");
+      if (oldSentinel) oldSentinel.remove();
+      // Append new cards
+      g.insertAdjacentHTML("beforeend", list.map(buildPCard).join(""));
+      // Update lazy state
+      _lazyList = _lazyList.concat(list);
+      _lazyOffset = g.querySelectorAll(".pc").length;
+      // Re-create observer if more items remain
+      if (_lazyOffset < _lazyList.length) {
+        const sentinel = document.createElement("div");
+        sentinel.id = "lazy-sentinel";
+        sentinel.style.height = "1px";
+        g.appendChild(sentinel);
+        _lazyObs = new IntersectionObserver(entries => {
+          if (!entries[0].isIntersecting) return;
+          const next = _lazyList.slice(_lazyOffset, _lazyOffset + LAZY_PAGE);
+          if (!next.length) { _lazyObs.disconnect(); sentinel.remove(); return; }
+          sentinel.insertAdjacentHTML("beforebegin", next.map(buildPCard).join(""));
+          _lazyOffset += next.length;
+          if (_lazyOffset >= _lazyList.length) { _lazyObs.disconnect(); sentinel.remove(); }
+        }, { rootMargin: "200px" });
+        _lazyObs.observe(sentinel);
+      }
+    }
+
     function updateLoadMore() {
       const wrap = document.getElementById("loadMoreWrap");
       if (!wrap) return;
@@ -3075,23 +3105,24 @@
       if (info) info.textContent = "Buscando mais produtos...";
       try {
         const isServerSearch = searchQ.length >= 2 && !catA && _searchProds.length;
+        let novos = [];
         if (isServerSearch) {
           const r = await apiG("getProdutos", { busca: searchQ, limit: _loadMoreLimit, offset: _searchProds.length });
-          const novos = r.produtos || [];
+          novos = r.produtos || [];
           if (r.total) _searchTotal = r.total;
           _searchProds = _searchProds.concat(novos);
         } else if (catA) {
           const r = await apiG("getProdutos", { categoria: catA, limit: _loadMoreLimit, offset: _catProds.length });
-          const novos = r.produtos || [];
+          novos = r.produtos || [];
           if (r.total) _catTotal = r.total;
           _catProds = _catProds.concat(novos);
         } else {
           const r = await apiG("getProdutos", { limit: _loadMoreLimit, offset: allProds.length });
-          const novos = r.produtos || [];
+          novos = r.produtos || [];
           if (r.total) _prodsTotal = r.total;
           allProds = allProds.concat(novos);
         }
-        applyF();
+        if (novos.length) appendCards(novos);
         updateLoadMore();
       } catch(e) {
         if (btn) { btn.disabled = false; btn.textContent = "Tentar novamente"; }
