@@ -2624,15 +2624,27 @@
       const k = action + JSON.stringify(params);
       try { const d = JSON.parse(sessionStorage.getItem(k) || "null"); if (d && Date.now() - d.t < TTL) return d.v; } catch (e) { }
       const u = new URL(API); u.searchParams.set("action", action);
-      Object.entries(params).forEach(([k, v]) => u.searchParams.set(k, v));
-      const r = await fetch(u); const data = await r.json();
-      try { sessionStorage.setItem(k, JSON.stringify({ t: Date.now(), v: data })); } catch (e) { }
-      return data;
+      Object.entries(params).forEach(([pk, pv]) => u.searchParams.set(pk, pv));
+      const ctrl = new AbortController();
+      const timer = setTimeout(() => ctrl.abort(), 12000);
+      try {
+        const r = await fetch(u, { signal: ctrl.signal, redirect: "follow" });
+        clearTimeout(timer);
+        if (!r.ok) throw new Error("HTTP " + r.status);
+        const data = await r.json();
+        try { sessionStorage.setItem(k, JSON.stringify({ t: Date.now(), v: data })); } catch (e) { }
+        return data;
+      } catch (e) {
+        clearTimeout(timer);
+        throw e;
+      }
     }
     function apiG2(action, params = {}) {
       const u = new URL(API); u.searchParams.set("action", action);
       Object.entries(params).forEach(([k, v]) => { if (v !== undefined && v !== null) u.searchParams.set(k, String(v)); });
-      return fetch(u.toString()).then(r => r.json());
+      const ctrl = new AbortController();
+      const timer = setTimeout(() => ctrl.abort(), 12000);
+      return fetch(u.toString(), { signal: ctrl.signal }).then(r => { clearTimeout(timer); if (!r.ok) throw new Error("HTTP " + r.status); return r.json(); }).catch(e => { clearTimeout(timer); throw e; });
     }
     function clearCache() { for (const k of Object.keys(sessionStorage)) { if (!k.startsWith("gjc")) sessionStorage.removeItem(k); } }
     function fmt(v) { return "R$ " + Number(v || 0).toLocaleString("pt-BR", { minimumFractionDigits: 2 }); }
@@ -4222,10 +4234,10 @@
     }
 
     // ── CATEGORIAS — event delegation (funciona antes e após renderDynCats) ───
-    // Helper: race um promise com timeout — se não resolver, rejeita
     function withTimeout(promise, ms) {
       return Promise.race([promise, new Promise((_, reject) => setTimeout(() => reject(new Error("timeout")), ms))]);
     }
+    function _safeApplyF() { try { applyF(); } catch(e) { renderProds([]); } }
     (function() {
       const track = document.getElementById("catTrack");
       if (!track) return;
@@ -4234,31 +4246,31 @@
         if (!cc) return;
         track.querySelectorAll(".cc").forEach(x => x.classList.remove("on"));
         cc.classList.add("on"); catA = cc.dataset.cat || "";
-        // Busca server-side quando categoria selecionada
         if (catA) {
-          // Loading imediato — mostra skeleton enquanto API responde
           const g = document.getElementById("pgrid");
           g.innerHTML = Array(6).fill('<div class="sk sk-c"></div>').join("");
           document.getElementById("stitle").innerHTML = `<div class="pip"></div>Carregando ${catA}...`;
+          let _done = false;
+          const _safety = setTimeout(() => { if (!_done) { _done = true; _catProds = []; _catTotal = 0; _safeApplyF(); } }, 14000);
           try {
-            // Timeout de 15s: se a API não responder, mostra erro com retry
-            const r = await withTimeout(apiG("getProdutos", { categoria: catA, limit: 30 }), 15000);
+            const r = await withTimeout(apiG("getProdutos", { categoria: catA, limit: 30 }), 13000);
             _catProds = r.produtos || [];
             _catTotal = r.total || _catProds.length;
           } catch(err) {
             _catProds = []; _catTotal = 0;
-            const wpp = getWpp();
             g.innerHTML = `<div class="estate" style="grid-column:1/-1">
               <div class="estate-ico">⏳</div>
               <div class="estate-txt">Carregamento demorando muito para <b style="color:var(--g)">${catA}</b>.<br>
-              A categoria pode ter muitos produtos.</div>
+              Tente novamente em alguns segundos.</div>
               <button onclick="document.querySelector('.cc.on').click()" style="margin-top:14px;padding:10px 24px;background:var(--g);color:#fff;border:none;border-radius:10px;font-family:var(--H);font-weight:700;cursor:pointer">🔄 Tentar novamente</button>
             </div>`;
           }
+          clearTimeout(_safety);
+          if (!_done) { _done = true; _safeApplyF(); }
         } else {
           _catProds = []; _catTotal = 0;
+          _safeApplyF();
         }
-        applyF();
         cc.scrollIntoView({ behavior: "smooth", inline: "center", block: "nearest" });
         document.getElementById("psec").scrollIntoView({ behavior: "smooth", block: "start" });
       });

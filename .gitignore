@@ -22,3 +22,7 @@ gas/.clasp.json
 # scratch / backups locais
 *.original.md
 *.sync-conflict*
+
+# credenciais — NUNCA commitar
+.env.local
+**/.env.local

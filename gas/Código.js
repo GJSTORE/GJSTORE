@@ -8,6 +8,9 @@
 // URL atual (v8): AKfycbzBuqMeTDLoFie4yTaMmwm6GufE3HRnpqQ7r3v1emlWLoUp1DDxWxRjbbKA4xfW6Xuh
 const SS = SpreadsheetApp.openById("1z1pP3q95qk906MpdVP5ymNwx9Vr3B6-6VimtuaROu30");
 
+// ── CACHE DE SCRIPT (evita reler planilha na mesma execução) ──
+var _PROD_ROWS = null;
+
 // ── GEMINI VISION (identificação de produtos) ──
 const GEMINI_API = 'https://generativelanguage.googleapis.com/v1beta/models';
 const GEMINI_MODEL_VISION = 'gemini-1.5-flash';
@@ -768,23 +771,29 @@ function getProdutos(p) {
   const isAll = p.verTodos === "1";
   const catKey = (p.categoria && p.categoria !== "todos") ? p.categoria.trim().toLowerCase() : "";
   const searchKey = p.busca || "";
-  const cacheKey = !isAll && catKey && !searchKey && p.recentes !== "1" ? "cat_" + catKey + "_v2" : null;
+  const cacheKey = !isAll && catKey && !searchKey && p.recentes !== "1" ? "cat_" + catKey + "_v3" : null;
+  const offset = Number(p.offset) || 0;
+  const limit = Number(p.limit) || 0;
+  // Tenta cache do CacheService
   if (cacheKey) {
     const cached = cache.get(cacheKey);
     if (cached) {
       try {
         const data = JSON.parse(cached);
-        const total = data.total;
         let list = data.produtos;
-        const offset = Number(p.offset) || 0;
-        const limit = Number(p.limit) || 0;
-        if (offset) list = list.slice(offset);
-        if (limit) list = list.slice(0, limit);
-        return { produtos: list, total: total };
+        // Só usa cache se temos dados suficientes para o offset pedido
+        if (offset < list.length) {
+          if (offset) list = list.slice(offset);
+          if (limit) list = list.slice(0, limit);
+          return { produtos: list, total: data.total };
+        }
+        // Offset além do cacheado → reler planilha abaixo
       } catch(e) {}
     }
   }
-  const rows = sheetToObjects("Produtos");
+  // Usa cache de script (evita reler planilha na mesma execução)
+  if (!_PROD_ROWS) _PROD_ROWS = sheetToObjects("Produtos");
+  const rows = _PROD_ROWS;
   let list = rows.map(function(r) {
     const est = r["Estoque"];
     return Object.assign({}, r, {
@@ -818,11 +827,13 @@ function getProdutos(p) {
     }
   }
   const total = list.length;
+  // Salva no CacheService: no máximo 200 produtos (cabe em 100KB)
   if (cacheKey) {
-    try { cache.put(cacheKey, JSON.stringify({ produtos: list, total: total }), 300); } catch(e) {}
+    try {
+      var toCache = list.length > 200 ? list.slice(0, 200) : list;
+      cache.put(cacheKey, JSON.stringify({ produtos: toCache, total: total }), 300);
+    } catch(e) {}
   }
-  const offset = Number(p.offset) || 0;
-  const limit = Number(p.limit) || 0;
   if (offset) list = list.slice(offset);
   if (limit) list = list.slice(0, limit);
   return { produtos: list, total };
@@ -861,6 +872,7 @@ function deletarProduto(id) {
 }
 
 function _clearProdCache() {
+  _PROD_ROWS = null; // Limpa cache de script
   try {
     const cache = CacheService.getScriptCache();
     const keys = cache.getAllKeys().filter(k => k.startsWith("cat_"));
