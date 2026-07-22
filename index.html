@@ -2612,6 +2612,12 @@
     let cup = null, freteA = null, pagS = "PIX", prodA = null, cIdx = 0, cMedia = [];
     let banIdx = 0;
     let _modalHistPushed = false, _cartHistPushed = false;
+    let _catProds = [], _catTotal = 0;
+
+    // ── NORMALIZAÇÃO DE TEXTO (acentos, case, espaços) ──
+    function normTxt(s) {
+      return (s || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim().toLowerCase();
+    }
 
     // ── API ──────────────────────────────────────────────
     async function apiG(action, params = {}) {
@@ -2851,13 +2857,26 @@
 
     // ── SEARCH ───────────────────────────────────────────
     let _searchTimer = null;
-    function onSearch(v) {
+    let _searchProds = [], _searchTotal = 0;
+    async function onSearch(v) {
       searchQ = v.toLowerCase();
       document.getElementById("clrBtn").style.display = v ? "block" : "none";
       clearTimeout(_searchTimer);
-      _searchTimer = setTimeout(applyF, 280);
+      if (!catA && searchQ.length >= 2) {
+        _searchTimer = setTimeout(async () => {
+          try {
+            const r = await apiG("getProdutos", { busca: searchQ, limit: 200 });
+            _searchProds = r.produtos || [];
+            _searchTotal = r.total || _searchProds.length;
+          } catch(e) { _searchProds = []; _searchTotal = 0; }
+          applyF();
+        }, 280);
+      } else {
+        _searchProds = []; _searchTotal = 0;
+        _searchTimer = setTimeout(applyF, 280);
+      }
     }
-    function clearS() { document.getElementById("sin").value = ""; onSearch(""); }
+    function clearS() { document.getElementById("sin").value = ""; onSearch(""); _searchProds = []; _searchTotal = 0; }
     function setPriceMax(max, el) {
       priceMax = max;
       document.querySelectorAll(".price-pill").forEach(p => p.classList.remove("on"));
@@ -2865,36 +2884,41 @@
       applyF();
     }
     function applyF() {
-      let l = allProds;
+      // Se busca server-side ativa (sem categoria), usa resultados da API
+      let l = (searchQ.length >= 2 && !catA && _searchProds.length) ? _searchProds
+            : catA ? _catProds : allProds;
       // Produto inativo nunca aparece
       l = l.filter(p => String(p["Status"] || "Ativo") !== "Inativo");
-      // Produto sem categoria ou com categoria inativa nunca aparece
-      if (allCats.length) {
-        const activeCatSet = new Set(allCats.filter(c => String(c.Status || "Ativo") !== "Inativo").map(c => String(c.Nome || "").trim()));
-        l = l.filter(p => { const cat = String(p["Categoria"] || "").trim(); return cat && activeCatSet.has(cat); });
-      } else {
-        l = l.filter(p => String(p["Categoria"] || "").trim() !== "");
+      // Produto sem categoria ou com categoria inativa nunca aparece (só no "Tudo" sem busca)
+      if (!catA && !(searchQ.length >= 2 && _searchProds.length)) {
+        if (allCats.length) {
+          const activeCatSet = new Set(allCats.filter(c => String(c.Status || "Ativo") !== "Inativo").map(c => normTxt(c.Nome)));
+          l = l.filter(p => { const cat = normTxt(p["Categoria"]); return cat && activeCatSet.has(cat); });
+        } else {
+          l = l.filter(p => normTxt(p["Categoria"]) !== "");
+        }
       }
-      if (catA) l = l.filter(p => (p["Categoria"] || "").trim().toLowerCase() === catA.trim().toLowerCase());
       if (priceMax > 0) l = l.filter(p => pf(p) <= priceMax);
-      if (searchQ) l = l.filter(p =>
-        (p["Nome do Produto"] || "").toLowerCase().includes(searchQ) ||
-        (p["Descrição"] || "").toLowerCase().includes(searchQ) ||
-        (p["Categoria"] || "").toLowerCase().includes(searchQ) ||
-        (p["Tags_Personalizadas"] || "").toLowerCase().includes(searchQ)
+      // Busca client-side só para termos curtos (<2 chars) — server-side já filtrou os longos
+      if (searchQ && searchQ.length < 2) l = l.filter(p =>
+        normTxt(p["Nome do Produto"]).includes(searchQ) ||
+        normTxt(p["Descrição"]).includes(searchQ) ||
+        normTxt(p["Categoria"]).includes(searchQ) ||
+        normTxt(p["Tags_Personalizadas"]).includes(searchQ)
       );
       l = sortProds(l);
       // "Tudo" sem sort/busca: intercalar categorias (senão a planilha agrupa tudo, ex. só iPhones no topo)
       if (!catA && !searchQ && !sortMode) l = interleaveByCat(l);
       document.getElementById("stitle").innerHTML = `<div class="pip"></div>${l.length} produto${l.length !== 1 ? "s" : ""}`;
       renderProds(l);
+      updateLoadMore();
     }
 
     // Round-robin entre categorias (1 de cada por volta). Destaques sobem ao topo preservando a intercalação.
     function interleaveByCat(list) {
       const buckets = new Map();
       list.forEach(p => {
-        const c = (p["Categoria"] || "_").trim().toLowerCase();
+        const c = normTxt(p["Categoria"] || "_");
         if (!buckets.has(c)) buckets.set(c, []);
         buckets.get(c).push(p);
       });
@@ -2989,15 +3013,41 @@
     function updateLoadMore() {
       const wrap = document.getElementById("loadMoreWrap");
       if (!wrap) return;
-      if (allProds.length < _prodsTotal) {
-        const restante = _prodsTotal - allProds.length;
-        wrap.style.display = "block";
-        document.getElementById("loadMoreInfo").textContent =
-          `Exibindo ${allProds.length} de ${_prodsTotal} produtos`;
-        document.getElementById("loadMoreBtn").textContent =
-          `Ver mais ${Math.min(restante, _prodsLimit)} produtos`;
+      const isServerSearch = searchQ.length >= 2 && !catA && _searchProds.length;
+      if (isServerSearch) {
+        if (_searchProds.length < _searchTotal) {
+          const restante = _searchTotal - _searchProds.length;
+          wrap.style.display = "block";
+          document.getElementById("loadMoreInfo").textContent =
+            `Exibindo ${_searchProds.length} de ${_searchTotal} resultados`;
+          document.getElementById("loadMoreBtn").textContent =
+            `Ver mais ${Math.min(restante, _prodsLimit)} resultados`;
+        } else {
+          wrap.style.display = "none";
+        }
+      } else if (catA) {
+        // Quando categoria selecionada, mostra total da categoria
+        if (_catProds.length < _catTotal) {
+          const restante = _catTotal - _catProds.length;
+          wrap.style.display = "block";
+          document.getElementById("loadMoreInfo").textContent =
+            `Exibindo ${_catProds.length} de ${_catTotal} produtos`;
+          document.getElementById("loadMoreBtn").textContent =
+            `Ver mais ${Math.min(restante, _prodsLimit)} produtos`;
+        } else {
+          wrap.style.display = "none";
+        }
       } else {
-        wrap.style.display = "none";
+        if (allProds.length < _prodsTotal) {
+          const restante = _prodsTotal - allProds.length;
+          wrap.style.display = "block";
+          document.getElementById("loadMoreInfo").textContent =
+            `Exibindo ${allProds.length} de ${_prodsTotal} produtos`;
+          document.getElementById("loadMoreBtn").textContent =
+            `Ver mais ${Math.min(restante, _prodsLimit)} produtos`;
+        } else {
+          wrap.style.display = "none";
+        }
       }
     }
 
@@ -3005,10 +3055,24 @@
       const btn = document.getElementById("loadMoreBtn");
       if (btn) { btn.disabled = true; btn.textContent = "Carregando..."; }
       try {
-        const r = await apiG("getProdutos", { limit: _prodsLimit, offset: allProds.length });
-        const novos = r.produtos || [];
-        if (r.total) _prodsTotal = r.total;
-        allProds = allProds.concat(novos);
+        const isServerSearch = searchQ.length >= 2 && !catA && _searchProds.length;
+        if (isServerSearch) {
+          const r = await apiG("getProdutos", { busca: searchQ, limit: _prodsLimit, offset: _searchProds.length });
+          const novos = r.produtos || [];
+          if (r.total) _searchTotal = r.total;
+          _searchProds = _searchProds.concat(novos);
+        } else if (catA) {
+          // Carrega mais produtos da categoria selecionada
+          const r = await apiG("getProdutos", { categoria: catA, limit: _prodsLimit, offset: _catProds.length });
+          const novos = r.produtos || [];
+          if (r.total) _catTotal = r.total;
+          _catProds = _catProds.concat(novos);
+        } else {
+          const r = await apiG("getProdutos", { limit: _prodsLimit, offset: allProds.length });
+          const novos = r.produtos || [];
+          if (r.total) _prodsTotal = r.total;
+          allProds = allProds.concat(novos);
+        }
         applyF();
         updateLoadMore();
       } catch(e) {
@@ -4112,11 +4176,22 @@
     (function() {
       const track = document.getElementById("catTrack");
       if (!track) return;
-      track.addEventListener("click", e => {
+      track.addEventListener("click", async e => {
         const cc = e.target.closest(".cc");
         if (!cc) return;
         track.querySelectorAll(".cc").forEach(x => x.classList.remove("on"));
-        cc.classList.add("on"); catA = cc.dataset.cat || ""; applyF();
+        cc.classList.add("on"); catA = cc.dataset.cat || "";
+        // Busca server-side quando categoria selecionada
+        if (catA) {
+          try {
+            const r = await apiG("getProdutos", { categoria: catA, limit: 500 });
+            _catProds = r.produtos || [];
+            _catTotal = r.total || _catProds.length;
+          } catch(err) { _catProds = []; _catTotal = 0; }
+        } else {
+          _catProds = []; _catTotal = 0;
+        }
+        applyF();
         cc.scrollIntoView({ behavior: "smooth", inline: "center", block: "nearest" });
         document.getElementById("psec").scrollIntoView({ behavior: "smooth", block: "start" });
       });
