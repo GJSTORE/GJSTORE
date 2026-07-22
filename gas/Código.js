@@ -764,8 +764,27 @@ function getBanners() {
 
 // \u2500\u2500 PRODUTOS \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
 function getProdutos(p) {
+  const cache = CacheService.getScriptCache();
+  const isAll = p.verTodos === "1";
+  const catKey = (p.categoria && p.categoria !== "todos") ? p.categoria.trim().toLowerCase() : "";
+  const searchKey = p.busca || "";
+  const cacheKey = !isAll && catKey && !searchKey && p.recentes !== "1" ? "cat_" + catKey + "_v2" : null;
+  if (cacheKey) {
+    const cached = cache.get(cacheKey);
+    if (cached) {
+      try {
+        const data = JSON.parse(cached);
+        const total = data.total;
+        let list = data.produtos;
+        const offset = Number(p.offset) || 0;
+        const limit = Number(p.limit) || 0;
+        if (offset) list = list.slice(offset);
+        if (limit) list = list.slice(0, limit);
+        return { produtos: list, total: total };
+      } catch(e) {}
+    }
+  }
   const rows = sheetToObjects("Produtos");
-  // BUG-02: normaliza estoque \u2014 vazio vira null (\u2260 zero), evita falso alerta crítico
   let list = rows.map(function(r) {
     const est = r["Estoque"];
     return Object.assign({}, r, {
@@ -774,7 +793,6 @@ function getProdutos(p) {
   });
   if (p.verTodos !== "1") {
     list = list.filter(r => String(r["Status"]).toLowerCase() === "ativo");
-    // Coluna Publicado: vazio = legado = exibe; "Nao" = rascunho = oculta
     if (p.verRascunhos !== "1") {
       list = list.filter(r => {
         const pub = String(r["Publicado"] || "").trim().toLowerCase();
@@ -782,17 +800,16 @@ function getProdutos(p) {
       });
     }
   }
-  if (p.categoria && p.categoria !== "todos") {
-    list = list.filter(r => String(r["Categoria"]).trim().toLowerCase() === p.categoria.trim().toLowerCase());
+  if (catKey) {
+    list = list.filter(r => String(r["Categoria"]).trim().toLowerCase() === catKey);
   }
-  if (p.busca) {
-    const q = p.busca.toLowerCase();
+  if (searchKey) {
+    const q = searchKey.toLowerCase();
     list = list.filter(r =>
       String(r["Nome do Produto"]).toLowerCase().includes(q) ||
       String(r["Descrição"]).toLowerCase().includes(q)
     );
   }
-  // Recentes: ultimos 8 ja filtrados (ativos + publicados)
   if (p.recentes === "1") {
     const exibir = getConfigValue("EXIBIR_PRODUTOS_RECENTES");
     if (exibir === "SIM") {
@@ -801,6 +818,9 @@ function getProdutos(p) {
     }
   }
   const total = list.length;
+  if (cacheKey) {
+    try { cache.put(cacheKey, JSON.stringify({ produtos: list, total: total }), 300); } catch(e) {}
+  }
   const offset = Number(p.offset) || 0;
   const limit = Number(p.limit) || 0;
   if (offset) list = list.slice(offset);
@@ -821,10 +841,12 @@ function salvarProduto(p) {
     const found = findRow("Produtos", 0, id);
     if (found) {
       sh.getRange(found.rowNum, 1, 1, row.length).setValues([row]);
+      _clearProdCache();
       return { ok: true, action: "updated", id };
     }
   }
   sh.appendRow(row);
+  _clearProdCache();
   return { ok: true, action: "created", id: row[0] };
 }
 
@@ -834,7 +856,16 @@ function deletarProduto(id) {
   const headers = getHeaders("Produtos");
   const col = headers.indexOf("Status") + 1;
   found.sh.getRange(found.rowNum, col).setValue("Inativo");
+  _clearProdCache();
   return { ok: true };
+}
+
+function _clearProdCache() {
+  try {
+    const cache = CacheService.getScriptCache();
+    const keys = cache.getAllKeys().filter(k => k.startsWith("cat_"));
+    if (keys.length) cache.removeAll(keys);
+  } catch(e) {}
 }
 
 // Adiciona colunas extras em Produtos sem apagar dados existentes
@@ -869,11 +900,13 @@ function excluirProdutoHard(p) {
         deleted++;
       }
     }
+    _clearProdCache();
     return { ok: true, deleted };
   }
   const found = findRow("Produtos", 0, id);
   if (!found) return { ok: false, erro: "Produto não encontrado" };
   found.sh.deleteRow(found.rowNum);
+  _clearProdCache();
   return { ok: true, deleted: 1 };
 }
 
@@ -2164,6 +2197,7 @@ function toggleCategoria(p) {
   }
   sh.getRange(2, iStat + 1, n, 1).setValues(colStat);
   sh.getRange(2, iFlag + 1, n, 1).setValues(colFlag);
+  _clearProdCache();
   return { ok: true, categoria: catRes, afetados: afetados, status: novoStatus };
 }
 
@@ -3986,6 +4020,7 @@ function salvarProdutosBatch(p) {
   const startRow = sh.getLastRow() + 1;
   sh.getRange(startRow, 1, rows.length, headers.length).setValues(rows);
   const ids = rows.map(r => r[0]);
+  _clearProdCache();
   return { ok: true, inseridos: ids.length, ids: ids };
 }
 
@@ -4016,6 +4051,7 @@ function atualizarProdutosBatch(p) {
     }
     updated++;
   }
+  _clearProdCache();
   return { ok: true, updated: updated, notFound: notFound };
 }
 
@@ -4036,5 +4072,6 @@ function excluirProdutosBatch(p) {
   for (const rn of rowNums) {
     sh.deleteRow(rn);
   }
+  _clearProdCache();
   return { ok: true, deletados: rowNums.length, naoEncontrados: ids.length - rowNums.length };
 }

@@ -2607,7 +2607,7 @@
     let _mcPedidos = {}, _reciboTxt = "";
     const TTL = 5 * 60 * 1000;
     let cfg = {}, prods = [], allProds = [], allCats = [], fretes = [], banners = [];
-    let _prodsTotal = 0, _prodsLimit = 30;
+    let _prodsTotal = 0, _prodsLimit = 30, _loadMoreLimit = 50;
     let catA = "", searchQ = "", priceMax = 0, cart = JSON.parse(localStorage.getItem("gjc") || "[]");
     let cup = null, freteA = null, pagS = "PIX", prodA = null, cIdx = 0, cMedia = [];
     let banIdx = 0;
@@ -3021,7 +3021,7 @@
           document.getElementById("loadMoreInfo").textContent =
             `Exibindo ${_searchProds.length} de ${_searchTotal} resultados`;
           document.getElementById("loadMoreBtn").textContent =
-            `Ver mais ${Math.min(restante, _prodsLimit)} resultados`;
+            `Ver mais ${Math.min(restante, _loadMoreLimit)} resultados`;
         } else {
           wrap.style.display = "none";
         }
@@ -3033,7 +3033,7 @@
           document.getElementById("loadMoreInfo").textContent =
             `Exibindo ${_catProds.length} de ${_catTotal} produtos`;
           document.getElementById("loadMoreBtn").textContent =
-            `Ver mais ${Math.min(restante, _prodsLimit)} produtos`;
+            `Ver mais ${Math.min(restante, _loadMoreLimit)} produtos`;
         } else {
           wrap.style.display = "none";
         }
@@ -3044,7 +3044,7 @@
           document.getElementById("loadMoreInfo").textContent =
             `Exibindo ${allProds.length} de ${_prodsTotal} produtos`;
           document.getElementById("loadMoreBtn").textContent =
-            `Ver mais ${Math.min(restante, _prodsLimit)} produtos`;
+            `Ver mais ${Math.min(restante, _loadMoreLimit)} produtos`;
         } else {
           wrap.style.display = "none";
         }
@@ -3059,17 +3059,17 @@
       try {
         const isServerSearch = searchQ.length >= 2 && !catA && _searchProds.length;
         if (isServerSearch) {
-          const r = await apiG("getProdutos", { busca: searchQ, limit: 50, offset: _searchProds.length });
+          const r = await apiG("getProdutos", { busca: searchQ, limit: _loadMoreLimit, offset: _searchProds.length });
           const novos = r.produtos || [];
           if (r.total) _searchTotal = r.total;
           _searchProds = _searchProds.concat(novos);
         } else if (catA) {
-          const r = await apiG("getProdutos", { categoria: catA, limit: 50, offset: _catProds.length });
+          const r = await apiG("getProdutos", { categoria: catA, limit: _loadMoreLimit, offset: _catProds.length });
           const novos = r.produtos || [];
           if (r.total) _catTotal = r.total;
           _catProds = _catProds.concat(novos);
         } else {
-          const r = await apiG("getProdutos", { limit: _prodsLimit, offset: allProds.length });
+          const r = await apiG("getProdutos", { limit: _loadMoreLimit, offset: allProds.length });
           const novos = r.produtos || [];
           if (r.total) _prodsTotal = r.total;
           allProds = allProds.concat(novos);
