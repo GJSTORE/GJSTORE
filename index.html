@@ -2626,7 +2626,7 @@
       const u = new URL(API); u.searchParams.set("action", action);
       Object.entries(params).forEach(([pk, pv]) => u.searchParams.set(pk, pv));
       const ctrl = new AbortController();
-      const timer = setTimeout(() => ctrl.abort(), 12000);
+      const timer = setTimeout(() => ctrl.abort(), 20000);
       try {
         const r = await fetch(u, { signal: ctrl.signal, redirect: "follow" });
         clearTimeout(timer);
@@ -2643,7 +2643,7 @@
       const u = new URL(API); u.searchParams.set("action", action);
       Object.entries(params).forEach(([k, v]) => { if (v !== undefined && v !== null) u.searchParams.set(k, String(v)); });
       const ctrl = new AbortController();
-      const timer = setTimeout(() => ctrl.abort(), 12000);
+      const timer = setTimeout(() => ctrl.abort(), 20000);
       return fetch(u.toString(), { signal: ctrl.signal }).then(r => { clearTimeout(timer); if (!r.ok) throw new Error("HTTP " + r.status); return r.json(); }).catch(e => { clearTimeout(timer); throw e; });
     }
     function clearCache() { for (const k of Object.keys(sessionStorage)) { if (!k.startsWith("gjc")) sessionStorage.removeItem(k); } }
@@ -4251,19 +4251,23 @@
           g.innerHTML = Array(6).fill('<div class="sk sk-c"></div>').join("");
           document.getElementById("stitle").innerHTML = `<div class="pip"></div>Carregando ${catA}...`;
           let _done = false;
-          const _safety = setTimeout(() => { if (!_done) { _done = true; _catProds = []; _catTotal = 0; _safeApplyF(); } }, 14000);
+          const _safety = setTimeout(() => { if (!_done) { _done = true; _catProds = []; _catTotal = 0; _safeApplyF(); } }, 22000);
           try {
-            const r = await withTimeout(apiG("getProdutos", { categoria: catA, limit: 30 }), 13000);
+            const r = await withTimeout(apiG("getProdutos", { categoria: catA, limit: 30 }), 21000);
             _catProds = r.produtos || [];
             _catTotal = r.total || _catProds.length;
           } catch(err) {
             _catProds = []; _catTotal = 0;
+            clearTimeout(_safety);
+            _done = true;
             g.innerHTML = `<div class="estate" style="grid-column:1/-1">
               <div class="estate-ico">⏳</div>
               <div class="estate-txt">Carregamento demorando muito para <b style="color:var(--g)">${catA}</b>.<br>
               Tente novamente em alguns segundos.</div>
               <button onclick="document.querySelector('.cc.on').click()" style="margin-top:14px;padding:10px 24px;background:var(--g);color:#fff;border:none;border-radius:10px;font-family:var(--H);font-weight:700;cursor:pointer">🔄 Tentar novamente</button>
             </div>`;
+            document.getElementById("stitle").innerHTML = `<div class="pip"></div>${catA}`;
+            return;
           }
           clearTimeout(_safety);
           if (!_done) { _done = true; _safeApplyF(); }

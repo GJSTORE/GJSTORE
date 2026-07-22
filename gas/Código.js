@@ -766,10 +766,13 @@ function getBanners() {
 }
 
 // \u2500\u2500 PRODUTOS \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
+function _normCat(s) {
+  return String(s || "").normalize("NFD").replace(/[̀-ͯ]/g, "").trim().toLowerCase();
+}
 function getProdutos(p) {
   const cache = CacheService.getScriptCache();
   const isAll = p.verTodos === "1";
-  const catKey = (p.categoria && p.categoria !== "todos") ? p.categoria.trim().toLowerCase() : "";
+  const catKey = (p.categoria && p.categoria !== "todos") ? _normCat(p.categoria) : "";
   const searchKey = p.busca || "";
   const cacheKey = !isAll && catKey && !searchKey && p.recentes !== "1" ? "cat_" + catKey + "_v3" : null;
   const offset = Number(p.offset) || 0;
@@ -810,7 +813,7 @@ function getProdutos(p) {
     }
   }
   if (catKey) {
-    list = list.filter(r => String(r["Categoria"]).trim().toLowerCase() === catKey);
+    list = list.filter(r => _normCat(r["Categoria"]) === catKey);
   }
   if (searchKey) {
     const q = searchKey.toLowerCase();
@@ -827,10 +830,10 @@ function getProdutos(p) {
     }
   }
   const total = list.length;
-  // Salva no CacheService: no máximo 200 produtos (cabe em 100KB)
+  // Salva no CacheService: no máximo 140 produtos (~84KB, CacheService tem limite de 100KB por item)
   if (cacheKey) {
     try {
-      var toCache = list.length > 200 ? list.slice(0, 200) : list;
+      var toCache = list.length > 140 ? list.slice(0, 140) : list;
       cache.put(cacheKey, JSON.stringify({ produtos: toCache, total: total }), 300);
     } catch(e) {}
   }
