@@ -2607,7 +2607,7 @@
     let _mcPedidos = {}, _reciboTxt = "";
     const TTL = 5 * 60 * 1000;
     let cfg = {}, prods = [], allProds = [], allCats = [], fretes = [], banners = [];
-    let _prodsTotal = 0, _prodsLimit = 100;
+    let _prodsTotal = 0, _prodsLimit = 30;
     let catA = "", searchQ = "", priceMax = 0, cart = JSON.parse(localStorage.getItem("gjc") || "[]");
     let cup = null, freteA = null, pagS = "PIX", prodA = null, cIdx = 0, cMedia = [];
     let banIdx = 0;
@@ -3053,17 +3053,18 @@
 
     async function loadMoreProds() {
       const btn = document.getElementById("loadMoreBtn");
+      const info = document.getElementById("loadMoreInfo");
       if (btn) { btn.disabled = true; btn.textContent = "Carregando..."; }
+      if (info) info.textContent = "Buscando mais produtos...";
       try {
         const isServerSearch = searchQ.length >= 2 && !catA && _searchProds.length;
         if (isServerSearch) {
-          const r = await apiG("getProdutos", { busca: searchQ, limit: _prodsLimit, offset: _searchProds.length });
+          const r = await apiG("getProdutos", { busca: searchQ, limit: 50, offset: _searchProds.length });
           const novos = r.produtos || [];
           if (r.total) _searchTotal = r.total;
           _searchProds = _searchProds.concat(novos);
         } else if (catA) {
-          // Carrega mais produtos da categoria selecionada
-          const r = await apiG("getProdutos", { categoria: catA, limit: _prodsLimit, offset: _catProds.length });
+          const r = await apiG("getProdutos", { categoria: catA, limit: 50, offset: _catProds.length });
           const novos = r.produtos || [];
           if (r.total) _catTotal = r.total;
           _catProds = _catProds.concat(novos);
@@ -4183,8 +4184,12 @@
         cc.classList.add("on"); catA = cc.dataset.cat || "";
         // Busca server-side quando categoria selecionada
         if (catA) {
+          // Loading imediato — mostra skeleton enquanto API responde
+          const g = document.getElementById("pgrid");
+          g.innerHTML = Array(6).fill('<div class="sk sk-c"></div>').join("");
+          document.getElementById("stitle").innerHTML = `<div class="pip"></div>Carregando ${catA}...`;
           try {
-            const r = await apiG("getProdutos", { categoria: catA, limit: 500 });
+            const r = await apiG("getProdutos", { categoria: catA, limit: 30 });
             _catProds = r.produtos || [];
             _catTotal = r.total || _catProds.length;
           } catch(err) { _catProds = []; _catTotal = 0; }
