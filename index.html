@@ -2758,6 +2758,9 @@
 
         // Temas dinâmicos
         loadTemasIndex();
+
+        // ── PRE-LOAD: carrega 30 produtos de cada categoria em background ──
+        setTimeout(preloadCategories, 800);
       } catch (e) {
         document.getElementById("pgrid").innerHTML = `<div class="estate"><div class="estate-ico">⚠️</div><div class="estate-txt">Erro ao carregar.<br>Puxe para atualizar.</div></div>`;
       }
@@ -2877,6 +2880,20 @@
       }
     }
     function clearS() { document.getElementById("sin").value = ""; onSearch(""); _searchProds = []; _searchTotal = 0; }
+    // ── PRE-LOAD: carrega 30 produtos de cada categoria em background ──
+    // Roda 3 requests em paralelo, espera 300ms, repete..sessionStorage já salva cada resultado.
+    async function preloadCategories() {
+      const cats = allCats.filter(c => String(c.Status || "Ativo") !== "Inativo");
+      if (!cats.length) return;
+      const BATCH = 3;
+      for (let i = 0; i < cats.length; i += BATCH) {
+        const batch = cats.slice(i, i + BATCH);
+        await Promise.allSettled(
+          batch.map(c => apiG("getProdutos", { categoria: c.Nome || "", limit: 30 }).catch(() => {}))
+        );
+        if (i + BATCH < cats.length) await new Promise(r => setTimeout(r, 300));
+      }
+    }
     function setPriceMax(max, el) {
       priceMax = max;
       document.querySelectorAll(".price-pill").forEach(p => p.classList.remove("on"));
