@@ -1,7 +1,7 @@
 // GJ Store — configuração central
 // Ao reimplantar o Apps Script, atualize APENAS esta linha:
-// Deployment @34 (2026-07-22): perf cache por-categoria + invalidacao automatica.
-const GAS_URL = "https://script.google.com/macros/s/AKfycbyhOCMQJkxf-sIyzItAcpUmxF1MTgo47WXVb0qDVSMXc0bcVD468xmIVwlkUNQKZt01/exec";
+// Deployment @36 (2026-07-22): script-level cache + CacheService 200 max + frontend timeout
+const GAS_URL = "https://script.google.com/macros/s/AKfycbxA0KPHoZReOqEW9GosO6IBjKtxi7vDmrhlVHOc2HUNfir7X8Y0QlvcZwcOYCcsV9sd/exec";
 
 // URL pública do site — usada nos links de compartilhar produto
 const CFG_SITE_URL = "https://gjstore.github.io/GJSTORE/";
