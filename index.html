@@ -2977,7 +2977,7 @@
       const estoque = temEstoque ? Number(estRaw) : null;
       const esgotado = temEstoque && estoque === 0;
       const scarc = !esgotado && estoque !== null && estoque > 0 && estoque <= 3 ? `<div class="scarcity-bar">🔥 Restam apenas ${estoque} unid.!</div>` : "";
-      const tags = (p["Tags_Personalizadas"] || "").split(",").map(t => t.trim()).filter(Boolean);
+      const tags = String(p["Tags_Personalizadas"] || "").split(",").map(t => t.trim()).filter(Boolean);
       const tagHtml = tags.length ? tags.map(t => `<span class="ptag-badge">${t}</span>`).join(" ") + " " : "";
       const d = JSON.stringify(p).replace(/'/g, "&apos;");
       const wpp = getWpp();
@@ -4237,7 +4237,7 @@
     function withTimeout(promise, ms) {
       return Promise.race([promise, new Promise((_, reject) => setTimeout(() => reject(new Error("timeout")), ms))]);
     }
-    function _safeApplyF() { try { applyF(); } catch(e) { renderProds([]); } }
+    function _safeApplyF() { try { applyF(); } catch(e) { console.error("[GJ] _safeApplyF caught:", e); renderProds([]); } }
     (function() {
       const track = document.getElementById("catTrack");
       if (!track) return;
