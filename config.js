@@ -12,5 +12,5 @@ const CFG_ADMIN_URL  = "https://gjstore.github.io/GJSTORE-ADM/admin.html";
 const CFG_GESTAO_URL = "https://gjstore.github.io/GJSTORE-ADM/gestao_unificada.html";
 
 // Cloudinary — conta do GJ Store (admin usa pra subir imagens)
-const CFG_CLOUDINARY_CLOUD  = "dxffbx07d";
-const CFG_CLOUDINARY_PRESET = "gj_store";
+const CFG_CLOUDINARY_CLOUD  = "eslbyl14";
+const CFG_CLOUDINARY_PRESET = "gjstore2";
