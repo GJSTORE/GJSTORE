@@ -164,6 +164,10 @@ function handleAction(p) {
       case "atualizarProdutosBatch": result = atualizarProdutosBatch(p);        break;
       case "excluirProdutosBatch":  result = excluirProdutosBatch(p);            break;
       case "fixarIDsVazios":        result = fixarIDsVazios();                   break;
+      case "debugFindRow":          result = debugFindRow(p);                   break;
+      case "debugSalvar":           result = debugSalvar(p);                    break;
+      case "testarEscrita":         result = testarEscrita(p);                  break;
+      case "deduplicarPorNome":     result = deduplicarPorNome(p);              break;
       default:                     result = { error: "Ação desconhecida: " + action };
     }
     // E1.2: auditoria automática de toda escrita sensível (excluirPedidoHard registra interno)
@@ -859,11 +863,13 @@ function salvarProduto(p) {
     const found = findRow("Produtos", 0, id);
     if (found) {
       sh.getRange(found.rowNum, 1, 1, row.length).setValues([row]);
+      SpreadsheetApp.flush();
       _clearProdCache();
       return { ok: true, action: "updated", id };
     }
   }
   sh.appendRow(row);
+  SpreadsheetApp.flush();
   _clearProdCache();
   return { ok: true, action: "created", id: row[0] };
 }
@@ -935,6 +941,164 @@ function deduplicarProdutos() {
   toDelete.forEach(function(r) { sh.deleteRow(r); });
   _clearProdCache();
   return { ok: true, removidos: toDelete.length };
+}
+
+// Deduplica por nome dentro de uma categoria, mantendo o produto com mais imagens
+// Prefer eslbyl14 images (nova conta) over dxffbx07d (antiga). Deleta o resto físicamente.
+function deduplicarPorNome(p) {
+  var categoria = p.categoria || "Perfumes";
+  var sh = getSheet("Produtos");
+  if (!sh) return { error: "Aba Produtos não encontrada" };
+  var data = sh.getDataRange().getValues();
+  var headers = data[0];
+  var idIdx    = headers.indexOf("ID");
+  var nomeIdx  = headers.indexOf("Nome do Produto");
+  var catIdx   = headers.indexOf("Categoria");
+  var img1Idx  = headers.indexOf("Imagem 1 (URL)");
+  var img2Idx  = headers.indexOf("Imagem 2 (URL)");
+  var img3Idx  = headers.indexOf("Imagem 3 (URL)");
+  if (idIdx < 0 || nomeIdx < 0) return { error: "Colunas ID / Nome do Produto não encontradas" };
+
+  // Agrupa por nome dentro da categoria
+  var byName = {};
+  for (var i = 1; i < data.length; i++) {
+    var cat = String(data[i][catIdx] || "").trim();
+    if (cat !== categoria) continue;
+    var nome = String(data[i][nomeIdx] || "").trim().toUpperCase();
+    if (!nome) continue;
+    if (!byName[nome]) byName[nome] = [];
+    byName[nome].push({ rowIdx: i, row: data[i] });
+  }
+
+  // Pontuação: conta imagens e prefere eslbyl14
+  function imgScore(row) {
+    var score = 0;
+    [img1Idx, img2Idx, img3Idx].forEach(function(idx) {
+      if (idx < 0) return;
+      var url = String(row[idx] || "");
+      if (!url) return;
+      score += url.includes("eslbyl14") ? 3 : 1;
+    });
+    return score;
+  }
+
+  // Para cada grupo com duplicatas, elege o melhor e coleta rowNums a deletar (de baixo pra cima)
+  var toDelete = [];
+  var kept = [], removed = [];
+  for (var nome in byName) {
+    var group = byName[nome];
+    if (group.length < 2) continue;
+    // ordena: maior score primeiro; empate → rowIdx menor (produto mais antigo) primeiro
+    group.sort(function(a, b) {
+      var sd = imgScore(b.row) - imgScore(a.row);
+      return sd !== 0 ? sd : a.rowIdx - b.rowIdx;
+    });
+    var winner = group[0];
+    kept.push(String(winner.row[idIdx]));
+    for (var j = 1; j < group.length; j++) {
+      toDelete.push(group[j].rowIdx + 1); // 1-based rowNum
+      removed.push(String(group[j].row[idIdx]));
+    }
+  }
+
+  // Deleta de baixo pra cima para não deslocar índices
+  toDelete.sort(function(a, b) { return b - a; });
+  toDelete.forEach(function(rowNum) { sh.deleteRow(rowNum); });
+  _clearProdCache();
+  return { ok: true, categoria: categoria, removidos: removed.length, kept: kept, removed: removed };
+}
+
+// Simula salvarProduto SEM escrever — retorna o que seria escrito e o que está na planilha
+// Escreve "__TESTE__" no nome do produto P8479, lê de volta, restaura original
+function testarEscrita(p) {
+  var testId = p.id || "P8479";
+  var sh = getSheet("Produtos");
+  if (!sh) return { error: "Aba Produtos não encontrada" };
+  var found = findRow("Produtos", 0, testId);
+  if (!found) return { error: "ID " + testId + " não encontrado", findRowResult: null };
+  var headers = getHeaders("Produtos");
+  var nomeIdx = headers.indexOf("Nome do Produto");
+  if (nomeIdx < 0) return { error: "Coluna 'Nome do Produto' não encontrada" };
+  // Lê valor original
+  var nomeColCell = sh.getRange(found.rowNum, nomeIdx + 1);
+  var original = nomeColCell.getValue();
+  // Escreve teste
+  var testValue = "__TESTE_" + Date.now() + "__";
+  nomeColCell.setValue(testValue);
+  SpreadsheetApp.flush(); // força commit imediato
+  // Lê de volta para confirmar
+  var confirmRead = sh.getRange(found.rowNum, nomeIdx + 1).getValue();
+  // Restaura original
+  nomeColCell.setValue(original);
+  SpreadsheetApp.flush();
+  return {
+    ok: true,
+    testId: testId,
+    rowNum: found.rowNum,
+    original: original,
+    testValue: testValue,
+    confirmRead: confirmRead,
+    writeSucceeded: confirmRead === testValue,
+    restored: true
+  };
+}
+
+function debugSalvar(p) {
+  var sh = getSheet("Produtos");
+  if (!sh) return { error: "Aba Produtos não encontrada" };
+  var headers = getHeaders("Produtos");
+  var id = p.id || p["ID"] || "";
+  var row = headers.map(function(h) {
+    if (h === "ID" && !id) return "(new)";
+    if (p[h] !== undefined) return p[h];
+    return "(blank)";
+  });
+  var found = id ? findRow("Produtos", 0, id) : null;
+  var currentRow = null;
+  if (found) currentRow = found.row.slice(0, headers.length);
+  return {
+    ok: true,
+    id: id,
+    headers: headers,
+    rowToWrite: row,
+    findRowResult: found ? { rowNum: found.rowNum } : null,
+    currentRowInSheet: currentRow,
+    paramsReceived: Object.keys(p)
+  };
+}
+
+function debugFindRow(p) {
+  var id = String(p.id || "");
+  var sh = getSheet("Produtos");
+  if (!sh) return { error: "Aba Produtos não encontrada" };
+  var data = sh.getDataRange().getValues();
+  var headers = data[0];
+  var sv = id;
+  var svNum = sv.replace(/^P/, "");
+  var col0Samples = [];
+  for (var i = 1; i < Math.min(data.length, 20); i++) {
+    var cell = data[i][0];
+    col0Samples.push({ row: i + 1, raw: cell, type: typeof cell, str: String(cell) });
+  }
+  // busca exata
+  var found = null;
+  for (var i = 1; i < data.length; i++) {
+    var cell = String(data[i][0]);
+    if (cell === sv || cell === svNum || String(Number(cell)) === svNum) {
+      found = { rowNum: i + 1, cell: data[i][0], cellStr: String(data[i][0]) };
+      break;
+    }
+  }
+  return {
+    ok: true,
+    searchId: id,
+    sv: sv,
+    svNum: svNum,
+    totalRows: data.length - 1,
+    headers: headers.slice(0, 5),
+    col0Samples: col0Samples,
+    found: found
+  };
 }
 
 function fixarIDsVazios() {
