@@ -109,6 +109,7 @@ function handleAction(p) {
       case "salvarProduto":        result = salvarProduto(p);                   break;
       case "deletarProduto":       result = deletarProduto(p.id);               break;
       case "excluirProdutoHard":   result = excluirProdutoHard(p);              break;
+      case "deduplicarProdutos":   result = deduplicarProdutos();               break;
       case "addColunasProdutos":   result = addColunasProdutos();               break;
       case "deletarPedido":        result = deletarPedido(p.id);               break;
       case "atualizarStatus":      result = atualizarStatus(p.id, p.status, p); break;
@@ -162,6 +163,7 @@ function handleAction(p) {
       case "salvarProdutosBatch":  result = salvarProdutosBatch(p);             break;
       case "atualizarProdutosBatch": result = atualizarProdutosBatch(p);        break;
       case "excluirProdutosBatch":  result = excluirProdutosBatch(p);            break;
+      case "fixarIDsVazios":        result = fixarIDsVazios();                   break;
       default:                     result = { error: "Ação desconhecida: " + action };
     }
     // E1.2: auditoria automática de toda escrita sensível (excluirPedidoHard registra interno)
@@ -501,6 +503,7 @@ function sheetToObjects(name) {
   return data.slice(1).map(row => {
     const obj = {};
     headers.forEach((h, i) => { if (h) obj[h] = row[i]; });
+    if (obj["ID"] !== undefined && obj["ID"] !== "") obj["ID"] = String(obj["ID"]);
     return obj;
   });
 }
@@ -835,6 +838,7 @@ function getProdutos(p) {
     try {
       var toCache = list.length > 140 ? list.slice(0, 140) : list;
       cache.put(cacheKey, JSON.stringify({ produtos: toCache, total: total }), 300);
+      _regCatKey(cache, cacheKey);
     } catch(e) {}
   }
   if (offset) list = list.slice(offset);
@@ -875,11 +879,22 @@ function deletarProduto(id) {
 }
 
 function _clearProdCache() {
-  _PROD_ROWS = null; // Limpa cache de script
+  _PROD_ROWS = null;
   try {
     const cache = CacheService.getScriptCache();
-    const keys = cache.getAllKeys().filter(k => k.startsWith("cat_"));
-    if (keys.length) cache.removeAll(keys);
+    // CacheService não tem getAllKeys() — usa registry próprio
+    var reg = [];
+    try { reg = JSON.parse(cache.get("cat_keys_reg") || "[]"); } catch(e) {}
+    if (reg.length) cache.removeAll(reg);
+    cache.remove("cat_keys_reg");
+  } catch(e) {}
+}
+
+function _regCatKey(cache, key) {
+  try {
+    var reg = [];
+    try { reg = JSON.parse(cache.get("cat_keys_reg") || "[]"); } catch(e) {}
+    if (!reg.includes(key)) { reg.push(key); cache.put("cat_keys_reg", JSON.stringify(reg), 310); }
   } catch(e) {}
 }
 
@@ -898,6 +913,49 @@ function addColunasProdutos() {
     }
   });
   return { ok: true, adicionadas: added, jaExistiam: extras.filter(function(c) { return !added.includes(c); }) };
+}
+
+function deduplicarProdutos() {
+  var sh = getSheet("Produtos");
+  var data = sh.getDataRange().getValues();
+  var seen = {};
+  var toDelete = [];
+  // varre de baixo pra cima: mantém a ÚLTIMA ocorrência de cada ID
+  for (var i = data.length - 1; i >= 1; i--) {
+    var id = String(data[i][0]).trim();
+    if (!id) continue;
+    if (seen[id]) {
+      toDelete.push(i + 1); // rowNum (1-based)
+    } else {
+      seen[id] = true;
+    }
+  }
+  // deleta de baixo pra cima para não deslocar índices
+  toDelete.sort(function(a, b) { return b - a; });
+  toDelete.forEach(function(r) { sh.deleteRow(r); });
+  _clearProdCache();
+  return { ok: true, removidos: toDelete.length };
+}
+
+function fixarIDsVazios() {
+  const sh = getSheet("Produtos");
+  if (!sh) return { ok: false, erro: "Aba Produtos não encontrada" };
+  const data = sh.getDataRange().getValues();
+  const headers = data[0];
+  const idColIdx = headers.indexOf("ID");
+  if (idColIdx < 0) return { ok: false, erro: "Coluna ID não encontrada" };
+  var baseTs = Date.now();
+  var updates = []; // { rowNum, newId }
+  for (var i = 1; i < data.length; i++) {
+    var id = String(data[i][idColIdx]).trim();
+    if (!id) updates.push({ rowNum: i + 1, newId: "P" + (baseTs + updates.length) });
+  }
+  // Batch write — evita timeout por setValue individual
+  updates.forEach(function(u) {
+    sh.getRange(u.rowNum, idColIdx + 1).setValue(u.newId);
+  });
+  _clearProdCache();
+  return { ok: true, fixed: updates.length };
 }
 
 function excluirProdutoHard(p) {
