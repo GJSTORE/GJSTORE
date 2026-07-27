@@ -1,13 +1,17 @@
 #!/usr/bin/env bash
 # deploy.sh — publica cada arquivo no repo certo (ver REPO-MAP.md)
-# Uso: ./deploy.sh "mensagem de commit"
-# Requer: git com credencial já configurada (gh auth login OU credential helper).
-#         NUNCA embutir token neste arquivo.
+# Uso: GH_TOKEN=ghp_... ./deploy.sh "mensagem de commit"
+# Requer: GH_TOKEN definido como variável de ambiente (NUNCA embutir neste arquivo).
 set -euo pipefail
 
 MSG="${1:-deploy: sync $(date +%F_%H%M)}"
 HERE="$(cd "$(dirname "$0")" && pwd)"
-ADM_REPO="https://github.com/GJSTORE/GJSTORE-ADM.git"
+GH_TOKEN="${GH_TOKEN:-}"
+if [ -z "$GH_TOKEN" ]; then
+  echo "ERRO: defina GH_TOKEN antes de rodar. Ex: GH_TOKEN=ghp_... ./deploy.sh"
+  exit 1
+fi
+ADM_REPO="https://${GH_TOKEN}@github.com/GJSTORE/GJSTORE-ADM.git"
 TMP="$(mktemp -d)"
 trap 'rm -rf "$TMP"' EXIT
 
