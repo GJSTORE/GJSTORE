@@ -3975,8 +3975,9 @@
       const { pagas, pendentes, totalPago, saldo, pct, quitado } = _rcCalcSaldo(p.baixas, total);
       const nPagas = pagas.length, nPend = pendentes.length;
       const totalParc = qtdParc || (nPagas + nPend) || 0;
+      const valorParcelaCli = qtdParc > 0 ? total / qtdParc : 0;
       const mkBxRow = (b, isPend, num) => {
-        const vl = Number(isPend ? (b.Saldo_Restante || b.Valor_Original || 0) : (b.Valor_Final_Recebido || 0));
+        const vl = Number(isPend ? (valorParcelaCli || b.Saldo_Restante || b.Valor_Original || 0) : (b.Valor_Final_Recebido || 0));
         const st = b.Status_Pagamento || "";
         const dt = _rcDate(isPend ? b.Proxima_Vencimento : b.Data_Baixa_Efetiva);
         const taxa = Number(b.Taxa_Aplicada_RS || 0);
@@ -4003,7 +4004,7 @@
       // Próxima parcela a vencer
       const proxPend = pendentes[0] || null;
       const proxBanner = proxPend && !quitado ? (() => {
-        const vl = Number(proxPend.Saldo_Restante || proxPend.Valor_Original || 0);
+        const vl = Number(valorParcelaCli || proxPend.Saldo_Restante || proxPend.Valor_Original || 0);
         const dt = _rcDate(proxPend.Proxima_Vencimento);
         const num = nPagas + 1;
         const isHoje = proxPend.Proxima_Vencimento && new Date(_rcDate(proxPend.Proxima_Vencimento).split("/").reverse().join("-")) <= new Date();

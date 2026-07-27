@@ -1518,7 +1518,8 @@ function editarPedido(p) {
     "Custo_Lote":             p.custoLote !== undefined ? Number(p.custoLote) : undefined,
     "Endereco":               p.endereco,
     "CEP":                    p.cep,
-    "Responsavel":            p.responsavel
+    "Responsavel":            p.responsavel,
+    "Qtd_Parcelas":           p.qtdParcelas !== undefined && p.qtdParcelas !== "" ? Number(p.qtdParcelas) : undefined
   };
   Object.entries(campos).forEach(function([campo, valor]) {
     if (valor === undefined) return;

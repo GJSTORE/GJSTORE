@@ -1586,8 +1586,11 @@ function renderDetailBaixas(pedId, totalPed) {
     el.innerHTML = `<div style="font-size:12px;color:var(--muted);padding:8px 0">Nenhum pagamento registrado</div>`;
     return;
   }
+  const _pedRef = allPeds.find(x => String(x["ID Pedido"]) === String(pedId));
+  const qtdParcDet = Number((_pedRef && (_pedRef["Qtd_Parcelas"] || _pedRef["qtdParcelas"])) || 0);
+  const valorParcelaDet = qtdParcDet > 0 ? totalPed / qtdParcDet : 0;
   const mkRow = (b, isPend, num) => {
-    const vl = Number(isPend ? (b["Saldo_Restante"] || b["Valor_Original"] || 0) : (b["Valor_Final_Recebido"] || 0));
+    const vl = Number(isPend ? (valorParcelaDet || b["Saldo_Restante"] || b["Valor_Original"] || 0) : (b["Valor_Final_Recebido"] || 0));
     const st = b["Status_Pagamento"] || "";
     const dt = isPend ? (b["Proxima_Vencimento"] || "—") : (b["Data_Baixa_Efetiva"] || "—");
     const cor = isPend ? "#f44336" : (st.includes("Atraso") ? "#ffb74d" : "#00e676");
@@ -1801,11 +1804,15 @@ function openEditPedido(id) {
     </div>
     <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:6px">
       <div style="flex:1;min-width:130px"><div class="bx-lbl">Forma Pagamento</div>
-        <select class="bx-inp" id="ep-forma">
+        <select class="bx-inp" id="ep-forma" onchange="_epToggleParc()">
           ${["PIX","Dinheiro","Cartão","Parcelado GJ","Boleto"].map(f => `<option${f===(p["Forma Pagamento"]||"")?" selected":""}>${f}</option>`).join("")}
         </select>
       </div>
       <div style="flex:1;min-width:130px"><div class="bx-lbl">⏰ Vencimento</div><input class="bx-inp" id="ep-venc" type="date" value="${dvIso}"></div>
+      <div id="ep-parc-wrap" style="flex:1;min-width:110px;display:${(p["Forma Pagamento"]||"")==="Parcelado GJ"?"block":"none"}">
+        <div class="bx-lbl">📦 Nº Parcelas</div>
+        <input class="bx-inp" id="ep-parcelas" type="number" min="1" max="60" value="${Number(p["Qtd_Parcelas"]||p["qtdParcelas"]||1)}">
+      </div>
     </div>
     <div style="display:flex;gap:8px;flex-wrap:wrap;margin-top:6px">
       <div style="flex:2;min-width:140px"><div class="bx-lbl">Endereço</div><input class="bx-inp" id="ep-end" value="${String(p["Endereco"]||p["Endereço"]||"").replace(/"/g,"&quot;")}"></div>
@@ -1826,20 +1833,28 @@ function openEditPedido(id) {
   panel.scrollIntoView({ behavior: "smooth", block: "nearest" });
 }
 
+function _epToggleParc() {
+  const forma = document.getElementById("ep-forma")?.value || "";
+  const wrap  = document.getElementById("ep-parc-wrap");
+  if (wrap) wrap.style.display = forma === "Parcelado GJ" ? "block" : "none";
+}
+
 async function salvarEditPedido(id) {
   const dvVal = document.getElementById("ep-venc")?.value || "";
   const dvBR = dvVal ? (() => { const [y,m,d] = dvVal.split("-"); return `${d}/${m}/${y}`; })() : "";
+  const formaSel = document.getElementById("ep-forma")?.value || "";
   const params = {
     id,
     nomeCliente:   document.getElementById("ep-nome")?.value.trim() || "",
     telefone:      document.getElementById("ep-tel")?.value.trim().replace(/\D/g,"") || "",
-    formaPagamento:document.getElementById("ep-forma")?.value || "",
+    formaPagamento:formaSel,
     dataVencimento:dvBR,
     obs:           document.getElementById("ep-obs")?.value || "",
     fornecedor:    document.getElementById("ep-forn")?.value.trim() || "",
     custoLote:     document.getElementById("ep-custo")?.value || "",
     endereco:      document.getElementById("ep-end")?.value.trim() || "",
-    cep:           document.getElementById("ep-cep")?.value.trim() || ""
+    cep:           document.getElementById("ep-cep")?.value.trim() || "",
+    qtdParcelas:   formaSel === "Parcelado GJ" ? (document.getElementById("ep-parcelas")?.value || "") : ""
   };
   const btn = document.querySelector("#editPedPanel .bx-confirm");
   if (btn) { btn.disabled = true; btn.textContent = "⏳ Salvando..."; }
@@ -1859,7 +1874,8 @@ async function salvarEditPedido(id) {
           "Fornecedor_Selecionado": params.fornecedor,
           "Custo_Lote": params.custoLote,
           "Endereco": params.endereco,
-          "CEP": params.cep
+          "CEP": params.cep,
+          "Qtd_Parcelas": params.qtdParcelas !== "" ? Number(params.qtdParcelas) : allPeds[idx]["Qtd_Parcelas"]
         };
         currentPed = allPeds[idx];
       }
@@ -2019,8 +2035,9 @@ async function showRecibo(pedId) {
   const abatimento = Math.max(0, (sub + totalJuros) - total - totalPago + saldo);
 
   const totalParc = qtdParc || (nPagas + nPend) || 0;
+  const valorParcelaRc = qtdParc > 0 ? total / qtdParc : 0;
   const mkBxRow = (b, isPend, num) => {
-    const vl = Number(isPend ? (b["Saldo_Restante"] || b["Valor_Original"] || 0) : (b["Valor_Final_Recebido"] || 0));
+    const vl = Number(isPend ? (valorParcelaRc || b["Saldo_Restante"] || b["Valor_Original"] || 0) : (b["Valor_Final_Recebido"] || 0));
     const st = b["Status_Pagamento"] || "";
     const dt = isPend ? (b["Proxima_Vencimento"] || "—") : (b["Data_Baixa_Efetiva"] || "—");
     const taxa = Number(b["Taxa_Aplicada_RS"] || 0);
@@ -2069,7 +2086,7 @@ async function showRecibo(pedId) {
       const taxa = Number(b["Taxa_Aplicada_RS"]||0);
       wppLines.push(`✅ ${parcLabel(i+1)} — ${b["Data_Baixa_Efetiva"]||"—"} — ${fmt(Number(b["Valor_Final_Recebido"]||0))}${taxa > 0 ? ` (c/ juros ${fmt(taxa)})` : ""}`);
     });
-    pendentes.forEach((b,i) => wppLines.push(`⏳ ${parcLabel(nPagas+i+1)} — Vence ${b["Proxima_Vencimento"]||"—"} — ${fmt(Number(b["Saldo_Restante"]||b["Valor_Original"]||0))}`));
+    pendentes.forEach((b,i) => wppLines.push(`⏳ ${parcLabel(nPagas+i+1)} — Vence ${b["Proxima_Vencimento"]||"—"} — ${fmt(Number(valorParcelaRc || b["Saldo_Restante"]||b["Valor_Original"]||0))}`));
     wppLines.push("", `✅ *Total pago: ${fmt(totalPago)}*`);
     if (totalJuros > 0) wppLines.push(`⚠️ Juros totais: ${fmt(totalJuros)}`);
     wppLines.push(quitado ? "🎉 *QUITADO ✅*" : `⚠️ *Saldo devedor: ${fmt(saldo)}*`);
@@ -2083,10 +2100,45 @@ async function showRecibo(pedId) {
     <button class="rc-btn rc-btn-img" id="rcImgBtn" onclick="gerarImagemRecibo()">📲 Enviar pelo WPP</button>
     <button class="rc-btn rc-btn-cls" onclick="document.getElementById('receiptModal').classList.remove('open')">✕ Fechar</button>`;
 
+  const _msgMotivRc = quitado
+    ? `🎉 Pedido totalmente quitado! Obrigado ${String(nome).split(" ")[0]}!`
+    : pct >= 90 ? `🔥 Quase lá! Só mais ${totalParc - nPagas} parcela${(totalParc-nPagas)>1?"s":""}`
+    : pct >= 50 ? `🎯 Na metade! Faltam ${totalParc - nPagas} parcela${(totalParc-nPagas)>1?"s":""}`
+    : pct >= 25 ? `💪 Você está indo bem! ${nPagas} de ${totalParc} pagas`
+    : nPagas > 0 ? `👏 Primeira parcela paga! Continue firme`
+    : totalParc > 1 ? `📅 ${totalParc} parcelas a pagar` : "";
+
+  let _proxPagHtml = "";
+  if (!quitado && pendentes.length) {
+    const _prox = pendentes[0];
+    const _dtVenc = String(_prox["Proxima_Vencimento"] || "").split("T")[0];
+    let _diasAte = null;
+    try { const _d = new Date(_dtVenc); if (!isNaN(_d)) _diasAte = Math.ceil((_d - new Date()) / 86400000); } catch(e) {}
+    const _dtBR = _dtVenc.split("-").reverse().join("/");
+    const _vlProx = valorParcelaRc || Number(_prox["Saldo_Restante"] || _prox["Valor_Original"] || 0);
+    const _urg = _diasAte === null ? "" : _diasAte < 0 ? `⚠️ Atrasado há ${Math.abs(_diasAte)}d` : _diasAte === 0 ? "🔴 Vence HOJE" : _diasAte <= 3 ? `🟠 Vence em ${_diasAte}d` : _diasAte <= 7 ? `🟡 Vence em ${_diasAte}d` : `🟢 Vence em ${_diasAte}d`;
+    const _corU = _diasAte === null ? "#00bcd4" : _diasAte < 0 ? "#f44336" : _diasAte <= 3 ? "#ff8a65" : _diasAte <= 7 ? "#ffb74d" : "#00e676";
+    _proxPagHtml = `<div style="padding:12px 16px;border-bottom:1px solid #1a2840;background:linear-gradient(135deg,rgba(0,188,212,.08),rgba(0,230,118,.04))">
+      <div style="font-size:9px;font-weight:800;color:#8899aa;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px">📅 PRÓXIMO PAGAMENTO</div>
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <div>
+          <div style="font-size:18px;font-weight:900;color:${_corU}">${fmt(_vlProx)}</div>
+          <div style="font-size:10px;color:#8899aa;margin-top:2px">${_dtBR || "—"}</div>
+        </div>
+        <div style="font-size:11px;font-weight:800;color:${_corU};text-align:right">${_urg}</div>
+      </div>
+    </div>`;
+  }
+
+  const _badgeHead = quitado
+    ? `<div style="margin-top:6px;font-size:10px;font-weight:800;color:#04090f;background:rgba(4,9,15,.15);border-radius:20px;padding:3px 10px;display:inline-block">🎉 PEDIDO QUITADO</div>`
+    : (nPagas >= 3 ? `<div style="margin-top:6px;font-size:10px;font-weight:800;color:#04090f;background:rgba(4,9,15,.15);border-radius:20px;padding:3px 10px;display:inline-block">🏅 CLIENTE FIEL</div>` : "");
+
   document.getElementById("rcCard").innerHTML = `
     <div class="rc-header">
       <div class="rc-store">🏪 ${_storeName}</div>
       <div class="rc-sub">RECIBO DE VENDA  •  #${id}</div>
+      ${_badgeHead}
     </div>
 
     <div style="padding:12px 16px;border-bottom:1px solid #1a2840">
@@ -2144,9 +2196,12 @@ async function showRecibo(pedId) {
             : `<div><div style="font-size:10px;color:#8899aa;margin-bottom:3px">⚠️ Saldo devedor</div><div style="font-size:22px;font-weight:900;color:#f44336;font-family:'Syne',sans-serif">${fmt(saldo)}</div></div>`}
         </div>
       </div>
-    </div>` : ""}
+      ${_msgMotivRc ? `<div style="margin-top:10px;font-size:11px;font-weight:700;color:${quitado?"#00e676":"#00bcd4"};text-align:center;padding:7px 10px;background:rgba(255,255,255,.04);border-radius:8px">${_msgMotivRc}</div>` : ""}
+    </div>
+    ${_proxPagHtml}` : ""}
 
     <div style="padding:12px 16px;text-align:center;background:rgba(0,0,0,.2)">
+      <div style="font-size:11px;font-weight:700;color:#e2f4ff;margin-bottom:4px">${String(nome).split(" ")[0]}, conte sempre com a gente! 💚</div>
       <div style="font-size:9px;color:#8899aa;letter-spacing:.5px;text-transform:uppercase">${_storeName} · Obrigado pela preferência 🙏</div>
       <div style="font-size:8px;color:rgba(136,153,170,.5);margin-top:3px">${new Date().toLocaleDateString("pt-BR")} ${new Date().toLocaleTimeString("pt-BR",{hour:"2-digit",minute:"2-digit"})}</div>
     </div>`;

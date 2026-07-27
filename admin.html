@@ -3827,6 +3827,19 @@
         <div class="det-section">
           <div class="det-sec-title">💰 Registrar Pagamento</div>
 
+          <!-- Editar Qtd Parcelas do pedido (parcelado GJ) -->
+          <div id="detQtdParcelasWrap" style="display:none;background:var(--d3);border:1px solid var(--border);border-radius:10px;padding:10px 12px;margin-bottom:10px">
+            <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+              <div style="flex:1;min-width:130px">
+                <label class="fl" style="font-size:11px;font-weight:700;color:var(--muted);margin-bottom:4px;display:block">📦 Nº de parcelas do pedido</label>
+                <input class="fi" id="detQtdParcelasGJ" type="number" min="1" max="60" value="1"
+                  style="width:100%;text-align:center;font-size:15px;font-weight:800;color:var(--c);padding:8px 10px">
+              </div>
+              <button onclick="salvarQtdParcelasGJ()" style="padding:10px 14px;background:var(--c);color:#04090f;border:0;border-radius:8px;font-weight:800;font-size:12px;cursor:pointer">💾 Salvar</button>
+            </div>
+            <div style="font-size:10px;color:var(--muted);margin-top:6px">Alterando aqui recalcula o valor da parcela no recibo (mantém histórico de pagamentos).</div>
+          </div>
+
           <!-- Resumo financeiro do pedido -->
           <div id="bxResumo" style="background:var(--d3);border-radius:10px;padding:12px 14px;margin-bottom:12px"></div>
 
@@ -5978,6 +5991,12 @@
       document.getElementById("detDataAcordada").value = pedDates.acordada || "";
       document.getElementById("detDataLembrete").value = pedDates.lembrete || "";
       document.getElementById("detParcelas").value = pedDates.parcelas || 1;
+      // Popula campo Qtd_Parcelas do pedido (Parcelado GJ)
+      const _forma = String(p["Forma Pagamento"] || "");
+      const _wrapQP = document.getElementById("detQtdParcelasWrap");
+      if (_wrapQP) _wrapQP.style.display = _forma === "Parcelado GJ" ? "block" : "none";
+      const _inpQP = document.getElementById("detQtdParcelasGJ");
+      if (_inpQP) _inpQP.value = Number(p["Qtd_Parcelas"] || p["qtdParcelas"] || 1);
       renderLembretesResumo(pedDates);
       renderDetDatesTimeline(p);
 
@@ -6015,6 +6034,8 @@
       const nPagas = pagas.length;
       const nPend  = pendentes.length;
       const nTotal = todas.length;
+      const qtdParcRes = Number((currentDetailPed && (currentDetailPed["Qtd_Parcelas"] || currentDetailPed["qtdParcelas"])) || 0);
+      const valorParcelaRes = qtdParcRes > 0 ? totalPed / qtdParcRes : 0;
 
       // Monta linhas de histórico (pagas primeiro, pendentes depois)
       const rowHtml = (arr, isPend) => arr.map((b, i) => {
@@ -6024,14 +6045,15 @@
         const dt  = isPend ? (b["Proxima_Vencimento"] || "—") : (b["Data_Baixa_Efetiva"] || "—");
         const cor = isPend ? "var(--r)" : (st.includes("Atraso") ? "#ffb74d" : "var(--g)");
         const num = isPend ? (nPagas + i + 1) : (i + 1);
+        const vlPend = valorParcelaRes || Number(b["Saldo_Restante"] || b["Valor_Original"] || 0);
         return `<div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid rgba(255,255,255,.04)">
           <div style="width:18px;height:18px;border-radius:50%;background:${cor}22;border:1px solid ${cor}44;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:800;color:${cor};flex-shrink:0">${num}</div>
           <div style="flex:1;min-width:0">
             <div style="font-size:11px;font-weight:600;color:${cor}">${isPend ? "⏳ Vence: " + dt : "✅ " + dt}</div>
-            <div style="font-size:10px;color:var(--muted)">${st}${sl > 0.01 ? " · restam " + fmt(sl) : ""}</div>
+            <div style="font-size:10px;color:var(--muted)">${st}${sl > 0.01 && !valorParcelaRes ? " · restam " + fmt(sl) : ""}</div>
           </div>
           <div style="text-align:right;flex-shrink:0">
-            <div style="font-size:13px;font-weight:800;color:${isPend ? "var(--muted)" : cor}">${isPend ? fmt(Number(b["Saldo_Restante"] || b["Valor_Original"] || 0)) : fmt(vl)}</div>
+            <div style="font-size:13px;font-weight:800;color:${isPend ? "var(--muted)" : cor}">${isPend ? fmt(vlPend) : fmt(vl)}</div>
             ${isPend ? `<div style="font-size:9px;color:var(--r)">a pagar</div>` : `<div style="font-size:9px;color:var(--muted)">pago</div>`}
           </div>
         </div>`;
@@ -6446,9 +6468,10 @@
       const pct        = totalOrig > 0 ? Math.min(100, Math.round(totalPago / totalOrig * 100)) : 0;
       const qtdParcAdmin = Number(pedObj["Qtd_Parcelas"] || pedObj["qtdParcelas"] || 0);
       const totalParcAdmin = qtdParcAdmin || (nPagas + nPend) || 0;
+      const valorParcelaAdmin = qtdParcAdmin > 0 ? totalOrig / qtdParcAdmin : 0;
 
       const mkBaixaRow = (b, isPend, num) => {
-        const vl  = Number(isPend ? (b["Saldo_Restante"] || b["Valor_Original"] || 0) : (b["Valor_Final_Recebido"] || 0));
+        const vl  = Number(isPend ? (valorParcelaAdmin || b["Saldo_Restante"] || b["Valor_Original"] || 0) : (b["Valor_Final_Recebido"] || 0));
         const st  = b["Status_Pagamento"] || "";
         const dt  = isPend ? (b["Proxima_Vencimento"] || "—") : (b["Data_Baixa_Efetiva"] || "—");
         const cor = isPend ? "#f44336" : (st.includes("Atraso") ? "#ffb74d" : "#00e676");
@@ -6484,7 +6507,7 @@
         ``,
         historico.length ? `📋 *Pagamentos (${nPagas} de ${nPagas+nPend}):*` : "",
         ...pagas.map((b,i) => `✅ ${i+1}. ${b["Data_Baixa_Efetiva"]||"—"} — ${fmt(b["Valor_Final_Recebido"])} (${b["Status_Pagamento"]})`),
-        ...pendentes.map((b,i) => `⏳ ${nPagas+i+1}. Vence ${b["Proxima_Vencimento"]||"—"} — ${fmt(b["Saldo_Restante"]||b["Valor_Original"]||0)} (Pendente)`),
+        ...pendentes.map((b,i) => `⏳ ${nPagas+i+1}. Vence ${b["Proxima_Vencimento"]||"—"} — ${fmt(valorParcelaAdmin || b["Saldo_Restante"]||b["Valor_Original"]||0)} (Pendente)`),
         ``,
         `✅ *Total pago: ${fmt(totalPago)}*`,
         quitado ? `✅ *QUITADO*` : `⚠️ *Saldo devedor: ${fmt(saldo)}*`,
@@ -6518,9 +6541,10 @@
         <div id="rcCard" style="width:100%;max-width:400px;background:#04090f;border-radius:16px;overflow:hidden;border:1px solid #1a2840;margin:0 8px">
 
           <!-- Header gradient -->
-          <div style="background:linear-gradient(135deg,#00e676 0%,#00bcd4 100%);padding:20px 18px 16px;text-align:center">
+          <div style="background:linear-gradient(135deg,#00e676 0%,#00bcd4 100%);padding:20px 18px 16px;text-align:center;position:relative">
             <div style="font-size:24px;font-weight:900;color:#04090f;letter-spacing:-1px;line-height:1">GJ STORE</div>
             <div style="font-size:11px;font-weight:700;color:#04090f;opacity:.75;margin-top:3px;letter-spacing:.5px">RECIBO #${idPed}</div>
+            ${quitado ? `<div style="margin-top:8px;font-size:11px;font-weight:800;color:#04090f;background:rgba(4,9,15,.12);border-radius:20px;padding:4px 12px;display:inline-block">🎉 PEDIDO QUITADO</div>` : (nPagas >= 3 ? `<div style="margin-top:8px;font-size:11px;font-weight:800;color:#04090f;background:rgba(4,9,15,.12);border-radius:20px;padding:4px 12px;display:inline-block">🏅 CLIENTE FIEL</div>` : "")}
           </div>
 
           <!-- Info básica -->
@@ -6549,16 +6573,47 @@
             const dots = Array.from({length: Math.min(totalParcAdmin, 12)}, (_,i) =>
               `<div style="flex:1;height:8px;border-radius:2px;background:${i < nPagas ? "#00e676" : i === nPagas ? cor2 : "rgba(255,255,255,.15)"}"></div>`
             ).join("");
+            const msgMotiv = quitado
+              ? `🎉 Pedido totalmente quitado! Obrigado ${String(nome).split(" ")[0]}!`
+              : pct >= 90 ? `🔥 Quase lá! Só mais ${faltam2} parcela${faltam2>1?"s":""}`
+              : pct >= 50 ? `🎯 Na metade! Faltam ${faltam2} parcela${faltam2>1?"s":""}`
+              : pct >= 25 ? `💪 Você está indo bem! ${nPagas} de ${totalParcAdmin} pagas`
+              : nPagas > 0 ? `👏 Primeira parcela paga! Continue firme`
+              : `📅 ${totalParcAdmin} parcela${totalParcAdmin>1?"s":""} a pagar`;
             return `<div style="padding:10px 16px;border-bottom:1px solid #1a2840;background:${quitado ? "rgba(0,230,118,.06)" : "rgba(0,188,212,.06)"}">
               <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
                 <span style="font-size:9px;font-weight:800;color:#8899aa;text-transform:uppercase;letter-spacing:1px">📦 PARCELAS</span>
                 <span style="font-size:12px;font-weight:800;color:${cor2}">${nPagas}${totalParcAdmin > 0 ? "/" + totalParcAdmin : ""} pagas${quitado ? " ✅" : faltam2 > 0 ? " · " + faltam2 + " restante" + (faltam2 > 1 ? "s" : "") : ""}</span>
               </div>
               ${totalParcAdmin > 1 ? `<div style="display:flex;gap:3px;margin-bottom:6px">${dots}</div>` : ""}
-              <div style="display:flex;justify-content:space-between;font-size:10px">
+              <div style="display:flex;justify-content:space-between;font-size:10px;margin-bottom:6px">
                 <span style="color:#8899aa">Pago: <b style="color:#00e676">${fmt(totalPago)}</b></span>
                 <span style="color:#8899aa">Pct: <b style="color:${cor2}">${pct}%</b></span>
                 ${!quitado ? `<span style="color:#8899aa">Saldo: <b style="color:#f44336">${fmt(saldo)}</b></span>` : ""}
+              </div>
+              <div style="font-size:11px;font-weight:700;color:${cor2};text-align:center;padding:6px 8px;background:rgba(255,255,255,.03);border-radius:6px">${msgMotiv}</div>
+            </div>`;
+          })() : ""}
+          ${!quitado && pendentes.length ? (() => {
+            const prox = pendentes[0];
+            const dtVenc = String(prox["Proxima_Vencimento"] || "").split("T")[0];
+            let diasAte = null;
+            try {
+              const d = new Date(dtVenc);
+              if (!isNaN(d)) diasAte = Math.ceil((d - new Date()) / 86400000);
+            } catch(e) {}
+            const dtBR = dtVenc.split("-").reverse().join("/");
+            const vlProx = valorParcelaAdmin || Number(prox["Saldo_Restante"] || prox["Valor_Original"] || 0);
+            const urgencia = diasAte === null ? "" : diasAte < 0 ? `⚠️ Atrasado há ${Math.abs(diasAte)}d` : diasAte === 0 ? "🔴 Vence HOJE" : diasAte <= 3 ? `🟠 Vence em ${diasAte}d` : diasAte <= 7 ? `🟡 Vence em ${diasAte}d` : `🟢 Vence em ${diasAte}d`;
+            const corU = diasAte === null ? "#00bcd4" : diasAte < 0 ? "#f44336" : diasAte <= 3 ? "#ff8a65" : diasAte <= 7 ? "#ffb74d" : "#00e676";
+            return `<div style="padding:12px 16px;border-bottom:1px solid #1a2840;background:linear-gradient(135deg,rgba(0,188,212,.08),rgba(0,230,118,.04))">
+              <div style="font-size:9px;font-weight:800;color:#8899aa;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px">📅 PRÓXIMO PAGAMENTO</div>
+              <div style="display:flex;justify-content:space-between;align-items:center">
+                <div>
+                  <div style="font-size:18px;font-weight:900;color:${corU}">${fmt(vlProx)}</div>
+                  <div style="font-size:10px;color:#8899aa;margin-top:2px">${dtBR || "—"}</div>
+                </div>
+                <div style="font-size:11px;font-weight:800;color:${corU};text-align:right">${urgencia}</div>
               </div>
             </div>`;
           })() : ""}
@@ -6610,6 +6665,7 @@
 
           <!-- Footer -->
           <div style="text-align:center;padding:12px;background:#060c18;border-top:1px solid #1a2840;font-size:10px;color:#8899aa">
+            <div style="font-weight:700;color:#e2f4ff;margin-bottom:2px">${String(nome).split(" ")[0]}, conte sempre com a gente! 💚</div>
             GJ Store &nbsp;•&nbsp; Obrigado pela preferência 🙏
           </div>
         </div>`;
@@ -6757,6 +6813,32 @@
     function getPedDatesLocal(idPed) {
       try { return JSON.parse(localStorage.getItem("gj_peddates_" + idPed) || "{}"); } catch(e) { return {}; }
     }
+    async function salvarQtdParcelasGJ() {
+      if (!currentDetailPed) return;
+      const id = currentDetailPed["ID Pedido"] || "";
+      const novaQtd = Math.max(1, parseInt(document.getElementById("detQtdParcelasGJ").value) || 1);
+      if (!id) return;
+      const btn = document.querySelector("#detQtdParcelasWrap button");
+      const oldTxt = btn ? btn.textContent : "";
+      if (btn) { btn.disabled = true; btn.textContent = "⏳..."; }
+      try {
+        const res = await apiPost("editarPedido", { id, qtdParcelas: novaQtd });
+        if (res && res.ok) {
+          currentDetailPed["Qtd_Parcelas"] = novaQtd;
+          const idx = allPeds.findIndex(x => String(x["ID Pedido"]) === String(id));
+          if (idx >= 0) allPeds[idx]["Qtd_Parcelas"] = novaQtd;
+          if (typeof renderBxResumo === "function") renderBxResumo(id, Number(currentDetailPed["Total (R$)"] || 0));
+          toast(`Parcelas: ${novaQtd} ✅`);
+        } else {
+          toast("Erro: " + (res?.error || "?"), "err");
+        }
+      } catch(e) {
+        toast("Erro: " + e.message, "err");
+      } finally {
+        if (btn) { btn.disabled = false; btn.textContent = oldTxt; }
+      }
+    }
+
     function savePedDates() {
       if (!currentDetailPed) return;
       const id = currentDetailPed["ID Pedido"] || "";
