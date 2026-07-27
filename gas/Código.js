@@ -2370,7 +2370,7 @@ function getVisitorMap(p) {
     if (!ts || ts < cutoff) return;
     const pid = String(r["Detalhe"] || "");
     if (!pid) return;
-    const vid = String(r["VID"] || "") || ("sess_" + String(r["ID_Sessao"] || "?"));
+    const vid = String(r["VID"] || "") || String(r["ID_Sessao"] || "?");
     if (!prodViews[pid]) prodViews[pid] = {};
     prodViews[pid][vid] = (prodViews[pid][vid] || 0) + 1;
   });
