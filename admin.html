@@ -3827,12 +3827,13 @@
         <div class="det-section">
           <div class="det-sec-title">💰 Registrar Pagamento</div>
 
-          <!-- Editar Qtd Parcelas do pedido (parcelado GJ) -->
-          <div id="detQtdParcelasWrap" style="display:none;background:var(--d3);border:1px solid var(--border);border-radius:10px;padding:10px 12px;margin-bottom:10px">
+          <!-- Editar Qtd Parcelas do pedido -->
+          <div id="detQtdParcelasWrap" style="background:var(--d3);border:1px solid var(--border);border-radius:10px;padding:10px 12px;margin-bottom:10px">
             <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
               <div style="flex:1;min-width:130px">
                 <label class="fl" style="font-size:11px;font-weight:700;color:var(--muted);margin-bottom:4px;display:block">📦 Nº de parcelas do pedido</label>
                 <input class="fi" id="detQtdParcelasGJ" type="number" min="1" max="60" value="1"
+                  onchange="salvarQtdParcelasGJ()"
                   style="width:100%;text-align:center;font-size:15px;font-weight:800;color:var(--c);padding:8px 10px">
               </div>
               <button onclick="salvarQtdParcelasGJ()" style="padding:10px 14px;background:var(--c);color:#04090f;border:0;border-radius:8px;font-weight:800;font-size:12px;cursor:pointer">💾 Salvar</button>
@@ -5991,10 +5992,7 @@
       document.getElementById("detDataAcordada").value = pedDates.acordada || "";
       document.getElementById("detDataLembrete").value = pedDates.lembrete || "";
       document.getElementById("detParcelas").value = pedDates.parcelas || 1;
-      // Popula campo Qtd_Parcelas do pedido (Parcelado GJ)
-      const _forma = String(p["Forma Pagamento"] || "");
-      const _wrapQP = document.getElementById("detQtdParcelasWrap");
-      if (_wrapQP) _wrapQP.style.display = _forma === "Parcelado GJ" ? "block" : "none";
+      // Popula campo Qtd_Parcelas (sempre visível)
       const _inpQP = document.getElementById("detQtdParcelasGJ");
       if (_inpQP) _inpQP.value = Number(p["Qtd_Parcelas"] || p["qtdParcelas"] || 1);
       renderLembretesResumo(pedDates);

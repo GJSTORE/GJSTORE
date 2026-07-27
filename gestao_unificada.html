@@ -1810,7 +1810,7 @@ function openEditPedido(id) {
         </select>
       </div>
       <div style="flex:1;min-width:130px"><div class="bx-lbl">⏰ Vencimento</div><input class="bx-inp" id="ep-venc" type="date" value="${dvIso}"></div>
-      <div id="ep-parc-wrap" style="flex:1;min-width:110px;display:${(p["Forma Pagamento"]||"")==="Parcelado GJ"?"block":"none"}">
+      <div id="ep-parc-wrap" style="flex:1;min-width:110px">
         <div class="bx-lbl">📦 Nº Parcelas</div>
         <input class="bx-inp" id="ep-parcelas" type="number" min="1" max="60" value="${Number(p["Qtd_Parcelas"]||p["qtdParcelas"]||1)}">
       </div>
@@ -1835,15 +1835,14 @@ function openEditPedido(id) {
 }
 
 function _epToggleParc() {
-  const forma = document.getElementById("ep-forma")?.value || "";
-  const wrap  = document.getElementById("ep-parc-wrap");
-  if (wrap) wrap.style.display = forma === "Parcelado GJ" ? "block" : "none";
+  // campo sempre visível — mantido por compatibilidade
 }
 
 async function salvarEditPedido(id) {
   const dvVal = document.getElementById("ep-venc")?.value || "";
   const dvBR = dvVal ? (() => { const [y,m,d] = dvVal.split("-"); return `${d}/${m}/${y}`; })() : "";
   const formaSel = document.getElementById("ep-forma")?.value || "";
+  const qtdParcVal = document.getElementById("ep-parcelas")?.value || "";
   const params = {
     id,
     nomeCliente:   document.getElementById("ep-nome")?.value.trim() || "",
@@ -1855,7 +1854,7 @@ async function salvarEditPedido(id) {
     custoLote:     document.getElementById("ep-custo")?.value || "",
     endereco:      document.getElementById("ep-end")?.value.trim() || "",
     cep:           document.getElementById("ep-cep")?.value.trim() || "",
-    qtdParcelas:   formaSel === "Parcelado GJ" ? (document.getElementById("ep-parcelas")?.value || "") : ""
+    qtdParcelas:   qtdParcVal
   };
   const btn = document.querySelector("#editPedPanel .bx-confirm");
   if (btn) { btn.disabled = true; btn.textContent = "⏳ Salvando..."; }
