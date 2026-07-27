@@ -6658,7 +6658,7 @@
       const p = currentDetailPed;
       if (!p) return;
       const id = p["ID Pedido"] || "";
-      const itensHtml = (p["Itens"] || "").split("|").map(item => {
+      const itensHtml = ((p["Itens (JSON)"] || p["Itens"]) || "").split("|").map(item => {
         const t = item.trim();
         const m = t.match(/^(.+?)\s+x(\d+)$/);
         return `<tr><td class="pa-table">${m ? m[1] : t}</td><td>${m ? m[2] : 1}</td></tr>`;
@@ -6711,7 +6711,7 @@
     <div><b>Cliente:</b> ${p["Nome Cliente"] || "—"}</div>
     <div><b>Tel:</b> ${p["Telefone"] || "—"}</div>
     <div style="border-top:1px dashed #000;margin:8px 0;padding-top:8px">
-      ${(p["Itens"] || "").split("|").map(i => `<div>• ${i.trim()}</div>`).join("")}
+      ${((p["Itens (JSON)"] || p["Itens"]) || "").split("|").map(i => `<div>• ${i.trim()}</div>`).join("")}
     </div>
     <div style="border-top:2px solid #000;margin-top:8px;padding-top:8px;font-size:15px;font-weight:900;text-align:right">
       TOTAL: R$ ${total.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}

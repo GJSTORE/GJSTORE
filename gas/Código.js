@@ -1379,7 +1379,7 @@ function getPedidoById(p) {
   // Parse itens
   let itensParsed = null, parseError = null;
   try {
-    const raw = String(ped["Itens"] || "").trim();
+    const raw = String((ped["Itens (JSON)"] || ped["Itens"]) || "").trim();
     if (raw && raw !== "[]") itensParsed = JSON.parse(raw);
   } catch(e) { parseError = e.message; }
   return {
@@ -1389,8 +1389,8 @@ function getPedidoById(p) {
     itensParsed: itensParsed,
     itensParseError: parseError,
     debug: {
-      itensRawLength: String(ped["Itens"] || "").length,
-      itensRawSample: String(ped["Itens"] || "").substring(0, 200),
+      itensRawLength: String((ped["Itens (JSON)"] || ped["Itens"]) || "").length,
+      itensRawSample: String((ped["Itens (JSON)"] || ped["Itens"]) || "").substring(0, 200),
       qtdBaixas: baixas.length,
       status: ped["Status"] || "(vazio)"
     }
@@ -1769,7 +1769,7 @@ function gerarComprovanteDrive(p) {
   const obs = p.obs || obj["Observações"] || "";
   const nomeCliente = obj["Nome Cliente"] || "";
   const telefone = obj["Telefone"] || "";
-  const itens = obj["Itens"] || "";
+  const itens = (obj["Itens (JSON)"] || obj["Itens"]) || "";
   const total = Number(obj["Total (R$)"] || 0);
   const subtotal = Number(obj["Subtotal (R$)"] || obj["Subtotal"] || 0);
   const desconto = Number(obj["Desconto (R$)"] || obj["Desconto"] || 0);
@@ -1959,7 +1959,7 @@ function sendEmailStatusUpdate(idPedido, status, pedObj) {
   // pedObj é um objeto nomeado {coluna: valor} \u2014 independe da ordem das colunas
   const nomeCliente = String(pedObj["Nome Cliente"] || pedObj["Nome_Cliente"] || "");
   const telefone    = String(pedObj["Telefone"] || "");
-  const itens       = String(pedObj["Itens"] || "");
+  const itens       = String((pedObj["Itens (JSON)"] || pedObj["Itens"]) || "");
   const total       = parseFloat(String(pedObj["Total (R$)"] || pedObj["Total"] || "0").replace(",", ".")) || 0;
   const pagamento   = String(pedObj["Forma Pagamento"] || pedObj["Forma_Pagamento"] || "");
   const totalFmt    = "R$ " + total.toFixed(2).replace(".", ",");
@@ -3875,7 +3875,7 @@ function getAnalytics(p) {
   const formasPagamento = Object.entries(fpMap).map(function(e){return{forma:e[0],qtd:e[1]};}).sort(function(a,b){return b.qtd-a.qtd;});
   const prodMap = {};
   finalizados.forEach(function(pd){
-    const raw = pd["Itens"] || "";
+    const raw = (pd["Itens (JSON)"] || pd["Itens"]) || "";
     let parsed = false;
     try {
       const arr = JSON.parse(raw);

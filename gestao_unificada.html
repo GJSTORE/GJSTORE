@@ -838,7 +838,7 @@ function getFiltered() {
 
     // Busca
     if (q) {
-      const hay = [id, p["Nome Cliente"], p["Itens"] || ""].join(" ").toLowerCase();
+      const hay = [id, p["Nome Cliente"], (p["Itens (JSON)"] || p["Itens"]) || ""].join(" ").toLowerCase();
       if (!hay.includes(q)) return false;
     }
     return true;
@@ -943,7 +943,7 @@ function buildCard(p) {
   const fc = fcMap[formaShort] || "var(--muted)";
 
   // Itens display
-  const itensRaw = String(p["Itens"] || "").trim();
+  const itensRaw = String((p["Itens (JSON)"] || p["Itens"]) || "").trim();
   let itensDisp = "—";
   if (itensRaw && itensRaw !== "[]") {
     try {
@@ -1969,7 +1969,7 @@ async function showRecibo(pedId) {
   const cep = cepRaw !== null && cepRaw !== undefined ? String(cepRaw).trim() : "";
   const enderecoFmt = [endereco, cep ? `CEP ${cep}` : ""].filter(Boolean).join(" — ");
   const qtdParc = Number(p["Qtd_Parcelas"] || 0);
-  const itensRaw = String(p["Itens"] || "").trim();
+  const itensRaw = String((p["Itens (JSON)"] || p["Itens"]) || "").trim();
 
   // ── Itens HTML — layout idêntico ao verRecibo do index.html (thumb 72×72) ──
   let itensArr = [];
