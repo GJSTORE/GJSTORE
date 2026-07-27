@@ -6035,7 +6035,8 @@
       const nPend  = pendentes.length;
       const nTotal = todas.length;
       const qtdParcRes = Number((currentDetailPed && (currentDetailPed["Qtd_Parcelas"] || currentDetailPed["qtdParcelas"])) || 0);
-      const valorParcelaRes = qtdParcRes > 0 ? totalPed / qtdParcRes : 0;
+      const totalParcRes = qtdParcRes || (nPagas + nPend) || 0;
+      const valorParcelaRes = totalParcRes > 0 ? totalPed / totalParcRes : 0;
 
       // Monta linhas de histórico (pagas primeiro, pendentes depois)
       const rowHtml = (arr, isPend) => arr.map((b, i) => {
@@ -6468,7 +6469,7 @@
       const pct        = totalOrig > 0 ? Math.min(100, Math.round(totalPago / totalOrig * 100)) : 0;
       const qtdParcAdmin = Number(pedObj["Qtd_Parcelas"] || pedObj["qtdParcelas"] || 0);
       const totalParcAdmin = qtdParcAdmin || (nPagas + nPend) || 0;
-      const valorParcelaAdmin = qtdParcAdmin > 0 ? totalOrig / qtdParcAdmin : 0;
+      const valorParcelaAdmin = totalParcAdmin > 0 ? totalOrig / totalParcAdmin : 0;
 
       const mkBaixaRow = (b, isPend, num) => {
         const vl  = Number(isPend ? (valorParcelaAdmin || b["Saldo_Restante"] || b["Valor_Original"] || 0) : (b["Valor_Final_Recebido"] || 0));

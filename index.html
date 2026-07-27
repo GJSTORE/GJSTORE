@@ -3975,7 +3975,7 @@
       const { pagas, pendentes, totalPago, saldo, pct, quitado } = _rcCalcSaldo(p.baixas, total);
       const nPagas = pagas.length, nPend = pendentes.length;
       const totalParc = qtdParc || (nPagas + nPend) || 0;
-      const valorParcelaCli = qtdParc > 0 ? total / qtdParc : 0;
+      const valorParcelaCli = totalParc > 0 ? total / totalParc : 0;
       const mkBxRow = (b, isPend, num) => {
         const vl = Number(isPend ? (valorParcelaCli || b.Saldo_Restante || b.Valor_Original || 0) : (b.Valor_Final_Recebido || 0));
         const st = b.Status_Pagamento || "";

@@ -1588,7 +1588,8 @@ function renderDetailBaixas(pedId, totalPed) {
   }
   const _pedRef = allPeds.find(x => String(x["ID Pedido"]) === String(pedId));
   const qtdParcDet = Number((_pedRef && (_pedRef["Qtd_Parcelas"] || _pedRef["qtdParcelas"])) || 0);
-  const valorParcelaDet = qtdParcDet > 0 ? totalPed / qtdParcDet : 0;
+  const totalParcDet = qtdParcDet || (pagas.length + pendentes.length) || 0;
+  const valorParcelaDet = totalParcDet > 0 ? totalPed / totalParcDet : 0;
   const mkRow = (b, isPend, num) => {
     const vl = Number(isPend ? (valorParcelaDet || b["Saldo_Restante"] || b["Valor_Original"] || 0) : (b["Valor_Final_Recebido"] || 0));
     const st = b["Status_Pagamento"] || "";
@@ -2035,7 +2036,7 @@ async function showRecibo(pedId) {
   const abatimento = Math.max(0, (sub + totalJuros) - total - totalPago + saldo);
 
   const totalParc = qtdParc || (nPagas + nPend) || 0;
-  const valorParcelaRc = qtdParc > 0 ? total / qtdParc : 0;
+  const valorParcelaRc = totalParc > 0 ? total / totalParc : 0;
   const mkBxRow = (b, isPend, num) => {
     const vl = Number(isPend ? (valorParcelaRc || b["Saldo_Restante"] || b["Valor_Original"] || 0) : (b["Valor_Final_Recebido"] || 0));
     const st = b["Status_Pagamento"] || "";
@@ -2131,8 +2132,8 @@ async function showRecibo(pedId) {
   }
 
   const _badgeHead = quitado
-    ? `<div style="margin-top:6px;font-size:10px;font-weight:800;color:#04090f;background:rgba(4,9,15,.15);border-radius:20px;padding:3px 10px;display:inline-block">🎉 PEDIDO QUITADO</div>`
-    : (nPagas >= 3 ? `<div style="margin-top:6px;font-size:10px;font-weight:800;color:#04090f;background:rgba(4,9,15,.15);border-radius:20px;padding:3px 10px;display:inline-block">🏅 CLIENTE FIEL</div>` : "");
+    ? `<div style="margin-top:8px;font-size:10px;font-weight:800;color:#00e676;background:rgba(0,230,118,.12);border:1px solid rgba(0,230,118,.35);border-radius:20px;padding:4px 12px;display:inline-block">🎉 PEDIDO QUITADO</div>`
+    : (nPagas >= 3 ? `<div style="margin-top:8px;font-size:10px;font-weight:800;color:#ffd54f;background:rgba(255,213,79,.12);border:1px solid rgba(255,213,79,.35);border-radius:20px;padding:4px 12px;display:inline-block">🏅 CLIENTE FIEL</div>` : "");
 
   document.getElementById("rcCard").innerHTML = `
     <div class="rc-header">
