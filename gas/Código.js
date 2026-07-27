@@ -159,6 +159,7 @@ function handleAction(p) {
       case "getLogAcoes":          result = getLogAcoes(p);                     break;
       case "analyticsHealth":      result = analyticsHealth();                  break;
       case "getVisitorMap":        result = getVisitorMap(p);                   break;
+      case "getPedidoById":        result = getPedidoById(p);                   break;
       case "identificarProduto":   result = identificarProduto(p);              break;
       case "atualizarNomeProduto": result = atualizarNomeProduto(p);            break;
       case "salvarProdutosBatch":  result = salvarProdutosBatch(p);             break;
@@ -1357,6 +1358,43 @@ function getPedidos(p) {
   list = list.filter(function(r) { return r["Status"] !== "Deletado"; });
   if (p.status) list = list.filter(function(r) { return r["Status"] === p.status; });
   return { pedidos: list, total: list.length };
+}
+
+// DEBUG — busca pedido por ID incluindo Deletado. Retorna raw + metadados
+function getPedidoById(p) {
+  const id = String((p && p.id) || "").trim();
+  if (!id) return { error: "id obrigatório" };
+  const rows = sheetToObjects("Pedidos") || [];
+  const idNorm = id.toUpperCase();
+  const ped = rows.find(function(r) { return String(r["ID Pedido"] || "").trim().toUpperCase() === idNorm; });
+  if (!ped) {
+    // Fuzzy: contém
+    const fuzzy = rows.filter(function(r) { return String(r["ID Pedido"] || "").toUpperCase().includes(idNorm); });
+    return { error: "não encontrado", fuzzyMatches: fuzzy.map(function(r) { return { id: r["ID Pedido"], nome: r["Nome Cliente"], status: r["Status"] }; }).slice(0, 10) };
+  }
+  // Normaliza Data/Hora
+  ped["Data/Hora"] = normalizarDataHora(ped["Data/Hora"]);
+  // Baixas do pedido
+  const baixas = (sheetToObjects("Financeiro_Fluxo") || []).filter(function(b) { return String(b["ID_Pedido"] || "") === String(ped["ID Pedido"]); });
+  // Parse itens
+  let itensParsed = null, parseError = null;
+  try {
+    const raw = String(ped["Itens"] || "").trim();
+    if (raw && raw !== "[]") itensParsed = JSON.parse(raw);
+  } catch(e) { parseError = e.message; }
+  return {
+    ok: true,
+    pedido: ped,
+    baixas: baixas,
+    itensParsed: itensParsed,
+    itensParseError: parseError,
+    debug: {
+      itensRawLength: String(ped["Itens"] || "").length,
+      itensRawSample: String(ped["Itens"] || "").substring(0, 200),
+      qtdBaixas: baixas.length,
+      status: ped["Status"] || "(vazio)"
+    }
+  };
 }
 
 function atualizarStatus(id, status, p) {
