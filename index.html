@@ -4049,6 +4049,30 @@
             <span style="font-size:20px;font-weight:900;color:#e2f4ff;font-family:'Syne',sans-serif">${fmt(total)}</span>
           </div>
         </div>
+        ${(qtdParc > 1 || temHist) ? (() => {
+          const totalParc2 = qtdParc || (nPagas + nPend) || 1;
+          const pagas2 = nPagas;
+          const faltam = totalParc2 - pagas2;
+          const bgC = quitado ? "rgba(0,230,118,.12)" : pagas2 > 0 ? "rgba(0,188,212,.08)" : "rgba(255,183,77,.08)";
+          const borderC = quitado ? "rgba(0,230,118,.3)" : pagas2 > 0 ? "rgba(0,188,212,.2)" : "rgba(255,183,77,.2)";
+          const textC = quitado ? "#00e676" : pagas2 > 0 ? "#00bcd4" : "#ffb74d";
+          const dotRow = Array.from({length: totalParc2}, (_,i) => {
+            const isPaga = i < pagas2;
+            const c = isPaga ? "#00e676" : (i === pagas2 ? textC : "rgba(255,255,255,.2)");
+            return `<div style="width:${Math.min(18, Math.floor(280/totalParc2))}px;height:10px;border-radius:3px;background:${c}"></div>`;
+          }).join("");
+          return `<div style="padding:10px 16px;border-bottom:1px solid #1a2840;background:${bgC};border-left:3px solid ${textC}">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+              <div style="font-size:9px;font-weight:800;color:#8899aa;text-transform:uppercase;letter-spacing:1px">📦 PARCELAMENTO</div>
+              <div style="font-size:11px;font-weight:800;color:${textC}">${pagas2}/${totalParc2} ${quitado ? "✅ Quitado" : faltam > 0 ? `· ${faltam} a pagar` : ""}</div>
+            </div>
+            <div style="display:flex;gap:3px;flex-wrap:wrap;margin-bottom:6px">${dotRow}</div>
+            <div style="display:flex;justify-content:space-between;font-size:10px">
+              <span style="color:#8899aa">Total pago: <b style="color:#00e676">${fmt(totalPago)}</b></span>
+              ${!quitado && saldo > 0 ? `<span style="color:#8899aa">Pendente: <b style="color:${textC}">${fmt(saldo)}</b></span>` : ""}
+            </div>
+          </div>`;
+        })() : ""}
         ${temHist ? `<div style="padding:12px 16px;border-bottom:1px solid #1a2840">
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
             <span style="font-size:9px;font-weight:800;color:#8899aa;text-transform:uppercase;letter-spacing:1px">💳 HISTÓRICO DE PAGAMENTOS</span>

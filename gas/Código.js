@@ -1609,7 +1609,12 @@ function darBaixa(p) {
     // Cria evento de cobrança para o saldo restante
     try {
       const saldoFmt = "R$ " + saldoRestante.toFixed(2).replace(".", ",");
-      criarEventoCobranca(p.idPedido, nomeCliente, telefone, saldoRestante, proximaFmt);
+      const novoIdEvento = criarEventoCobranca(p.idPedido, nomeCliente, telefone, saldoRestante, proximaFmt);
+      // Salva ID do novo evento na planilha para poder cancelar no futuro
+      if (novoIdEvento) {
+        const colEvCobranca = headers.indexOf("ID_Evento_Agenda_Cobranca") + 1;
+        if (colEvCobranca > 0) found.sh.getRange(found.rowNum, colEvCobranca).setValue(novoIdEvento);
+      }
     } catch(err) { console.warn("Agenda parcial: " + err.message); }
 
     // Status do pedido: mantém status atual se já for Entregue, senão Em andamento
@@ -2045,12 +2050,12 @@ function criarEventoCobranca(idPedido, nomeCliente, telefone, valor, dataVencStr
   const msgCobranca = encodeURIComponent("Ol\u00E1 " + nomeCliente + "! \uD83D\uDC4B Passando para lembrar do vencimento hoje de *" + totalFmt2 + "* referente ao pedido #" + idPedido + ". Podemos confirmar o pagamento? \uD83D\uDE4F");
   const wppClickLink = wppLink + "?text=" + msgCobranca;
 
-  const evento = cal.createAllDayEvent(titulo, dv);
+  const fim = new Date(dv.getTime() + 60 * 60 * 1000); // 1h depois (9h→10h)
+  const evento = cal.createEvent(titulo, dv, fim);
   evento.setDescription(desc);
   evento.setLocation(wppClickLink);
-  try { evento.addPopupReminder(0); } catch (e) {}
-  try { evento.addPopupReminder(15); } catch (e) {}
-  try { evento.addEmailReminder(1440); } catch (e) {}
+  try { evento.addPopupReminder(0); } catch (e) {}   // popup ao iniciar (9h)
+  try { evento.addEmailReminder(1440); } catch (e) {} // email D-1
 
   return evento.getId();
 }
