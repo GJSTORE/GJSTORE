@@ -5920,29 +5920,55 @@
         </div>`;
       }
 
-      const itensRaw = p["Itens"] || p["itens"] || p["Items"] || "";
-      let itensHtml;
-      if (!itensRaw || itensRaw === "[]") {
-        itensHtml = '<span style="color:var(--muted);font-size:12px;font-style:italic">Itens não registrados</span>';
-      } else {
+      // Itens com thumbnail — layout idêntico ao verRecibo do index.html
+      const itensRaw = String(p["Itens"] || p["itens"] || p["Items"] || p["Itens (JSON)"] || "").trim();
+      const _detProdImg = (nomeI) => {
+        if (!allProds || !allProds.length || !nomeI) return "";
+        const n = String(nomeI).toLowerCase().trim();
+        const f = allProds.find(pp => String(pp["Nome do Produto"] || pp["Nome"] || "").toLowerCase().trim() === n)
+          || allProds.find(pp => { const pn = String(pp["Nome do Produto"] || pp["Nome"] || "").toLowerCase().trim(); return pn && (pn.includes(n) || n.includes(pn)); });
+        return f ? String(f["Imagem 1 (URL)"] || f["Imagem URL"] || "").trim() : "";
+      };
+      let detItensArr = [];
+      if (itensRaw && itensRaw !== "[]") {
         try {
-          const arr = JSON.parse(itensRaw);
-          if (Array.isArray(arr) && arr.length) {
-            itensHtml = arr.map(i => {
-              const n = i.nome || i.name || i.product || i.descricao || "?";
-              const q = i.qty || i.quantidade || i.quantity || 1;
-              const v = i.preco || i.price || i.valor || 0;
-              return `<div style="display:flex;justify-content:space-between;align-items:center;padding:4px 0;border-bottom:1px solid var(--border)"><span>• ${n} <span style="color:var(--muted)">x${q}</span></span>${v ? `<span style="color:var(--g);font-size:12px">${fmt(Number(v) * Number(q))}</span>` : ""}</div>`;
-            }).join("");
-          } else throw new Error("not array");
+          const parsed = JSON.parse(itensRaw);
+          if (Array.isArray(parsed) && parsed.length) detItensArr = parsed;
         } catch(e) {
-          const parts = itensRaw.split("|").map(i => i.trim()).filter(Boolean);
-          if (parts.length) {
-            itensHtml = parts.map(i => `<div style="padding:3px 0;border-bottom:1px solid var(--border)">• ${i}</div>`).join("");
-          } else {
-            itensHtml = '<span style="color:var(--muted);font-size:12px;font-style:italic">Itens não registrados</span>';
-          }
+          detItensArr = itensRaw.split("|").map(s => s.trim()).filter(Boolean).map(s => {
+            const mQty = s.match(/^(.+?)\s*x\s*(\d+)\s*$/i);
+            return mQty ? { nome: mQty[1].trim(), qtd: Number(mQty[2]), valor: 0 } : { nome: s, qtd: 1, valor: 0 };
+          });
         }
+      }
+      let itensHtml;
+      if (!detItensArr.length) {
+        itensHtml = '<span style="color:var(--r);font-size:12px;font-weight:600">⚠️ Nenhum item registrado neste pedido</span>';
+      } else {
+        const somaCalc = detItensArr.reduce((s, i) => s + Number(i.valor || i.preco || i.price || 0) * Number(i.qtd || i.qty || i.quantidade || 1), 0);
+        const divergeSub = sub > 0 && Math.abs(somaCalc - sub) > 0.5;
+        itensHtml = detItensArr.map(i => {
+          const n = (i.nome || i.name || i.product || i.descricao || "?") + (i.variacao ? ` (${i.variacao})` : "");
+          const q = Number(i.qtd || i.qty || i.quantidade || i.quantity || 1);
+          const v = Number(i.valor || i.preco || i.price || 0);
+          const tot = v * q;
+          const img = _detProdImg(i.nome || i.name);
+          const thumb = img
+            ? `<img src="${img}?_nc=1" style="width:100%;height:100%;object-fit:cover;border-radius:8px;display:block" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">`
+            : "";
+          const fb = `<div style="display:${img ? "none" : "flex"};align-items:center;justify-content:center;height:100%;font-size:22px;color:var(--muted)">📦</div>`;
+          return `<div style="display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--border)">
+            <div style="width:64px;height:64px;border-radius:10px;background:rgba(255,255,255,.04);border:1px solid var(--border);flex-shrink:0;overflow:hidden">${thumb}${fb}</div>
+            <div style="flex:1;min-width:0">
+              <div style="font-size:13px;color:var(--text);font-weight:700;line-height:1.35">${n}</div>
+              ${v > 0 ? `<div style="font-size:11px;color:var(--muted);margin-top:3px">${fmt(v)} × ${q} un.</div>` : `<div style="font-size:11px;color:var(--muted);margin-top:3px">${q} un.</div>`}
+            </div>
+            <div style="text-align:right;flex-shrink:0">
+              <div style="font-size:14px;font-weight:900;color:var(--g)">${tot > 0 ? fmt(tot) : "—"}</div>
+              ${q > 1 && v > 0 ? `<div style="font-size:10px;color:var(--muted)">unit. ${fmt(v)}</div>` : ""}
+            </div>
+          </div>`;
+        }).join("") + (divergeSub ? `<div style="margin-top:8px;padding:8px 10px;background:rgba(255,183,77,.1);border:1px solid rgba(255,183,77,.3);border-radius:8px;font-size:11px;color:#ffb74d">⚠️ Soma dos itens (${fmt(somaCalc)}) diverge do subtotal (${fmt(sub)}). Verifique o pedido.</div>` : "");
       }
       document.getElementById("detItens").innerHTML = itensHtml;
       document.getElementById("detFornecedor").value = p["Fornecedor_Selecionado"] || "";
@@ -6359,42 +6385,53 @@
       const cepRaw    = pedObj["CEP"] || pedObj["cep"] || "";
       const dtPed     = pedObj["Data/Hora"] || pedObj["Data_Criacao"] || new Date().toLocaleString("pt-BR");
 
-      // Itens
-      const itensRaw = String(pedObj["Itens"] || "").trim();
+      // Itens — layout idêntico ao verRecibo do index.html (thumb 72×72)
+      const _rcProdImg = (nomeI) => {
+        if (!allProds || !allProds.length || !nomeI) return "";
+        const n = String(nomeI).toLowerCase().trim();
+        const f = allProds.find(p => String(p["Nome do Produto"] || p["Nome"] || "").toLowerCase().trim() === n)
+          || allProds.find(p => { const pn = String(p["Nome do Produto"] || p["Nome"] || "").toLowerCase().trim(); return pn && (pn.includes(n) || n.includes(pn)); });
+        return f ? String(f["Imagem 1 (URL)"] || f["Imagem URL"] || "").trim() : "";
+      };
+      const itensRaw = String(pedObj["Itens"] || pedObj["Itens (JSON)"] || "").trim();
       let itensHtml = "";
+      let itensCount = 0;
+      let itensArr = [];
       if (itensRaw && itensRaw !== "[]") {
         try {
-          const arr = JSON.parse(itensRaw);
-          if (Array.isArray(arr) && arr.length) {
-            itensHtml = arr.map(i => {
-              const n = (i.nome || i.name || "?") + (i.variacao ? ` (${i.variacao})` : "");
-              const q = i.qtd || i.qty || i.quantidade || 1;
-              const v = Number(i.valor || i.preco || i.price || 0);
-              // Busca imagem pelo nome do produto em allProds
-              const prodMatch = allProds.find(p => {
-                const pn = String(p["Nome do Produto"] || p["Nome"] || "").toLowerCase().trim();
-                const in_ = String(i.nome || i.name || "").toLowerCase().trim();
-                return pn === in_ || (pn && in_ && (pn.includes(in_) || in_.includes(pn)));
-              });
-              const imgUrl = prodMatch ? String(prodMatch["Imagem 1 (URL)"] || prodMatch["Imagem URL"] || "").trim() : "";
-              const thumb = imgUrl
-                ? `<img src="${imgUrl}?_nc=1" crossorigin="anonymous" style="width:100%;height:100%;object-fit:cover;border-radius:6px" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">`
-                : "";
-              const fb = `<div style="display:${imgUrl ? "none" : "flex"};align-items:center;justify-content:center;width:100%;height:100%;font-size:18px;color:#8899aa">📦</div>`;
-              return `<div style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.06)">
-                <div style="width:56px;height:56px;border-radius:8px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);flex-shrink:0;overflow:hidden">${thumb}${fb}</div>
-                <div style="flex:1;min-width:0">
-                  <div style="font-size:12px;color:#c8e6f5;font-weight:600;line-height:1.3">${n}</div>
-                  ${v > 0 ? `<div style="font-size:10px;color:#8899aa;margin-top:2px">${fmt(v)} × ${q} un.</div>` : ""}
-                </div>
-                ${v > 0 ? `<div style="text-align:right;flex-shrink:0"><div style="font-size:13px;font-weight:800;color:#00e676">${fmt(v*q)}</div>${q>1?`<div style="font-size:9px;color:#8899aa">unit. ${fmt(v)}</div>`:""}</div>` : ""}
-              </div>`;
-            }).join("");
-          } else throw 0;
+          const parsed = JSON.parse(itensRaw);
+          if (Array.isArray(parsed) && parsed.length) itensArr = parsed;
         } catch(e) {
-          const ps = itensRaw.split("|").map(s => s.trim()).filter(Boolean);
-          itensHtml = ps.map(s => `<div style="padding:4px 0;border-bottom:1px solid rgba(255,255,255,.06);font-size:12px;color:#c8e6f5">• ${s}</div>`).join("");
+          itensArr = itensRaw.split("|").map(s => s.trim()).filter(Boolean).map(s => {
+            const mQty = s.match(/^(.+?)\s*x\s*(\d+)\s*$/i);
+            return mQty ? { nome: mQty[1].trim(), qtd: Number(mQty[2]), valor: 0 } : { nome: s, qtd: 1, valor: 0 };
+          });
         }
+      }
+      itensCount = itensArr.length;
+      if (itensCount) {
+        itensHtml = itensArr.map(i => {
+          const n = (i.nome || i.name || "?") + (i.variacao ? ` (${i.variacao})` : "");
+          const q = Number(i.qtd || i.qty || i.quantidade || 1);
+          const v = Number(i.valor || i.preco || i.price || 0);
+          const tot = v * q;
+          const img = _rcProdImg(i.nome || i.name);
+          const thumb = img
+            ? `<img src="${img}?_nc=1" crossorigin="anonymous" style="width:100%;height:100%;object-fit:cover;border-radius:8px;display:block" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">`
+            : "";
+          const fb = `<div style="display:${img ? "none" : "flex"};align-items:center;justify-content:center;height:100%;font-size:24px;color:#8899aa">📦</div>`;
+          return `<div style="display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid rgba(255,255,255,.05)">
+            <div style="width:72px;height:72px;border-radius:10px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.08);flex-shrink:0;overflow:hidden">${thumb}${fb}</div>
+            <div style="flex:1;min-width:0">
+              <div style="font-size:12px;color:#e2f4ff;font-weight:700;line-height:1.35">${n}</div>
+              ${v > 0 ? `<div style="font-size:10px;color:#8899aa;margin-top:3px">${fmt(v)} × ${q} un.</div>` : `<div style="font-size:10px;color:#8899aa;margin-top:3px">${q} un.</div>`}
+            </div>
+            <div style="text-align:right;flex-shrink:0">
+              <div style="font-size:14px;font-weight:900;color:#00e676">${tot > 0 ? fmt(tot) : "—"}</div>
+              ${q > 1 && v > 0 ? `<div style="font-size:9px;color:#8899aa">unit. ${fmt(v)}</div>` : ""}
+            </div>
+          </div>`;
+        }).join("");
       }
 
       // Histórico de baixas
@@ -6493,7 +6530,7 @@
               ${tel ? `<span style="font-size:11px;color:#8899aa">📱 ${tel}</span>` : ""}
             </div>
             <div style="display:flex;justify-content:space-between;align-items:center">
-              <span style="font-size:11px;color:#8899aa">${dtPed}</span>
+              <span style="font-size:11px;color:#8899aa">${fmtDT(dtPed) || dtPed}</span>
               <span style="font-size:10px;font-weight:700;padding:2px 8px;border-radius:6px;background:rgba(0,188,212,.15);color:#00bcd4;border:1px solid rgba(0,188,212,.3)">${pag}</span>
             </div>
             ${(endRaw || cepRaw) ? `<div style="font-size:10px;color:#8899aa;margin-top:4px">📍 ${[endRaw, cepRaw ? "CEP " + cepRaw : ""].filter(Boolean).join(" · ")}</div>` : ""}
@@ -6502,9 +6539,9 @@
 
           <!-- Itens -->
           ${itensHtml ? `<div style="padding:12px 16px;border-bottom:1px solid #1a2840">
-            <div style="font-size:9px;font-weight:700;color:#8899aa;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px">ITENS</div>
+            <div style="font-size:9px;font-weight:800;color:#8899aa;text-transform:uppercase;letter-spacing:1px;margin-bottom:8px">🛒 ITENS DO PEDIDO${itensCount > 1 ? ` (${itensCount})` : ""}</div>
             ${itensHtml}
-          </div>` : ""}
+          </div>` : `<div style="padding:12px 16px;border-bottom:1px solid #1a2840;color:#f44336;font-size:12px">⚠️ Nenhum item registrado neste pedido</div>`}
 
           ${(totalParcAdmin > 1 || (nPagas + nPend) > 0) ? (() => {
             const faltam2 = totalParcAdmin - nPagas;
