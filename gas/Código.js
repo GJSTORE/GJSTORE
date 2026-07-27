@@ -158,6 +158,7 @@ function handleAction(p) {
       case "excluirPedidoHard":    result = excluirPedidoHard(p);               break;
       case "getLogAcoes":          result = getLogAcoes(p);                     break;
       case "analyticsHealth":      result = analyticsHealth();                  break;
+      case "getVisitorMap":        result = getVisitorMap(p);                   break;
       case "identificarProduto":   result = identificarProduto(p);              break;
       case "atualizarNomeProduto": result = atualizarNomeProduto(p);            break;
       case "salvarProdutosBatch":  result = salvarProdutosBatch(p);             break;
@@ -2199,8 +2200,12 @@ function logAcao(p) {
     let sh = getSheet("Logs_Metricas");
     if (!sh) {
       sh = SS.insertSheet("Logs_Metricas");
-      sh.getRange(1, 1, 1, 6).setValues([["Timestamp", "ID_Sessao", "Acao", "Detalhe", "Origem", "Dispositivo"]]);
+      sh.getRange(1, 1, 1, 7).setValues([["Timestamp", "ID_Sessao", "Acao", "Detalhe", "Origem", "Dispositivo", "VID"]]);
       sh.setFrozenRows(1);
+    } else {
+      // Migração: adiciona coluna VID se não existe
+      const hdrs = sh.getRange(1, 1, 1, sh.getLastColumn()).getValues()[0].map(String);
+      if (!hdrs.includes("VID")) sh.getRange(1, hdrs.length + 1).setValue("VID");
     }
     sh.appendRow([
       nowBR(),
@@ -2208,7 +2213,8 @@ function logAcao(p) {
       p.acao || "",
       p.detalhe || "",
       p.origem || "",
-      p.dispositivo || ""
+      p.dispositivo || "",
+      p.vid || ""
     ]);
     return { ok: true };
   } catch(err) {
@@ -2248,18 +2254,23 @@ function getMetricas(p) {
   // Fonte 1: Logs_Metricas (logAcao \u2014 ações estruturadas do site e admin)
   const rowsMetricas = sheetToObjects("Logs_Metricas") || [];
 
-  // BUG-03 \u2014 Fonte 2: Acessos_Log (logAcesso \u2014 cliques em produtos, formato diferente)
+  // Fonte 2: Acessos_Log (formato legado) \u2014 exclui VIEW_PRODUCT e ADD_TO_CART
+  // pois Logs_Metricas j\u00e1 captura ambos via logAcao() \u2014 evita contagem dupla
   const rowsAcessos = sheetToObjects("Acessos_Log") || [];
-  const acessosNorm = rowsAcessos.map(function(r) {
-    return {
-      "Timestamp": r["Data_Hora"] || "",
-      "ID_Sessao": "",
-      "Acao": mapTipoAcao(r["Tipo_Acao"]),
-      "Detalhe": r["ID_Produto"] || "",
-      "Origem": "index",
-      "Dispositivo": ""
-    };
-  });
+  const ACESSOS_EXCLUIR = ["Clique_Detalhes", "VIEW_PRODUCT", "Adicionar_Carrinho", "ADD_TO_CART"];
+  const acessosNorm = rowsAcessos
+    .filter(function(r) { return !ACESSOS_EXCLUIR.includes(r["Tipo_Acao"]); })
+    .map(function(r) {
+      return {
+        "Timestamp": r["Data_Hora"] || "",
+        "ID_Sessao": "",
+        "Acao": mapTipoAcao(r["Tipo_Acao"]),
+        "Detalhe": r["ID_Produto"] || "",
+        "Origem": "index",
+        "Dispositivo": "",
+        "VID": ""
+      };
+    });
 
   // Combina e filtra pelo período
   const todas = rowsMetricas.concat(acessosNorm);
@@ -2301,10 +2312,10 @@ function getMetricas(p) {
       return { id: e[0], nome: prod ? (prod["Nome do Produto"] || prod["Nome"] || e[0]) : e[0], total: e[1] };
     });
 
-  // Acessos por hora
+  // Acessos por hora — apenas PAGE_VIEW (evita inflação por VIEW_PRODUCT/ADD_TO_CART)
   const horaMap = {};
   for (var h = 0; h < 24; h++) horaMap[h] = 0;
-  filtradas.forEach(function(r) {
+  filtradas.filter(function(r) { return r["Acao"] === "PAGE_VIEW"; }).forEach(function(r) {
     const n = normalizarDataHora(r["Timestamp"]);
     const partes = n ? n.split(" ") : [];
     if (partes.length >= 2) {
@@ -2332,6 +2343,59 @@ function getMetricas(p) {
   const totalSessoes = sessaoSet.size;
 
   return { metricas: { totalAcessos, totalProdutosVistos, totalCarrinhos, totalCheckouts, totalPedidos, acessosPorDia, topProdutos, acessosPorHora, referrers, totalSessoes } };
+}
+
+// ── MAPA DE VISITANTES — quem está de olho em quê ──────────────────────────
+function getVisitorMap(p) {
+  const diasLimit = Number((p && p.dias) || 30);
+  const cutoff = new Date();
+  cutoff.setDate(cutoff.getDate() - diasLimit);
+
+  const rows = sheetToObjects("Logs_Metricas") || [];
+
+  // Identidades: vid → {nome, telefone} via CLIENT_IDENTIFY
+  const vidIdentity = {};
+  rows.forEach(function(r) {
+    if (r["Acao"] === "CLIENT_IDENTIFY" && r["VID"]) {
+      const pts = String(r["Detalhe"] || "").split("|");
+      vidIdentity[r["VID"]] = { nome: pts[0] || "", telefone: pts[1] || "" };
+    }
+  });
+
+  // Agrupa VIEW_PRODUCT por produto × vid
+  const prodViews = {};
+  rows.forEach(function(r) {
+    if (r["Acao"] !== "VIEW_PRODUCT") return;
+    const ts = r["Timestamp"] ? parseDateBR(normalizarDataHora(r["Timestamp"]).split(" ")[0]) : null;
+    if (!ts || ts < cutoff) return;
+    const pid = String(r["Detalhe"] || "");
+    if (!pid) return;
+    const vid = String(r["VID"] || "") || ("sess_" + String(r["ID_Sessao"] || "?"));
+    if (!prodViews[pid]) prodViews[pid] = {};
+    prodViews[pid][vid] = (prodViews[pid][vid] || 0) + 1;
+  });
+
+  const prods_ = sheetToObjects("Produtos");
+  const prodIdx = {};
+  prods_.forEach(function(pr) { if (pr["ID"]) prodIdx[String(pr["ID"])] = pr["Nome do Produto"] || pr["Nome"] || pr["ID"]; });
+
+  const result = Object.entries(prodViews)
+    .map(function(e) {
+      const pid = e[0], vidMap = e[1];
+      const viewers = Object.entries(vidMap)
+        .sort(function(a, b) { return b[1] - a[1]; })
+        .map(function(ve) {
+          const vid = ve[0], count = ve[1];
+          const id2 = vidIdentity[vid] || {};
+          return { vid: vid, count: count, nome: id2.nome || "", telefone: id2.telefone || "" };
+        });
+      const totalViews = viewers.reduce(function(s, v) { return s + v.count; }, 0);
+      return { id: pid, nome: prodIdx[pid] || pid, views: totalViews, viewers: viewers };
+    })
+    .sort(function(a, b) { return b.views - a.views; })
+    .slice(0, 20);
+
+  return { visitorMap: result };
 }
 
 // \u2500\u2500 FRETE \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500

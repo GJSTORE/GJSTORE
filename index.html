@@ -3420,6 +3420,8 @@
       document.querySelectorAll(".field-err").forEach(e => e.remove());
       if (!nome) { showFieldErr(document.getElementById("cnome"), "Informe seu nome completo"); return; }
       if (telDigits.length < 10) { showFieldErr(document.getElementById("ctel"), "Informe um WhatsApp válido com DDD"); return; }
+      // Vincula vid ao cliente identificado (habilita visitor map no admin)
+      logAcao("CLIENT_IDENTIFY", nome + "|" + telDigits);
       const btn = document.getElementById("cfbtn");
       btn.disabled = true; btn.textContent = "⏳ Enviando...";
       const sub = cart.reduce((s, c) => s + c.pfv * c.qty, 0);
