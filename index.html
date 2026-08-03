@@ -3,7 +3,10 @@
 
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <!-- M6: user-scalable=no bloqueava zoom (viola WCAG 1.4.4) — removido, mantém initial-scale só como sugestão inicial -->
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <!-- A3: tema aplicado ANTES do CSS carregar, evita flash claro→escuro (ou vice-versa) no load -->
+  <script>(function(){try{var t=localStorage.getItem("gj_theme")||"cyberpunk";if(t==="botafogo")t="gold";if(t!=="cyberpunk")document.documentElement.className="theme-"+t;}catch(e){}})();</script>
   <title>GJ Store - As Melhores Ofertas</title>
   <meta name="description"
     content="Compre eletrônicos, games, veículos e muito mais. Parcele do seu jeito com a GJ Store!">
@@ -2446,6 +2449,7 @@
           <option value="8">8x</option>
           <option value="9">9x</option>
           <option value="10">10x</option>
+          <option value="11">11x</option>
           <option value="12">12x</option>
         </select>
       </div>
@@ -2589,12 +2593,8 @@
 
   <script src="config.js"></script>
   <script>
-    // Theme init — antes de qualquer render
-    (function() {
-      let t = localStorage.getItem("gj_theme") || "cyberpunk";
-      if (t === "botafogo") { t = "gold"; localStorage.setItem("gj_theme", t); }
-      if (t !== "cyberpunk") document.documentElement.className = "theme-" + t;
-    })();
+    // A3: tema já aplicado no <head> (antes do CSS) — normaliza "botafogo"→"gold" no localStorage aqui
+    if (localStorage.getItem("gj_theme") === "botafogo") localStorage.setItem("gj_theme", "gold");
 
     const API = (typeof GAS_URL !== "undefined") ? GAS_URL : "https://script.google.com/macros/s/AKfycbxA0KPHoZReOqEW9GosO6IBjKtxi7vDmrhlVHOc2HUNfir7X8Y0QlvcZwcOYCcsV9sd/exec";
     const WPP0 = "5521970552698";
@@ -2649,6 +2649,8 @@
     function clearCache() { for (const k of Object.keys(sessionStorage)) { if (!k.startsWith("gjc")) sessionStorage.removeItem(k); } }
     function fmt(v) { return "R$ " + Number(v || 0).toLocaleString("pt-BR", { minimumFractionDigits: 2 }); }
     function pf(p) { const a = Number(p["Preço (R$)"] || 0), b = Number(p["Preço Promo (R$)"] || 0); return b > 0 && b < a ? b : a; }
+    // C3: nome de produto vai direto pra innerHTML em vários cards — escapar evita HTML/script quebrar o layout ou executar
+    function esc(s) { const d = document.createElement("div"); d.textContent = String(s || ""); return d.innerHTML; }
 
     // ── LOG ACESSO (fire-and-forget) ──────────────────────
     function logAcesso(idProduto, tipoAcao) {
@@ -2794,7 +2796,7 @@
           return `<div class="rpc" onclick='openP(${d})'>
         <div class="rpc-img">${img ? `<img src="${img}" alt="${(p["Nome do Produto"] || "").replace(/"/g, "")}" loading="lazy" onerror="this.style.display='none'">` : `<div class="rpc-img-ph">📦</div>`}</div>
         <div class="rpc-body">
-          <div class="rpc-name">${p["Nome do Produto"] || "—"}</div>
+          <div class="rpc-name">${esc(p["Nome do Produto"] || "—")}</div>
           <div class="rpc-price">${fmt(pfv)}</div>
         </div>
       </div>`;
@@ -2810,8 +2812,12 @@
     document.addEventListener("touchend", async () => { if (!ptrOn) return; ptrOn = false; clearCache(); await init(); document.getElementById("ptr").classList.remove("show"); });
 
     // ── BANNERS ──────────────────────────────────────────
+    // A1: renderBanners() pode rodar de novo (pull-to-refresh chama init()) — sem limpar o interval
+    // anterior, cada chamada empilhava outro timer rodando pra sempre (CPU/memória vazando).
+    let _banInterval = null;
     function renderBanners() {
       const w = document.getElementById("bwrap");
+      if (_banInterval) { clearInterval(_banInterval); _banInterval = null; }
       if (!banners.length) { w.style.display = "none"; return; }
       w.style.height = "36px"; w.style.position = "relative";
       w.innerHTML = banners.map((b, i) => {
@@ -2820,7 +2826,7 @@
         const inner = lnk ? `<a href="${lnk}" target="_blank" style="color:inherit;text-decoration:none;display:block;width:100%;height:100%;display:flex;align-items:center;justify-content:center">${txt}</a>` : txt;
         return `<div class="bslide${i === 0 ? " on" : ""}" style="background:#${b["Cor Fundo (hex)"] || "FF6D00"};color:#${b["Cor Texto (hex)"] || "FFFFFF"};${lnk?"cursor:pointer":""}">${inner}</div>`;
       }).join("");
-      if (banners.length > 1) { setInterval(() => { const s = w.querySelectorAll(".bslide"); s[banIdx].classList.remove("on"); banIdx = (banIdx + 1) % s.length; s[banIdx].classList.add("on"); }, 4000); }
+      if (banners.length > 1) { _banInterval = setInterval(() => { const s = w.querySelectorAll(".bslide"); s[banIdx].classList.remove("on"); banIdx = (banIdx + 1) % s.length; s[banIdx].classList.add("on"); }, 4000); }
     }
 
     // ── CAT CAROUSEL — scroll nativo (overflow-x: auto no .cat-outer) ──────
@@ -2863,7 +2869,7 @@
           const d = JSON.stringify(p).replace(/'/g, "&apos;");
           return `<div class="rpc" onclick='openP(${d})'>
             <div class="rpc-img">${img ? `<img src="${img}" loading="lazy" onerror="this.style.display='none'">` : `<div class="rpc-img-ph">📦</div>`}</div>
-            <div class="rpc-body"><div class="rpc-name">${p["Nome do Produto"] || "—"}</div><div class="rpc-price">${fmt(pfv)}</div></div>
+            <div class="rpc-body"><div class="rpc-name">${esc(p["Nome do Produto"] || "—")}</div><div class="rpc-price">${fmt(pfv)}</div></div>
           </div>`;
         }).join("");
         sec.style.display = "block";
@@ -2967,10 +2973,14 @@
     const LAZY_PAGE = 30;
     let _lazyList = [], _lazyOffset = 0, _lazyObs = null;
 
+    // C2: 1 produto com dado corrompido não pode derrubar o grid inteiro — .map síncrono propaga exceção
+    function safeCard(p) {
+      try { return buildPCard(p); } catch(e) { console.error("[GJ] buildPCard falhou:", p && p["ID"], e); return ""; }
+    }
     function buildPCard(p) {
       const pr = Number(p["Preço (R$)"] || 0), pm = Number(p["Preço Promo (R$)"] || 0), pfv = pf(p);
       const imgs = [p["Imagem 1 (URL)"], p["Imagem 2 (URL)"], p["Imagem 3 (URL)"]].filter(Boolean);
-      const badge = p["Destaque?"] == "Sim" ? `<div class="pb ph">🔥 Destaque</div>` : pm > 0 && pm < pr ? `<div class="pb ps">PROMO</div>` : `<div class="pb pn">Novo</div>`;
+      const badge = String(p["Destaque?"] || "").trim().toLowerCase() === "sim" ? `<div class="pb ph">🔥 Destaque</div>` : pm > 0 && pm < pr ? `<div class="pb ps">PROMO</div>` : `<div class="pb pn">Novo</div>`;
       const parc = Number(p["Parcelas Máx"] || 0);
       const estRaw = p["Estoque"];
       const temEstoque = estRaw !== null && estRaw !== undefined && estRaw !== "";
@@ -2993,7 +3003,7 @@
       </div>
       <div class="pb2">
         ${tagHtml ? `<div style="margin-bottom:4px">${tagHtml}</div>` : ""}
-        <div class="pname">${p["Nome do Produto"] || "—"}</div>
+        <div class="pname">${esc(p["Nome do Produto"] || "—")}</div>
         ${pm > 0 && pm < pr ? `<div class="pold">${fmt(pr)}</div>` : ""}
         <div class="pprice">${esgotado ? `<span style="color:var(--muted);font-size:14px">Indisponível</span>` : fmt(pfv)}</div>
         ${!esgotado && parc > 1 ? `<div class="ppar">${parc}x de ${fmt(pfv / parc)}</div>` : ""}
@@ -3021,7 +3031,7 @@
       _lazyList = list; _lazyOffset = 0;
       const initial = list.slice(0, LAZY_PAGE);
       _lazyOffset = initial.length;
-      g.innerHTML = initial.map(buildPCard).join("");
+      g.innerHTML = initial.map(safeCard).join("");
       if (_lazyOffset < list.length) {
         const sentinel = document.createElement("div");
         sentinel.id = "lazy-sentinel";
@@ -3031,7 +3041,7 @@
           if (!entries[0].isIntersecting) return;
           const next = _lazyList.slice(_lazyOffset, _lazyOffset + LAZY_PAGE);
           if (!next.length) { _lazyObs.disconnect(); sentinel.remove(); return; }
-          sentinel.insertAdjacentHTML("beforebegin", next.map(buildPCard).join(""));
+          sentinel.insertAdjacentHTML("beforebegin", next.map(safeCard).join(""));
           _lazyOffset += next.length;
           if (_lazyOffset >= _lazyList.length) { _lazyObs.disconnect(); sentinel.remove(); }
         }, { rootMargin: "200px" });
@@ -3047,7 +3057,7 @@
       const oldSentinel = document.getElementById("lazy-sentinel");
       if (oldSentinel) oldSentinel.remove();
       // Append new cards
-      g.insertAdjacentHTML("beforeend", list.map(buildPCard).join(""));
+      g.insertAdjacentHTML("beforeend", list.map(safeCard).join(""));
       // Update lazy state
       _lazyList = _lazyList.concat(list);
       _lazyOffset = g.querySelectorAll(".pc").length;
@@ -3061,7 +3071,7 @@
           if (!entries[0].isIntersecting) return;
           const next = _lazyList.slice(_lazyOffset, _lazyOffset + LAZY_PAGE);
           if (!next.length) { _lazyObs.disconnect(); sentinel.remove(); return; }
-          sentinel.insertAdjacentHTML("beforebegin", next.map(buildPCard).join(""));
+          sentinel.insertAdjacentHTML("beforebegin", next.map(safeCard).join(""));
           _lazyOffset += next.length;
           if (_lazyOffset >= _lazyList.length) { _lazyObs.disconnect(); sentinel.remove(); }
         }, { rootMargin: "200px" });
@@ -3526,6 +3536,8 @@
       const hasDeepLink = urlParams.get("prod"); // não bloqueia quem veio por link direto
       if (!user && !hasDeepLink) {
         setTimeout(() => {
+          // A2: se o cliente já rolou a página (tá vendo produto/decidindo), não interrompe
+          if (window.scrollY > 200) return;
           const m = document.getElementById("wModal");
           if (m) { m.classList.remove("hidden"); document.body.style.overflow = "hidden"; }
         }, 3500); // 3.5s — cliente vê os produtos antes do modal
@@ -3591,7 +3603,8 @@
         let nome = "", tel = "";
         try { const gu = JSON.parse(localStorage.getItem("gj_user") || "null"); if (gu) { nome = gu.nome || ""; tel = gu.tel || ""; } } catch(e) {}
         const itens = cart.map(i => `${i.nome} x${i.qty}`).join(", ");
-        const total = cart.reduce((s, i) => s + pf(i) * (i.qty || 1), 0);
+        // C1: pf() espera objeto de PRODUTO (Preço (R$)) — item de carrinho já tem preço calculado em .pfv
+        const total = cart.reduce((s, i) => s + Number(i.pfv || 0) * (i.qty || 1), 0);
         const u = new URL(API);
         u.searchParams.set("action", "logCarrinho");
         u.searchParams.set("vid", _vid);
@@ -3652,7 +3665,7 @@
             <button class="fav-btn on" data-id="${p["ID"]}" onclick="toggleFav('${p["ID"]}',event)" style="width:22px;height:22px;font-size:11px;top:3px;left:3px">❤️</button>
           </div>
           <div class="rpc-body">
-            <div class="rpc-name">${(p["Nome do Produto"]||"—").substring(0,22)}</div>
+            <div class="rpc-name">${esc(Array.from(p["Nome do Produto"]||"—").slice(0,22).join(""))}</div>
             <div class="rpc-price">${fmt(pfv)}</div>
           </div>
         </div>`;
@@ -4113,6 +4126,19 @@
       pdTab("recibo");
     }
 
+    // A4: timeout de segurança — se o CDN travar sem disparar load NEM error, não trava o botão pra sempre
+    function _loadH2C() {
+      if (window.html2canvas) return Promise.resolve();
+      return new Promise(function(res, rej) {
+        var done = false;
+        var timer = setTimeout(function() { if (!done) { done = true; rej(new Error("timeout html2canvas")); } }, 8000);
+        var s = document.createElement("script");
+        s.src = "https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js";
+        s.onload = function() { if (!done) { done = true; clearTimeout(timer); res(); } };
+        s.onerror = function() { if (!done) { done = true; clearTimeout(timer); rej(new Error("falha ao carregar html2canvas")); } };
+        document.head.appendChild(s);
+      });
+    }
     async function compartilharReciboWPP() {
       const btn = document.getElementById("okrecibo");
       const recibo = btn && btn.dataset.recibo ? decodeURIComponent(btn.dataset.recibo) : "";
@@ -4120,14 +4146,7 @@
       const orig = btn ? btn.textContent : "";
       if (btn) { btn.disabled = true; btn.textContent = "⏳ Gerando..."; }
       try {
-        if (!window.html2canvas) {
-          await new Promise(function(res, rej) {
-            var s = document.createElement("script");
-            s.src = "https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js";
-            s.onload = res; s.onerror = rej;
-            document.head.appendChild(s);
-          });
-        }
+        await _loadH2C();
         var el = document.getElementById("rcCardCli");
         if (!el) throw new Error("recibo nao encontrado");
         var canvas = await html2canvas(el, { backgroundColor: "#04090f", scale: 2, useCORS: true });
@@ -4158,20 +4177,17 @@
     }
 
     async function gerarImagemReciboCli() {
-      if (!window.html2canvas) {
-        const s = document.createElement("script");
-        s.src = "https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js";
-        document.head.appendChild(s);
-        await new Promise((res, rej) => { s.onload = res; s.onerror = rej; });
-      }
       const btn = document.getElementById("rcImgBtnCli");
       if (btn) { btn.textContent = "⏳ Gerando..."; btn.disabled = true; }
       try {
+        await _loadH2C();
         const canvas = await html2canvas(document.getElementById("rcCardCli"), { backgroundColor: "#04090f", scale: 2, useCORS: true });
+        // W3: manda texto junto (dataset já preenchido por atualizarReciboCliente) — mesma legenda do botão "Enviar recibo"
+        const reciboTxt = (() => { try { return decodeURIComponent(document.getElementById("okrecibo")?.dataset.recibo || ""); } catch(e) { return ""; } })();
         canvas.toBlob(blob => {
           const file = new File([blob], "recibo-gj.png", { type: "image/png" });
           if (navigator.canShare && navigator.canShare({ files: [file] })) {
-            navigator.share({ files: [file], title: "Recibo GJ Store" }).catch(() => {});
+            navigator.share({ files: [file], text: reciboTxt, title: "Recibo GJ Store" }).catch(() => {});
           } else {
             const a = document.createElement("a");
             a.href = URL.createObjectURL(blob);
