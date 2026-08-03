@@ -155,6 +155,7 @@ function handleAction(p) {
       case "testarSLA":            verificarSLA(); result = { ok: true, msg: "SLA verificado" }; break;
       case "testarDigest":         enviarMorningDigest(); result = { ok: true, msg: "Digest enviado" }; break;
       case "testarVencimento":     alertaVencimentoAmanha(); result = { ok: true, msg: "Alerta D-1 enviado" }; break;
+      case "testarGarantia":       verificarGarantia(); result = { ok: true, msg: "Verificação de garantia enviada (se houver pedido de 7 dias atrás)" }; break;
       case "excluirPedidoHard":    result = excluirPedidoHard(p);               break;
       case "getCobrancasPendentes": result = getCobrancasPendentes();           break;
       case "getLogAcoes":          result = getLogAcoes(p);                     break;
@@ -4305,13 +4306,23 @@ function _criarTriggerVencimento() {
     .timeBased().everyDays(1).atHour(9).create();
 }
 
+// ── TRIGGER: AVISO DE GARANTIA (diário 10h) — W5 ──
+function _criarTriggerGarantia() {
+  ScriptApp.getProjectTriggers().forEach(function(t) {
+    if (t.getHandlerFunction() === "verificarGarantia") ScriptApp.deleteTrigger(t);
+  });
+  ScriptApp.newTrigger("verificarGarantia")
+    .timeBased().everyDays(1).atHour(10).create();
+}
+
 // \u2500\u2500 SETUP COMPLETO DE TRIGGERS \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
 function setupTodosOsTriggers() {
   _criarTriggerDashboard();
   _criarTriggerMorningDigest();
   _criarTriggerSLA();
   _criarTriggerVencimento();
-  return { ok: true, msg: "4 triggers criados: dashboard (1h), morning digest (7h), SLA (1h seg-sex 8-18h), vencimento D-1 (9h)" };
+  _criarTriggerGarantia();
+  return { ok: true, msg: "5 triggers criados: dashboard (1h), morning digest (7h), SLA (1h seg-sex 8-18h), vencimento D-1 (9h), garantia 7 dias (10h)" };
 }
 
 // \u2500\u2500 VERIFICAR SLA \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
@@ -4457,6 +4468,63 @@ function alertaVencimentoAmanha() {
     + "<div style='font-size:10px;color:#445'>" + nomeLoja + " · Alerta D-1 vencimento</div></div></div></body></html>";
 
   GmailApp.sendEmail(emailDest, "\uD83D\uDCB0 [D-1] " + cobrar.length + " cobrança(s) vencem amanhã \u2014 " + nomeLoja, "", {
+    htmlBody: htmlBody, name: nomeLoja
+  });
+}
+
+// W5: aviso de garantia — pedidos Finalizado/Entregue há exatamente 7 dias. GAS não manda
+// WhatsApp direto (sem API paga), segue o mesmo padrão dos outros alertas: email pro dono com link
+// wa.me pronto (Template 5 de mind/conceitos/02-mensagens-wpp.md), ele clica pra mandar.
+// BUG-EMAIL-EMOJI: emoji literal corrompe no paste do editor Apps Script — sempre \u escape aqui.
+function verificarGarantia() {
+  const emailDest = getConfigValue("EMAIL_NOTIFICACAO");
+  if (!emailDest) return;
+  const nomeLoja = getConfigValue("NOME_LOJA") || "GJ Store";
+  const pedidos = sheetToObjects("Pedidos") || [];
+  const hoje = new Date(); hoje.setHours(0, 0, 0, 0);
+  const alvo = new Date(hoje); alvo.setDate(alvo.getDate() - 7);
+  const alvoStr = Utilities.formatDate(alvo, "America/Sao_Paulo", "dd/MM/yyyy");
+
+  const entregues = pedidos.filter(function(p) {
+    const st = p["Status"] || "";
+    if (st !== "Finalizado" && st !== "Entregue") return false;
+    const dtFin = String(p["Data_Finalizacao"] || "").split(" ")[0];
+    const dtNorm = dtFin ? normalizarDataHora(dtFin).split(" ")[0] : "";
+    return dtNorm === alvoStr;
+  });
+  if (!entregues.length) return;
+
+  const linhas = entregues.slice(0, 15).map(function(p) {
+    const id = String(p["ID Pedido"] || "?");
+    const nome = p["Nome Cliente"] || "";
+    const tel = String(p["Telefone"] || "").replace(/\D/g, "");
+    const msg = encodeURIComponent("Olá " + nome + "! Como está o produto do pedido #" + id + "? 🛒 Só lembrando que ele tem garantia. Se precisar de assistência, é só chamar!\n\nSe estiver tudo certo, ignore esta mensagem ✅");
+    const wpp = tel ? "https://wa.me/55" + tel + "?text=" + msg : "";
+    return "<tr><td style='padding:8px 10px;border-bottom:1px solid #1a2840;color:#e2f4ff'>#" + id + "</td>"
+      + "<td style='padding:8px 10px;border-bottom:1px solid #1a2840;color:#e2f4ff'>" + nome + "</td>"
+      + (wpp ? "<td style='padding:8px 10px;border-bottom:1px solid #1a2840'><a href='" + wpp + "' style='background:#25d366;color:#fff;padding:5px 12px;border-radius:6px;text-decoration:none;font-size:12px;font-weight:700'>Enviar WPP</a></td>"
+             : "<td style='padding:8px 10px;border-bottom:1px solid #1a2840;color:#556'>Sem tel</td>") + "</tr>";
+  }).join("");
+
+  const htmlBody = "<!DOCTYPE html><html><head><meta charset='UTF-8'></head>"
+    + "<body style='background:#04090f;font-family:Arial;padding:24px'>"
+    + "<div style='max-width:580px;margin:0 auto'>"
+    + "<div style='background:#00e676;border-radius:14px 14px 0 0;padding:18px;text-align:center'>"
+    + "<div style='font-size:26px;font-weight:900;color:#04090f'>" + nomeLoja.toUpperCase() + "</div>"
+    + "<div style='font-size:13px;font-weight:700;color:#04090f;margin-top:4px'>🔒 CHECK-IN DE GARANTIA — entregues em " + alvoStr + "</div>"
+    + "</div>"
+    + "<div style='background:#060c18;border:1px solid #1a2840;padding:16px'>"
+    + "<div style='font-size:11px;color:#667;margin-bottom:8px'>" + entregues.length + " pedido(s) completaram 7 dias</div>"
+    + "<table width='100%' cellpadding='0' cellspacing='0'>"
+    + "<tr style='background:#08111f'>"
+    + "<th style='padding:7px 10px;font-size:10px;color:#667;text-align:left'>PEDIDO</th>"
+    + "<th style='padding:7px 10px;font-size:10px;color:#667;text-align:left'>CLIENTE</th>"
+    + "<th style='padding:7px 10px;font-size:10px;color:#667;text-align:left'>AÇÃO</th></tr>"
+    + linhas + "</table></div>"
+    + "<div style='background:#060c18;border:1px solid #1a2840;border-top:none;border-radius:0 0 14px 14px;padding:12px;text-align:center'>"
+    + "<div style='font-size:10px;color:#445'>" + nomeLoja + " · Aviso de garantia (7 dias)</div></div></div></body></html>";
+
+  GmailApp.sendEmail(emailDest, "🔒 Garantia — " + entregues.length + " pedido(s) pra checar — " + nomeLoja, "", {
     htmlBody: htmlBody, name: nomeLoja
   });
 }
