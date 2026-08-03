@@ -1217,10 +1217,24 @@ function getLogAcoes(p) {
 
 // ── E1.1 + E1.5: EXCLUSÃO REAL (linha some da aba; backup em _Lixeira_*) ──
 // E4.2: painel de cobrança — quem tá pra vencer / atrasado, ordenado por urgência
+// E4.3: itens do pedido resumidos (JSON+pipe) — usado na msg de cobrança personalizada
+function _itensResumo(raw) {
+  raw = raw || "";
+  try {
+    const arr = JSON.parse(raw);
+    if (Array.isArray(arr) && arr.length) {
+      return arr.map(function(i) { return (i.nome || i.name || "?") + ((i.qtd || i.qty || 1) > 1 ? " x" + (i.qtd || i.qty) : ""); }).join(", ");
+    }
+  } catch (e) {}
+  return String(raw).split("|").filter(Boolean).map(function(s) { return s.trim(); }).join(", ");
+}
+
 function getCobrancasPendentes() {
   try {
     const baixas = getSheet("Financeiro_Fluxo") ? sheetToObjects("Financeiro_Fluxo") : [];
     const pendentes = baixas.filter(function(b) { return String(b["Status_Pagamento"] || "") === "Pendente"; });
+    const pedidosMap = {};
+    sheetToObjects("Pedidos").forEach(function(pd) { pedidosMap[String(pd["ID Pedido"] || "")] = pd; });
     const hoje = new Date(); hoje.setHours(0, 0, 0, 0);
     const itens = pendentes.map(function(b) {
       const dvNorm = normalizarDataHora(b["Proxima_Vencimento"]);
@@ -1228,10 +1242,12 @@ function getCobrancasPendentes() {
       if (dv) dv.setHours(0, 0, 0, 0);
       const diff = dv ? Math.round((dv - hoje) / 86400000) : null; // negativo = atrasado
       const diasAtraso = diff !== null && diff < 0 ? -diff : 0;
+      const pd = pedidosMap[String(b["ID_Pedido"] || "")];
       return {
         idPedido: b["ID_Pedido"] || "",
         nome: b["Nome_Cliente"] || "",
         telefone: b["Telefone"] || "",
+        itens: pd ? _itensResumo(pd["Itens (JSON)"] || pd["Itens"]) : "",
         valor: Number(b["Saldo_Restante"] || b["Valor_Original"] || 0),
         vencimento: dvNorm ? dvNorm.split(" ")[0] : "",
         diasAtraso: diasAtraso,
