@@ -1592,7 +1592,11 @@ function editarPedido(p) {
     "Endereco":               p.endereco,
     "CEP":                    p.cep,
     "Responsavel":            p.responsavel,
-    "Qtd_Parcelas":           p.qtdParcelas !== undefined && p.qtdParcelas !== "" ? Number(p.qtdParcelas) : undefined
+    "Qtd_Parcelas":           p.qtdParcelas !== undefined && p.qtdParcelas !== "" ? Number(p.qtdParcelas) : undefined,
+    // G5: editor de itens — grava só quando o front manda (edição de item alterou o pedido)
+    "Itens (JSON)":           p.itens !== undefined ? p.itens : undefined,
+    "Subtotal (R$)":          p.subtotal !== undefined ? Number(p.subtotal) : undefined,
+    "Total (R$)":             p.total !== undefined ? Number(p.total) : undefined
   };
   Object.entries(campos).forEach(function([campo, valor]) {
     if (valor === undefined) return;
