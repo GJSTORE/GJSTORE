@@ -147,7 +147,7 @@ function handleAction(p) {
       case "ping":                 result = { ok: true, pong: true, ts: new Date().toISOString() }; break;
       case "setupSheets":          result = setupSheetsV2();                    break;
       case "formatarPlanilha":    result = formatarPlanilhaCompleta();         break;
-      case "criarDashboard":      result = criarDashboardNativo();             break;
+      case "criarDashboard":      result = criarDashboardNativo(p);            break;
       case "atualizarDashboard":  atualizarDashboard(); result = { ok: true }; break;
       case "vendaPDV":             result = vendaPDV(p);                        break;
       case "setupTriggers":       result = setupTodosOsTriggers();            break;
@@ -3301,7 +3301,8 @@ function getClientes(p) {
   const cliSh = getSheet("CLIENTES");
   const cliRows = cliSh ? sheetToObjects("CLIENTES") : [];
   if (cliSh && cliRows.length > 0) {
-    let rows = cliRows;
+    // A5: soft-delete via coluna Status — não mostrar cliente "excluído" por padrão
+    let rows = p && p.verTodos === "1" ? cliRows : cliRows.filter(function(r) { return String(r["Status"] || "") !== "Inativo"; });
     if (busca) {
       const q = busca.toLowerCase();
       rows = rows.filter(function(r) {
@@ -3476,8 +3477,14 @@ function formatarPlanilhaCompleta() {
 }
 
 // \u2500\u2500 DASHBOARD NATIVO NA PLANILHA \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
-function criarDashboardNativo() {
+// A4: 2\u00AA chamada sem flag expl\u00EDcita n\u00E3o destr\u00F3i a aba (podia ter sido customizada manualmente).
+// A recorrente `atualizarDashboard()` (trigger 1h) j\u00E1 atualiza em cima sem apagar \u2014 essa aqui s\u00F3
+// recria do zero se pedido de prop\u00F3sito.
+function criarDashboardNativo(p) {
   const existente = getSheet("\uD83D\uDCCA Dashboard");
+  if (existente && !(p && p.forcar === "1")) {
+    return { ok: false, error: "Aba Dashboard j\u00E1 existe. Passe forcar=1 pra recriar do zero (perde customiza\u00E7\u00E3o manual)." };
+  }
   if (existente) SS.deleteSheet(existente);
   const dash = SS.insertSheet("\uD83D\uDCCA Dashboard");
   SS.setActiveSheet(dash);
@@ -3931,18 +3938,23 @@ function salvarCliente(p) {
 }
 
 // \u2500\u2500 DELETAR CLIENTE \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
+// A5 (2026-08-03): CLIENTES nunca tinha coluna "Status" no schema padrão (migrarAbas) — o soft-delete
+// abaixo nunca disparava de verdade, sempre caía no deleteRow físico. Agora cria a coluna se faltar,
+// igual ao padrão de _ensureAuthCols — soft-delete de fato, mantém histórico.
 function deletarCliente(id, p) {
   if (!_checkAdmin(p)) return { ok: false, erro: "Não autorizado" };
   const found = findRow("CLIENTES", 0, id);
-  if (!found) return { error: "Cliente não encontrado" };
-  const headers = getHeaders("CLIENTES");
-  const col = headers.indexOf("Status");
-  if (col >= 0) {
-    found.sh.getRange(found.rowNum, col + 1).setValue("Inativo");
-    return { ok: true, inativado: true, aviso: "Cliente inativado (coluna Status existente)." };
+  if (!found) return { ok: false, error: "Cliente não encontrado" };
+  let headers = getHeaders("CLIENTES");
+  let col = headers.indexOf("Status");
+  if (col === -1) {
+    found.sh.getRange(1, found.sh.getLastColumn() + 1).setValue("Status");
+    headers = getHeaders("CLIENTES");
+    col = headers.indexOf("Status");
   }
-  found.sh.deleteRow(found.rowNum);
-  return { ok: true };
+  found.sh.getRange(found.rowNum, col + 1).setValue("Inativo");
+  registrarAcao(p && p.operador, "deletarCliente", "Cliente", id, "soft-delete → Status=Inativo");
+  return { ok: true, inativado: true };
 }
 
 // \u2500\u2500 IMPORTAR CONTATOS (lote) \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
