@@ -2228,8 +2228,8 @@ function getCarrinhosAbandonados() {
     itens: r[3] || "",
     total: Number(r[4] || 0)
   }));
-  // Só carrinhos dos últimos 7 dias (cutoff de fato aplicado), mais recentes primeiro
-  const cutoff = new Date(); cutoff.setDate(cutoff.getDate() - 7);
+  // Cutoff 30 dias (ajustado 2026-08-03 — 7 dias ficava sempre vazio dado o volume de vendas da loja)
+  const cutoff = new Date(); cutoff.setDate(cutoff.getDate() - 30);
   const recent = rows
     .filter(r => r.nome && r.tel)
     .filter(r => {
