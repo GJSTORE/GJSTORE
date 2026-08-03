@@ -30,6 +30,9 @@ cp "$HERE/admin.html"            "$TMP/ADM/admin.html"
 cp "$HERE/gestao_unificada.html" "$TMP/ADM/gestao_unificada.html"
 # config.js NÃO é copiado: GAS_URL diverge de propósito (ver REPO-MAP.md).
 cd "$TMP/ADM"
+# clone temporário não herda identidade git — sem isso o commit falha com "Author identity unknown"
+git config user.name "$(cd "$HERE" && git config user.name || echo GJSTORE)"
+git config user.email "$(cd "$HERE" && git config user.email || echo deploy@gjstore.local)"
 git add admin.html gestao_unificada.html
 if ! git diff --cached --quiet; then
   git commit -m "$MSG"
