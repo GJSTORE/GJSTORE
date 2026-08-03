@@ -2985,19 +2985,31 @@ function getKPIs() {
     const mesAtual = hoje.getMonth();
     const anoAtual = hoje.getFullYear();
     const hojeStr = Utilities.formatDate(hoje, "America/Sao_Paulo", "dd/MM/yyyy");
+    const paga = function(b) { return String(b["Status_Pagamento"] || "") !== "Pendente"; };
 
-    // Faturamento real = soma das baixas do mês (pagas) — Liquidado também é recebido
+    // G4 (2026-08-03): Faturamento = dinheiro que ENTROU de verdade (baixas), não valor de pedido criado.
+    // Antes fatHoje/fatAno somavam Total(R$) de QUALQUER pedido não-cancelado (inclusive Pendente/Em andamento) —
+    // contava como faturamento venda que o cliente ainda nem pagou. Confirmado com o dono: faturamento = pago.
+    const baixasHoje = baixas.filter(function(b) {
+      const dt = normalizarDataHora(b["Data_Baixa_Efetiva"]);
+      return !!dt && dt.split(" ")[0] === hojeStr && paga(b);
+    });
     const baixasMes = baixas.filter(function(b) {
       const dt = normalizarDataHora(b["Data_Baixa_Efetiva"]);
       if (!dt) return false;
       const parts = dt.split(" ")[0].split("/");
       if (parts.length < 3) return false;
-      return Number(parts[1]) - 1 === mesAtual && Number(parts[2]) === anoAtual
-             && String(b["Status_Pagamento"] || "") !== "Pendente";
+      return Number(parts[1]) - 1 === mesAtual && Number(parts[2]) === anoAtual && paga(b);
     });
-    const fatMes = baixasMes.reduce(function(s, b) { return s + Number(b["Valor_Final_Recebido"] || b["Valor_Original"] || 0); }, 0);
+    const baixasAno = baixas.filter(function(b) {
+      const dt = normalizarDataHora(b["Data_Baixa_Efetiva"]);
+      if (!dt) return false;
+      const parts = dt.split(" ")[0].split("/");
+      return parts.length >= 3 && Number(parts[2]) === anoAtual && paga(b);
+    });
+    const somaBaixas = function(arr) { return arr.reduce(function(s, b) { return s + Number(b["Valor_Final_Recebido"] || b["Valor_Original"] || 0); }, 0); };
 
-    // Pedidos do mês — declarado ANTES do fallback que o usa
+    // Pedidos do mês/hoje/ano — usado p/ contagem + fallback (venda finalizada sem baixa registrada, ex: à vista)
     const pedidosMes = pedidos.filter(function(p) {
       const dt = normalizarDataHora(p["Data/Hora"]);
       if (!dt) return false;
@@ -3005,12 +3017,24 @@ function getKPIs() {
       if (parts.length < 2) return false;
       return Number(parts[1]) - 1 === mesAtual && (parts[2] && Number(parts[2].split(" ")[0]) === anoAtual);
     });
-    // Fallback: se não há baixas, calcula dos pedidos finalizados do mês
-    const fatMesFallback = pedidosMes.filter(function(p) { return p["Status"] === "Finalizado"; })
-      .reduce(function(s, p) { return s + Number(p["Total (R$)"] || 0); }, 0);
-    const fatMesFinal = fatMes > 0 ? fatMes : fatMesFallback;
+    const pedidosHojeArr = pedidos.filter(function(p) { return String(p["Data/Hora"] || "").startsWith(hojeStr); });
+    const pedidosAno = pedidos.filter(function(p) {
+      const dt = normalizarDataHora(p["Data/Hora"]);
+      if (!dt) return false;
+      const parts = dt.split("/");
+      return parts.length >= 3 && Number(parts[2].split(" ")[0]) === anoAtual;
+    });
+    const finalizadosDe = function(arr) { return arr.filter(function(p) { return p["Status"] === "Finalizado"; }); };
+    const somaTotalDe = function(arr) { return arr.reduce(function(s, p) { return s + Number(p["Total (R$)"] || 0); }, 0); };
 
-    const pedidosFinalizados = pedidosMes.filter(function(p) { return p["Status"] === "Finalizado"; });
+    const fatMes  = somaBaixas(baixasMes);
+    const fatHojeBaixas = somaBaixas(baixasHoje);
+    const fatAnoBaixas  = somaBaixas(baixasAno);
+    const fatMesFinal = fatMes > 0 ? fatMes : somaTotalDe(finalizadosDe(pedidosMes));
+    const fatHoje      = fatHojeBaixas > 0 ? fatHojeBaixas : somaTotalDe(finalizadosDe(pedidosHojeArr));
+    const fatAno        = fatAnoBaixas  > 0 ? fatAnoBaixas  : somaTotalDe(finalizadosDe(pedidosAno));
+
+    const pedidosFinalizados = finalizadosDe(pedidosMes);
     const pedidosPendentes   = pedidos.filter(function(p) { return p["Status"] === "Pendente"; });
 
     // Ticket médio
@@ -3027,38 +3051,23 @@ function getKPIs() {
     // Meta mensal
     const meta = Number(getConfigValue("META_MENSAL_RS") || 5000);
 
-    // Faturamento hoje
-    const fatHoje = pedidos
-      .filter(function(p) { return String(p["Data/Hora"] || "").startsWith(hojeStr) && p["Status"] !== "Cancelado"; })
-      .reduce(function(s, p) { return s + Number(p["Total (R$)"] || 0); }, 0);
-
     // Produtos para custo/lucro
     const produtosKPI = sheetToObjects("Produtos") || [];
     const produtosMapKPI = {};
     produtosKPI.forEach(function(pr) { produtosMapKPI[String(pr["ID"] || "")] = pr; });
 
-    // Ano atual
-    const pedidosAno = pedidos.filter(function(p) {
-      const dt = normalizarDataHora(p["Data/Hora"]);
-      if (!dt) return false;
-      const parts = dt.split("/");
-      return parts.length >= 3 && Number(parts[2].split(" ")[0]) === anoAtual;
-    });
-    const fatAno = pedidosAno.filter(function(p) { return p["Status"] !== "Cancelado"; })
-      .reduce(function(s, p) { return s + Number(p["Total (R$)"] || 0); }, 0);
-    const custoAno = pedidosAno.reduce(function(s, p) { return s + calcCustoPedido(p, produtosMapKPI); }, 0);
-    const lucroAno = fatAno - custoAno;
+    // G4: custo só de pedidos FINALIZADOS (venda concluída de verdade) — antes custoAno somava TODOS os
+    // status incluindo Cancelado, e custoMes/custoHoje somavam Pendente/Em andamento junto. Isso puxava o
+    // lucro pra baixo com custo de venda que nunca terminou (ou nunca aconteceu, no caso de cancelado).
+    const custoDe = function(arr) { return finalizadosDe(arr).reduce(function(s, p) { return s + calcCustoPedido(p, produtosMapKPI); }, 0); };
+    const custoMes  = custoDe(pedidosMes);
+    const custoHoje = custoDe(pedidosHojeArr);
+    const custoAno  = custoDe(pedidosAno);
 
-    // Custo e lucro do mês
-    const custoMes = pedidosMes.reduce(function(s, p) { return s + calcCustoPedido(p, produtosMapKPI); }, 0);
-    const lucroMes = fatMesFinal - custoMes;
-    const margemMes = fatMesFinal > 0 ? Number((lucroMes / fatMesFinal * 100).toFixed(1)) : 0;
-
-    // Custo hoje
-    const custoHoje = pedidos
-      .filter(function(p) { return String(p["Data/Hora"] || "").startsWith(hojeStr) && p["Status"] !== "Cancelado"; })
-      .reduce(function(s, p) { return s + calcCustoPedido(p, produtosMapKPI); }, 0);
+    const lucroMes  = fatMesFinal - custoMes;
     const lucroHoje = fatHoje - custoHoje;
+    const lucroAno  = fatAno - custoAno;
+    const margemMes = fatMesFinal > 0 ? Number((lucroMes / fatMesFinal * 100).toFixed(1)) : 0;
 
     return {
       fatMes: fatMesFinal, fatHoje, pedidosMes: pedidosMes.length, pedidosFinalizados: pedidosFinalizados.length,
