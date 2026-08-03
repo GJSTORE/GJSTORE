@@ -72,7 +72,7 @@ function doGet(e) {
 // Content-Type text/plain no front evita preflight CORS.
 function doPost(e) {
   var p = {};
-  try { p = JSON.parse((e.postData && e.postData.contents) || "{}"); } catch (err) {}
+  try { p = JSON.parse((e.postData && e.postData.contents) || "{}"); } catch (err) { console.error("doPost JSON parse: " + err.message); }
   if (e && e.parameter) for (var k in e.parameter) if (!(k in p)) p[k] = e.parameter[k];
   return jsonResponse(handleAction(p));
 }
@@ -103,7 +103,7 @@ function handleAction(p) {
       case "getClientesScore":     result = getClientesScore();                 break;
       case "getTemas":             result = getTemas();                         break;
       // AUTH
-      case "adminLogin":           result = adminLogin(p.senha);                break;
+      case "adminLogin":           result = adminLogin(p);                       break;
       // ESCRITA
       case "novoPedido":           result = novoPedido(p);                      break;
       case "salvarProduto":        result = salvarProduto(p);                   break;
@@ -131,12 +131,12 @@ function handleAction(p) {
       case "criarCupomReengajamento": result = criarCupomReengajamento(p);     break;
       case "getKPIs":             result = getKPIs();                          break;
       case "salvarOperador":       result = salvarOperador(p);                  break;
-      case "deletarOperador":      result = deletarOperador(p.id);              break;
+      case "deletarOperador":      result = deletarOperador(p.id, p);            break;
       case "definirSenhaOperador": result = definirSenhaOperador(p.id, p.senha); break;
       case "operadorLogin":        result = operadorLogin(p.id, p.senha);        break;
       case "getClientes":          result = getClientes(p);                     break;
       case "salvarCliente":        result = salvarCliente(p);                   break;
-      case "deletarCliente":       result = deletarCliente(p.id);               break;
+      case "deletarCliente":       result = deletarCliente(p.id, p);             break;
       case "importarContatos":     result = importarContatos(p);                break;
       case "getParcelasPedido":    result = getParcelasPedido(p.idPedido);      break;
       case "getAnalytics":         result = getAnalytics(p);                    break;
@@ -306,7 +306,11 @@ function autoRegistrarCliente(nome, telefone, primeiroIdPedido) {
     });
     if (!jaExiste) {
       const sh = getSheet("CLIENTES");
-      sh.appendRow([newId("CLI"), nome, tel, "", "", "", "", "", "", nowBR(), 1000, 0, 0, 0, 0, "Novo", "Auto_Pedido"]);
+      appendRowByHeaders("CLIENTES", {
+        ID_Cliente: newId("CLI"), Nome: nome, WhatsApp: tel,
+        Data_Cadastro: nowBR(), Score_Atual: 1000,
+        Classificacao: "Novo", Origem_Contato: "Auto_Pedido"
+      });
     }
   } catch(e) {
     Logger.log("autoRegistrarCliente: " + e);
@@ -424,9 +428,12 @@ function cadastrarCliente(p) {
     }
 
     // Cliente novo: cria linha respeitando a posição das colunas base + escreve auth por header
-    const sh = getSheet("CLIENTES");
-    sh.appendRow([newId("CLI"), nome, telefone, "", "", "", "", "", "", nowBR(), 1000, 0, 0, 0, 0, "Novo", "Cadastro_Loja"]);
-    const novaRow = sh.getLastRow();
+    appendRowByHeaders("CLIENTES", {
+      ID_Cliente: newId("CLI"), Nome: nome, WhatsApp: telefone,
+      Data_Cadastro: nowBR(), Score_Atual: 1000,
+      Classificacao: "Novo", Origem_Contato: "Cadastro_Loja"
+    });
+    const novaRow = getSheet("CLIENTES").getLastRow();
     _setCelula(novaRow, "Senha_Hash", hash);
     _setCelula(novaRow, "Salt", salt);
     _setCelula(novaRow, "Data_Senha", nowBR());
@@ -445,7 +452,7 @@ function loginCliente(p) {
     if (!telefone || !senha) return { ok: false, erro: "Informe telefone e senha" };
     _ensureAuthCols();
     var cli = _findClienteRow(telefone);
-    if (!cli || !cli.obj["Senha_Hash"]) return { ok: false, erro: "Telefone ou senha incorretos", naoCadastrado: !cli || !cli.obj["Senha_Hash"] };
+    if (!cli || !cli.obj["Senha_Hash"]) return { ok: false, erro: "Telefone ou senha incorretos" };
     var hash = _hashSenha(senha, cli.obj["Salt"]);
     if (hash !== cli.obj["Senha_Hash"]) return { ok: false, erro: "Telefone ou senha incorretos" };
     return { ok: true, token: _signToken(telefone), nome: cli.obj["Nome"] || "" };
@@ -499,6 +506,24 @@ function resetarSenhaCliente(p) {
 
 // \u2500\u2500 HELPERS \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
 function getSheet(name) { return SS.getSheetByName(name); }
+
+// D1: append por NOME de coluna — adicionar/remover coluna na aba não corrompe a linha.
+// obj = { Header: valor }. Retorna o array montado na ordem dos headers atuais.
+function appendRowByHeaders(sheetName, obj) {
+  const sh = getSheet(sheetName);
+  if (!sh) throw new Error("Aba " + sheetName + " não encontrada");
+  const headers = getHeaders(sheetName);
+  const row = headers.map(function(h) { return obj[h] !== undefined ? obj[h] : ""; });
+  sh.appendRow(row);
+  return row;
+}
+
+// Escapa HTML para evitar injeção em comprovantes/e-mails gerados com dados do usuário.
+function escapeHTML(s) {
+  return String(s === undefined || s === null ? "" : s)
+    .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;").replace(/'/g, "&#39;");
+}
 
 function sheetToObjects(name) {
   const sh = getSheet(name);
@@ -557,14 +582,20 @@ function corrigirHeaders() {
   return { ok: true, corrigidos: corrigidos };
 }
 
+// colIdx pode ser número (posição 0-based) ou NOME de coluna (resolve via headers).
 function findRow(sheetName, colIdx, val) {
   const sh = getSheet(sheetName);
   if (!sh) return null;
   const data = sh.getDataRange().getValues();
+  let idx = colIdx;
+  if (typeof colIdx === "string") {
+    idx = data[0].indexOf(colIdx);
+    if (idx < 0) return null;
+  }
   const sv = String(val);
   const svNum = sv.replace(/^P/, "");
   for (let i = 1; i < data.length; i++) {
-    const cell = String(data[i][colIdx]);
+    const cell = String(data[i][idx]);
     if (cell === sv || cell === svNum || String(Number(cell)) === svNum) return { sh, rowNum: i + 1, row: data[i] };
   }
   return null;
@@ -747,10 +778,9 @@ function setupSheets() {
     ];
     novasChaves.forEach(([k, v, d]) => {
       if (!keys.includes(k)) {
-        cfgSh.appendRow([k, v, d]);
+        appendRowByHeaders("Config", { Chave: k, Valor: v, Descricao: d });
         created.push("Config." + k);
-      }
-    });
+      }    });
   }
 
   return { ok: true, created };
@@ -800,7 +830,7 @@ function getProdutos(p) {
           return { produtos: list, total: data.total };
         }
         // Offset além do cacheado → reler planilha abaixo
-      } catch(e) {}
+      } catch(e) { console.error("getProdutos cache parse: " + e.message); }
     }
   }
   // Usa cache de script (evita reler planilha na mesma execução)
@@ -845,7 +875,7 @@ function getProdutos(p) {
       var toCache = list.length > 140 ? list.slice(0, 140) : list;
       cache.put(cacheKey, JSON.stringify({ produtos: toCache, total: total }), 300);
       _regCatKey(cache, cacheKey);
-    } catch(e) {}
+    } catch(e) { console.error("getProdutos cache put: " + e.message); }
   }
   if (offset) list = list.slice(offset);
   if (limit) list = list.slice(0, limit);
@@ -892,7 +922,7 @@ function _clearProdCache() {
     const cache = CacheService.getScriptCache();
     // CacheService não tem getAllKeys() — usa registry próprio
     var reg = [];
-    try { reg = JSON.parse(cache.get("cat_keys_reg") || "[]"); } catch(e) {}
+    try { reg = JSON.parse(cache.get("cat_keys_reg") || "[]"); } catch(e) { console.error("cat_keys_reg parse: " + e.message); }
     if (reg.length) cache.removeAll(reg);
     cache.remove("cat_keys_reg");
   } catch(e) {}
@@ -901,7 +931,7 @@ function _clearProdCache() {
 function _regCatKey(cache, key) {
   try {
     var reg = [];
-    try { reg = JSON.parse(cache.get("cat_keys_reg") || "[]"); } catch(e) {}
+    try { reg = JSON.parse(cache.get("cat_keys_reg") || "[]"); } catch(e) { console.error("cat_keys_reg parse: " + e.message); }
     if (!reg.includes(key)) { reg.push(key); cache.put("cat_keys_reg", JSON.stringify(reg), 310); }
   } catch(e) {}
 }
@@ -1125,6 +1155,7 @@ function fixarIDsVazios() {
 }
 
 function excluirProdutoHard(p) {
+  if (!_checkAdmin(p)) return { ok: false, erro: "Não autorizado" };
   const id = String(p.id || "");
   if (!id) {
     // Delete rows without ID by name match (for cleanup)
@@ -1168,7 +1199,10 @@ function registrarAcao(operador, acao, entidade, ref, detalhe) {
       sh.getRange(1, 1, 1, 6).setValues([["Timestamp", "Operador", "Acao", "Entidade", "ID_Ref", "Detalhe"]]);
       sh.setFrozenRows(1);
     }
-    sh.appendRow([nowBR(), String(operador || "—"), String(acao || ""), String(entidade || ""), String(ref || ""), String(detalhe || "")]);
+    appendRowByHeaders("Log_Acoes", {
+      Timestamp: nowBR(), Operador: String(operador || "—"), Acao: String(acao || ""),
+      Entidade: String(entidade || ""), ID_Ref: String(ref || ""), Detalhe: String(detalhe || "")
+    });
   } catch (e) { /* auditoria nunca derruba a operação */ }
 }
 
@@ -1193,7 +1227,9 @@ function excluirPedidoHard(p) {
     lix.setFrozenRows(1);
   }
   const rowVals = found.sh.getRange(found.rowNum, 1, 1, headers.length).getValues()[0];
-  lix.appendRow([nowBR()].concat(rowVals));
+  const lixObj = { "Excluido_Em": nowBR() };
+  headers.forEach(function(h, i) { lixObj[h] = rowVals[i]; });
+  appendRowByHeaders("_Lixeira_Pedidos", lixObj);
   found.sh.deleteRow(found.rowNum);
 
   // E1.5: baixas do pedido → backup em _Lixeira_Financeiro + remoção (sem órfãs)
@@ -1212,7 +1248,9 @@ function excluirPedidoHard(p) {
       const data = fin.getDataRange().getValues();
       for (let i = data.length - 1; i >= 1; i--) {
         if (String(data[i][colPed]) === id) {
-          lixF.appendRow([nowBR()].concat(data[i]));
+          const lixFObj = { "Excluido_Em": nowBR() };
+          fh.forEach(function(h, j) { lixFObj[h] = data[i][j]; });
+          appendRowByHeaders("_Lixeira_Financeiro", lixFObj);
           fin.deleteRow(i + 1);
           baixasRemovidas++;
         }
@@ -1268,42 +1306,41 @@ function novoPedido(p) {
 
   const statusInicial = p.statusInicial || "Pendente";
   const dataHora = p.dataHora ? String(p.dataHora) : nowBR();
-  const row = [
-    id,
-    dataHora,                 // Data/Hora
-    nomeCliente,
-    telefone,
-    itens,
-    Number(p.subtotal || 0),
-    String(p.cupom || "").trim().toUpperCase(),
-    Number(p.desconto || 0),
-    p.tipoFrete || "",
-    Number(p.valorFrete || 0),
-    total,
-    p.formaPagamento || "",
-    statusInicial,             // Status
-    obsCliente,                // Observações
-    dataVenc,                 // Data_Vencimento
-    "",                       // ID_Evento_Agenda_Cobranca  [col15]
-    "",                       // Fornecedor_Selecionado     [col16]
-    "",                       // Custo_Lote                 [col17]
-    "",                       // Data_Finalizacao            [col18]
-    "",                       // ID_Evento_Agenda_Status    [col19]
-    nowBR(),                  // Data_Criacao               [col20]
-    "",                       // Data_Confirmacao           [col21]
-    qtdParcelas,              // Qtd_Parcelas
-    intervaloDias,            // Intervalo_Dias
-    responsavel,              // Responsavel
-    endereco,                 // Endereco
-    cep,                      // CEP
-    dataAcordada,             // Data_Acordada
-    dataLembrete,             // Data_Lembrete
-  ];
-  sh.appendRow(row);
+  const row = appendRowByHeaders("Pedidos", {
+    "ID Pedido": id,
+    "Data/Hora": dataHora,
+    "Nome Cliente": nomeCliente,
+    "Telefone": telefone,
+    "Itens (JSON)": itens,
+    "Subtotal (R$)": Number(p.subtotal || 0),
+    "Cupom": String(p.cupom || "").trim().toUpperCase(),
+    "Desconto (R$)": Number(p.desconto || 0),
+    "tipoFrete": p.tipoFrete || "",
+    "valorFrete": Number(p.valorFrete || 0),
+    "Total (R$)": total,
+    "Forma Pagamento": p.formaPagamento || "",
+    "Status": statusInicial,
+    "Observações": obsCliente,
+    "Data_Vencimento": dataVenc,
+    "ID_Evento_Agenda_Cobranca": "",
+    "Fornecedor_Selecionado": "",
+    "Custo_Lote": "",
+    "Data_Finalizacao": "",
+    "ID_Evento_Agenda_Status": "",
+    "Data_Criacao": nowBR(),
+    "Data_Confirmacao": "",
+    "Qtd_Parcelas": qtdParcelas,
+    "Intervalo_Dias": intervaloDias,
+    "Responsavel": responsavel,
+    "Endereco": endereco,
+    "CEP": cep,
+    "Data_Acordada": dataAcordada,
+    "Data_Lembrete": dataLembrete
+  });
   if (p.cupom) incrementaCupom(p.cupom);
 
   // Auto-registrar cliente se for novo
-  try { autoRegistrarCliente(nomeCliente, telefone, id); } catch(e) {}
+  try { autoRegistrarCliente(nomeCliente, telefone, id); } catch(e) { console.error("autoRegistrarCliente: " + e); }
 
   // Envia email de notificação
   try { sendEmailNovoPedido(id, p); } catch (err) { console.warn("Email: " + err.message); }
@@ -1607,21 +1644,13 @@ function darBaixa(p) {
   const saldoRestante = isParcial ? (valorFinal - valorPago) : 0;
 
   // Registra pagamento (parcial ou total)
-  shFin.appendRow([
-    newId("BX"),                // ID_Baixa
-    p.idPedido,                 // ID_Pedido
-    nomeCliente,                // Nome_Cliente
-    valorOriginal,              // Valor_Original
-    statusFin,                  // Status_Pagamento
-    diasAtraso,                 // Dias_Atraso
-    taxaRS.toFixed(2),          // Taxa_Aplicada_RS
-    valorPago.toFixed(2),       // Valor_Final_Recebido
-    dataBaixaEfetiva,           // Data_Baixa_Efetiva (retroativa se p.dataBaixa)
-    saldoRestante.toFixed(2),   // Saldo_Restante
-    "",                         // Proxima_Vencimento (preenchida abaixo se parcial)
-    telefone,                   // Telefone
-    p.formaPagamento || ""      // Forma_Pagamento
-  ]);
+  appendRowByHeaders("Financeiro_Fluxo", {
+    ID_Baixa: newId("BX"), ID_Pedido: p.idPedido, Nome_Cliente: nomeCliente,
+    Valor_Original: valorOriginal, Status_Pagamento: statusFin, Dias_Atraso: diasAtraso,
+    Taxa_Aplicada_RS: taxaRS.toFixed(2), Valor_Final_Recebido: valorPago.toFixed(2),
+    Data_Baixa_Efetiva: dataBaixaEfetiva, Saldo_Restante: saldoRestante.toFixed(2),
+    Proxima_Vencimento: "", Telefone: telefone, Forma_Pagamento: p.formaPagamento || ""
+  });
 
   if (isParcial) {
     // Calcula próxima data de vencimento
@@ -1630,21 +1659,14 @@ function darBaixa(p) {
     const proximaFmt = Utilities.formatDate(proxima, "America/Sao_Paulo", "dd/MM/yyyy");
 
     // Cria linha pendente com o saldo restante
-    shFin.appendRow([
-      newId("BX"),                 // ID_Baixa
-      p.idPedido,                  // ID_Pedido
-      nomeCliente,                 // Nome_Cliente
-      saldoRestante,               // Valor_Original
-      "Pendente",                  // Status_Pagamento
-      0,                           // Dias_Atraso
-      "0.00",                      // Taxa_Aplicada_RS
-      "0.00",                      // Valor_Final_Recebido
-      "",                          // Data_Baixa_Efetiva (não pago ainda)
-      saldoRestante.toFixed(2),    // Saldo_Restante
-      proximaFmt,                  // Proxima_Vencimento
-      telefone,                    // Telefone
-      p.formaPagamento || ""       // Forma_Pagamento
-    ]);
+    appendRowByHeaders("Financeiro_Fluxo", {
+      ID_Baixa: newId("BX"), ID_Pedido: p.idPedido, Nome_Cliente: nomeCliente,
+      Valor_Original: saldoRestante, Status_Pagamento: "Pendente", Dias_Atraso: 0,
+      Taxa_Aplicada_RS: "0.00", Valor_Final_Recebido: "0.00",
+      Data_Baixa_Efetiva: "", Saldo_Restante: saldoRestante.toFixed(2),
+      Proxima_Vencimento: proximaFmt, Telefone: telefone,
+      Forma_Pagamento: p.formaPagamento || ""
+    });
 
     // Cria evento de cobrança para o saldo restante
     try {
@@ -1663,7 +1685,7 @@ function darBaixa(p) {
     const statusManter = statusAtual === "Entregue" ? "Entregue" : "Em andamento";
     found.sh.getRange(found.rowNum, colStatus).setValue(statusManter);
 
-    try { atualizarScore(nomeCliente, telefone, "No Prazo", 0); } catch(err) {}
+    try { atualizarScore(nomeCliente, telefone, "No Prazo", 0); } catch(err) { console.error("atualizarScore darBaixa: " + err.message); }
 
     return {
       ok: true,
@@ -1696,7 +1718,7 @@ function darBaixa(p) {
     }
   }
 
-  try { atualizarScore(nomeCliente, telefone, p.statusPagamento, diasAtraso); } catch(err) {}
+  try { atualizarScore(nomeCliente, telefone, p.statusPagamento, diasAtraso); } catch(err) { console.error("atualizarScore status: " + err.message); }
 
   return {
     ok: true,
@@ -1812,16 +1834,16 @@ td{padding:10px 12px;border-bottom:1px solid #eee;font-size:13px}
   </div>
   <div style="text-align:right">
     <div style="font-size:11px;opacity:.7">Pedido</div>
-    <div style="font-size:18px;font-weight:700">#${p.idPedido}</div>
-    <div class="badge">${status}</div>
+    <div style="font-size:18px;font-weight:700">#${escapeHTML(p.idPedido)}</div>
+    <div class="badge">${escapeHTML(status)}</div>
   </div>
 </div>
 
 <div class="info-grid">
-  <div class="info-box"><label>Cliente</label><span>${nomeCliente}</span></div>
-  <div class="info-box"><label>Telefone</label><span>${telefone}</span></div>
-  <div class="info-box"><label>Data</label><span>${dataHora}</span></div>
-  <div class="info-box"><label>Pagamento</label><span>${pagamento}</span></div>
+  <div class="info-box"><label>Cliente</label><span>${escapeHTML(nomeCliente)}</span></div>
+  <div class="info-box"><label>Telefone</label><span>${escapeHTML(telefone)}</span></div>
+  <div class="info-box"><label>Data</label><span>${escapeHTML(dataHora)}</span></div>
+  <div class="info-box"><label>Pagamento</label><span>${escapeHTML(pagamento)}</span></div>
 </div>
 
 <table>
@@ -1831,7 +1853,7 @@ td{padding:10px 12px;border-bottom:1px solid #eee;font-size:13px}
       const match = item.match(/^(.+?)\s+x(\d+)$/);
       const desc = match ? match[1] : item;
       const qty  = match ? match[2] : "1";
-      return `<tr><td>${desc}</td><td>${qty}</td></tr>`;
+      return `<tr><td>${escapeHTML(desc)}</td><td>${qty}</td></tr>`;
     }).join("")}
   </tbody>
 </table>
@@ -1845,8 +1867,8 @@ td{padding:10px 12px;border-bottom:1px solid #eee;font-size:13px}
   </tbody>
 </table>
 
-${termoGarantia ? `<div class="garantia"><strong>\u26A1 Garantia:</strong> ${termoGarantia}</div>` : ""}
-${obs ? `<div class="obs-box"><strong>Observações:</strong> ${obs}</div>` : ""}
+${termoGarantia ? `<div class="garantia"><strong>\u26A1 Garantia:</strong> ${escapeHTML(termoGarantia)}</div>` : ""}
+${obs ? `<div class="obs-box"><strong>Observações:</strong> ${escapeHTML(obs)}</div>` : ""}
 
 <div class="footer">
   GJ Store · WhatsApp: 55 21 97036-3062<br>
@@ -1866,7 +1888,7 @@ ${obs ? `<div class="obs-box"><strong>Observações:</strong> ${obs}</div>` : ""
 
   const filename = "Comprovante_" + p.idPedido + "_" + Utilities.formatDate(new Date(), "America/Sao_Paulo", "yyyyMMdd_HHmm") + ".html";
   const file = folder.createFile(filename, html, MimeType.HTML);
-  file.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
+  file.setSharing(DriveApp.Access.PRIVATE, DriveApp.Permission.NONE);
 
   return { ok: true, url: file.getUrl(), fileId: file.getId() };
 }
@@ -2139,7 +2161,10 @@ function getCRM() {
 function logAcesso(p) {
   const sh = getSheet("Acessos_Log");
   if (!sh) return { ok: false, error: "Aba Acessos_Log não existe" };
-  sh.appendRow([nowBR(), p.idProduto || p.id || "", p.tipoAcao || "Clique_Detalhes"]);
+  appendRowByHeaders("Acessos_Log", {
+    Data_Hora: nowBR(), ID_Produto: p.idProduto || p.id || "",
+    Tipo_Acao: p.tipoAcao || "Clique_Detalhes"
+  });
   return { ok: true };
 }
 
@@ -2147,13 +2172,10 @@ function logAcesso(p) {
 function logCarrinho(p) {
   const sh = getSheet("CARRINHOS_ABANDONADOS");
   if (!sh) return { error: "Aba CARRINHOS_ABANDONADOS não existe. Execute setupSheets." };
-  sh.appendRow([
-    nowBR(),
-    p.nome  || "",
-    p.tel   || "",
-    p.itens || "",
-    Number(p.total || 0)
-  ]);
+  appendRowByHeaders("CARRINHOS_ABANDONADOS", {
+    Data_Hora: nowBR(), Nome: p.nome || "", Telefone: p.tel || "",
+    Itens: p.itens || "", Total_RS: Number(p.total || 0)
+  });
   return { ok: true };
 }
 
@@ -2170,9 +2192,19 @@ function getCarrinhosAbandonados() {
     itens: r[3] || "",
     total: Number(r[4] || 0)
   }));
-  // Only return carrinhos from the last 7 days, most recent first
+  // Só carrinhos dos últimos 7 dias (cutoff de fato aplicado), mais recentes primeiro
   const cutoff = new Date(); cutoff.setDate(cutoff.getDate() - 7);
-  const recent = rows.filter(r => r.nome && r.tel).reverse().slice(0, 20);
+  const recent = rows
+    .filter(r => r.nome && r.tel)
+    .filter(r => {
+      if (!r.data) return false;
+      const parts = String(r.data).split("/");
+      if (parts.length < 3) return false;
+      const d = new Date(Number(parts[2]), Number(parts[1]) - 1, Number(parts[0]));
+      return !isNaN(d.getTime()) && d >= cutoff;
+    })
+    .reverse()
+    .slice(0, 20);
   return { carrinhos: recent };
 }
 
@@ -2246,15 +2278,11 @@ function logAcao(p) {
       const hdrs = sh.getRange(1, 1, 1, sh.getLastColumn()).getValues()[0].map(String);
       if (!hdrs.includes("VID")) sh.getRange(1, hdrs.length + 1).setValue("VID");
     }
-    sh.appendRow([
-      nowBR(),
-      p.sessao || "",
-      p.acao || "",
-      p.detalhe || "",
-      p.origem || "",
-      p.dispositivo || "",
-      p.vid || ""
-    ]);
+    appendRowByHeaders("Logs_Metricas", {
+      Timestamp: nowBR(), ID_Sessao: p.sessao || "", Acao: p.acao || "",
+      Detalhe: p.detalhe || "", Origem: p.origem || "",
+      Dispositivo: p.dispositivo || "", VID: p.vid || ""
+    });
     return { ok: true };
   } catch(err) {
     return { error: err.message };
@@ -2452,15 +2480,60 @@ function migrarSenhaParaProperties() {
   return { ok: true, msg: "Senha migrada. Você pode remover ADMIN_SENHA da planilha Config." };
 }
 
-function adminLogin(senha) {
+// ── AUTH ADMIN/OPERADOR: token HMAC stateless + rate-limit por chave (CacheService) ──
+// token = base64url(payload) + "." + base64url(HMAC_SHA256(payload, AUTH_SECRET))
+// payload = papel|id|expiraMs
+function _signAuthToken(papel, id) {
+  const exp = Date.now() + 12 * 60 * 60 * 1000; // 12h
+  const payload = papel + "|" + id + "|" + exp;
+  const sig = Utilities.computeHmacSha256Signature(payload, _authSecret());
+  return Utilities.base64EncodeWebSafe(payload) + "." + Utilities.base64EncodeWebSafe(sig);
+}
+function _verifyAuthToken(token, papel) {
+  if (!token || token.indexOf(".") === -1) return null;
+  try {
+    const parts = token.split(".");
+    const payload = Utilities.newBlob(Utilities.base64DecodeWebSafe(parts[0])).getDataAsString();
+    const expectSig = Utilities.base64EncodeWebSafe(Utilities.computeHmacSha256Signature(payload, _authSecret()));
+    if (expectSig !== parts[1]) return null;   // assinatura inválida (forjado)
+    const seg = payload.split("|");
+    if (seg[0] !== papel) return null;          // papel errado
+    if (Number(seg[2]) < Date.now()) return null; // expirado
+    return seg[1];                               // id (admin = "1")
+  } catch (e) { return null; }
+}
+function adminLoginId(token) { return _verifyAuthToken(token, "admin"); }
+function operadorLoginId(token) { return _verifyAuthToken(token, "operador"); }
+
+// Rate-limit de login: máx 5 tentativas por chave a cada 5 minutos.
+function _loginRateOk(chave) {
+  return Number(CacheService.getScriptCache().get("login_" + chave) || 0) < 5;
+}
+function _loginRateHit(chave) {
+  const cache = CacheService.getScriptCache();
+  const hits = Number(cache.get("login_" + chave) || 0) + 1;
+  cache.put("login_" + chave, String(hits), 300); // 5 min
+  return hits;
+}
+function _loginRateClear(chave) {
+  CacheService.getScriptCache().remove("login_" + chave);
+}
+
+function adminLogin(p) {
+  const senha = (p && p.senha) || "";
+  const chave = String((p && p.ip) || "admin");
   if (!senha) return { ok: false, error: "Senha não informada" };
+  if (!_loginRateOk(chave)) return { ok: false, error: "Muitas tentativas. Tente novamente em alguns minutos." };
   // BUG-06: lê de PropertiesService primeiro; fallback para Config durante transição
   const senhaCorreta = PropertiesService.getScriptProperties().getProperty("ADMIN_SENHA")
                     || getConfigValue("ADMIN_SENHA");
   if (!senhaCorreta) return { ok: false, error: "Senha não configurada" };
-  if (senha !== senhaCorreta) return { ok: false, error: "Senha incorreta" };
-  const token = Utilities.base64Encode(senhaCorreta + "_" + new Date().toDateString());
-  return { ok: true, token };
+  if (senha !== senhaCorreta) {
+    _loginRateHit(chave);
+    return { ok: false, error: "Senha incorreta" };
+  }
+  _loginRateClear(chave);
+  return { ok: true, token: _signAuthToken("admin", "1"), role: "admin" };
 }
 
 // \u2500\u2500 CATEGORIAS \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
@@ -2721,11 +2794,12 @@ function atualizarScore(nomeCliente, telefone, statusPagamento, diasAtraso) {
       if (colCl > 0) cliFound.sh.getRange(cliFound.rowNum, colCl).setValue(classif);
     } else {
       // Cliente ainda não cadastrado em CLIENTES \u2014 cria entrada automática
-      const sh = getSheet("CLIENTES");
-      sh.appendRow([
-        newId("CLI"), nomeCliente, tel, "", "", "", "", "", "", nowBR(),
-        score, prazo, atraso, antec, 0, classif, "Auto_Score"
-      ]);
+      appendRowByHeaders("CLIENTES", {
+        ID_Cliente: newId("CLI"), Nome: nomeCliente, WhatsApp: tel,
+        Data_Cadastro: nowBR(), Score_Atual: score,
+        Compras_No_Prazo: prazo, Compras_Com_Atraso: atraso, Compras_Adiantadas: antec,
+        Total_Gasto_RS: 0, Classificacao: classif, Origem_Contato: "Auto_Score"
+      });
     }
     return;
   }
@@ -2798,7 +2872,8 @@ function salvarOperador(p) {
   return { ok: true, id };
 }
 
-function deletarOperador(id) {
+function deletarOperador(id, p) {
+  if (!_checkAdmin(p)) return { ok: false, error: "Não autorizado" };
   const opFound = findRow("OPERADORES", 0,id);
   if (!opFound) return { ok: false, error: "Operador não encontrado" };
   const opRow = opFound.sh.getRange(opFound.rowNum, 1, 1, opFound.sh.getLastColumn()).getValues()[0];
@@ -2815,7 +2890,7 @@ function deletarOperador(id) {
   }
   opFound.sh.deleteRow(opFound.rowNum);
   // Remove senha se existir
-  try { PropertiesService.getScriptProperties().deleteProperty("OP_SENHA_" + id); } catch(e) {}
+  try { PropertiesService.getScriptProperties().deleteProperty("OP_SENHA_" + id); } catch(e) { console.error("deletarOperador: limpar OP_SENHA_" + id + " → " + e.message); }
   return { ok: true };
 }
 
@@ -2823,7 +2898,11 @@ function definirSenhaOperador(id, senha) {
   if (!id) return { error: "ID do operador não informado" };
   if (!senha || String(senha).trim().length < 4) return { error: "Senha deve ter no mínimo 4 caracteres" };
   if (!findRow("OPERADORES", 0,id)) return { error: "Operador não encontrado" };
-  PropertiesService.getScriptProperties().setProperty("OP_SENHA_" + id, String(senha).trim());
+  const props = PropertiesService.getScriptProperties();
+  const salt = Utilities.getUuid().replace(/-/g, "").slice(0, 16);
+  const hash = _bytesToHex(Utilities.computeDigest(Utilities.DigestAlgorithm.SHA_256, salt + "::" + String(senha).trim(), Utilities.Charset.UTF_8));
+  props.setProperty("OP_SALT_" + id, salt);
+  props.setProperty("OP_SENHA_" + id, "sha256:" + hash);
   return { ok: true };
 }
 
@@ -2836,11 +2915,29 @@ function operadorLogin(id, senha) {
   const opNome = String(opRow[headers.indexOf("Nome")] || "");
   const opStatus = String(opRow[headers.indexOf("Status")] || "");
   if (opStatus === "Inativo") return { ok: false, error: "Operador inativo. Contate o administrador." };
-  const stored = PropertiesService.getScriptProperties().getProperty("OP_SENHA_" + id);
+  const props = PropertiesService.getScriptProperties();
+  const stored = props.getProperty("OP_SENHA_" + id);
   if (!stored) return { ok: false, error: "Senha não configurada. Contate o administrador." };
-  if (String(senha).trim() !== stored) return { ok: false, error: "Senha incorreta." };
-  const token = Utilities.base64Encode(id + "_" + stored + "_" + new Date().toDateString());
-  return { ok: true, token: token, opId: id, opNome: opNome };
+  // Rate-limit por operador: máx 5 tentativas / 5min
+  const cache = CacheService.getScriptCache();
+  const hits = Number(cache.get("op_" + id) || 0);
+  if (hits >= 5) return { ok: false, error: "Muitas tentativas. Tente novamente em alguns minutos." };
+  let ok = false;
+  if (String(stored).indexOf("sha256:") === 0) {
+    const salt = props.getProperty("OP_SALT_" + id) || "";
+    const hash = _bytesToHex(Utilities.computeDigest(Utilities.DigestAlgorithm.SHA_256, salt + "::" + String(senha).trim(), Utilities.Charset.UTF_8));
+    ok = ("sha256:" + hash) === String(stored);
+  } else {
+    // Migração automática de senha legada em texto puro → re-salva com hash
+    ok = String(senha).trim() === String(stored);
+    if (ok) definirSenhaOperador(id, String(senha).trim());
+  }
+  if (!ok) {
+    cache.put("op_" + id, String(hits + 1), 300);
+    return { ok: false, error: "Senha incorreta." };
+  }
+  cache.remove("op_" + id);
+  return { ok: true, token: _signAuthToken("operador", id), opId: id, opNome: opNome };
 }
 
 // \u2500\u2500 KPIs CONSOLIDADOS \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
@@ -2956,6 +3053,34 @@ function calcCustoPedido(pedido, produtosMap) {
   } catch(e) { return 0; }
 }
 
+// D3: parser de itens (JSON novo + pipe legado) compartilhado entre getResumoPeriodo e getAnalytics
+// Acumula qtd/faturamento por nome de produto em `mapa`. Mesmo comportamento das 2 cópias originais:
+// fat soma o Total (R$) do pedido inteiro por CADA item distinto (não é rateio por unidade) — preservado de propósito.
+function acumularItensPedido(pedido, mapa) {
+  const raw = pedido["Itens (JSON)"] || pedido["Itens"] || "";
+  const total = Number(pedido["Total (R$)"] || 0);
+  let parsed = false;
+  try {
+    const arr = JSON.parse(raw);
+    if (Array.isArray(arr)) {
+      arr.forEach(function(it) {
+        const nome = (it.nome || it.name || "").trim();
+        const qty = Number(it.qty || it.quantidade || 1);
+        if (nome) { if (!mapa[nome]) mapa[nome] = { qtd: 0, fat: 0 }; mapa[nome].qtd += qty; mapa[nome].fat += total; }
+      });
+      parsed = true;
+    }
+  } catch(e) { console.error("acumularItensPedido parse: " + e.message); }
+  if (!parsed) {
+    String(raw).split("|").forEach(function(item) {
+      const m = item.trim().match(/^(.+?)\s+x(\d+)$/);
+      const nome = m ? m[1].trim() : item.trim();
+      const qty = m ? Number(m[2]) : 1;
+      if (nome) { if (!mapa[nome]) mapa[nome] = { qtd: 0, fat: 0 }; mapa[nome].qtd += qty; mapa[nome].fat += total; }
+    });
+  }
+}
+
 // ══ RESUMO PERIODICO (DASHBOARD HOME) ══════════════════════════════════════════════════════════════════════
 function getResumoPeriodo(p) {
   const periodo = p.periodo || "30";
@@ -3012,22 +3137,7 @@ function getResumoPeriodo(p) {
   const progresso = meta > 0 ? Math.min(100, fatFinal / meta * 100) : 0;
 
   const prodMap = {};
-  finalizados.forEach(function(pd) {
-    const raw = pd["Itens (JSON)"] || pd["Itens"] || "";
-    let parsed = false;
-    try { const arr = JSON.parse(raw);
-      if (Array.isArray(arr)) { arr.forEach(function(it) {
-        const nome = (it.nome || it.name || "").trim();
-        const qty = Number(it.qty || it.quantidade || 1);
-        if (nome) { if (!prodMap[nome]) prodMap[nome] = { qtd: 0, fat: 0 }; prodMap[nome].qtd += qty; prodMap[nome].fat += Number(pd["Total (R$)"] || 0); }
-      }); parsed = true; } } catch(e) {}
-    if (!parsed) {
-      raw.split("|").forEach(function(item) {
-        const m = item.trim().match(/^(.+?)\s+x(\d+)$/); const nome = m ? m[1].trim() : item.trim(); const qty = m ? Number(m[2]) : 1;
-        if (nome) { if (!prodMap[nome]) prodMap[nome] = { qtd: 0, fat: 0 }; prodMap[nome].qtd += qty; prodMap[nome].fat += Number(pd["Total (R$)"] || 0); }
-      });
-    }
-  });
+  finalizados.forEach(function(pd) { acumularItensPedido(pd, prodMap); });
   const topProdutos = Object.entries(prodMap).sort(function(a,b) { return b[1].qtd - a[1].qtd; }).slice(0,5)
     .map(function(e) { return { nome: e[0], qtd: e[1].qtd, fat: e[1].fat }; });
 
@@ -3076,7 +3186,7 @@ function salvarConfigValor(p) {
       return { ok: true, chave: p.chave, valor: String(p.valor) };
     }
   }
-  sh.appendRow([p.chave, String(p.valor), ""]);
+  appendRowByHeaders("Config", { Chave: p.chave, Valor: String(p.valor), Descricao: "" });
   return { ok: true, chave: p.chave, valor: String(p.valor), criado: true };
 }
 
@@ -3129,10 +3239,11 @@ function getClientes(p) {
     }
   });
 
-  // Usa aba CLIENTES unificada se existir
+  // Usa aba CLIENTES unificada se existir E tiver dados (aba vazia cai no fallback de Pedidos)
   const cliSh = getSheet("CLIENTES");
-  if (cliSh) {
-    let rows = sheetToObjects("CLIENTES");
+  const cliRows = cliSh ? sheetToObjects("CLIENTES") : [];
+  if (cliSh && cliRows.length > 0) {
+    let rows = cliRows;
     if (busca) {
       const q = busca.toLowerCase();
       rows = rows.filter(function(r) {
@@ -3620,10 +3731,10 @@ function _criarTriggerDashboard() {
       ScriptApp.deleteTrigger(t);
     }
   });
-  // Cria trigger a cada 5 minutos
+  // Cria trigger a cada 1 hora (alinhado à mensagem de retorno e econômico em cota)
   ScriptApp.newTrigger("atualizarDashboard")
     .timeBased()
-    .everyMinutes(5)
+    .everyHours(1)
     .create();
 }
 
@@ -3762,9 +3873,16 @@ function salvarCliente(p) {
 }
 
 // \u2500\u2500 DELETAR CLIENTE \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
-function deletarCliente(id) {
+function deletarCliente(id, p) {
+  if (!_checkAdmin(p)) return { ok: false, erro: "Não autorizado" };
   const found = findRow("CLIENTES", 0, id);
   if (!found) return { error: "Cliente não encontrado" };
+  const headers = getHeaders("CLIENTES");
+  const col = headers.indexOf("Status");
+  if (col >= 0) {
+    found.sh.getRange(found.rowNum, col + 1).setValue("Inativo");
+    return { ok: true, inativado: true, aviso: "Cliente inativado (coluna Status existente)." };
+  }
   found.sh.deleteRow(found.rowNum);
   return { ok: true };
 }
@@ -3793,10 +3911,11 @@ function importarContatos(p) {
     const nome = (c.nome || "").trim();
     if (!nome && !tel) { ignorados++; return; }
     if (tel && existing.includes(tel)) { duplicados++; return; }
-    sh.appendRow([
-      newId("CLI"), nome, tel, "", "", "", "", "", "",
-      nowBR(), 1000, 0, 0, 0, 0, "Novo", "Importacao_Contato"
-    ]);
+    appendRowByHeaders("CLIENTES", {
+      ID_Cliente: newId("CLI"), Nome: nome, WhatsApp: tel,
+      Data_Cadastro: nowBR(), Score_Atual: 1000,
+      Classificacao: "Novo", Origem_Contato: "Importacao_Contato"
+    });
     if (tel) existing.push(tel);
     importados++;
   });
@@ -3875,28 +3994,7 @@ function getAnalytics(p) {
   pedsFilt.forEach(function(pd){const fp=pd["Forma Pagamento"]||"Outros";fpMap[fp]=(fpMap[fp]||0)+1;});
   const formasPagamento = Object.entries(fpMap).map(function(e){return{forma:e[0],qtd:e[1]};}).sort(function(a,b){return b.qtd-a.qtd;});
   const prodMap = {};
-  finalizados.forEach(function(pd){
-    const raw = (pd["Itens (JSON)"] || pd["Itens"]) || "";
-    let parsed = false;
-    try {
-      const arr = JSON.parse(raw);
-      if (Array.isArray(arr)) {
-        arr.forEach(function(it){
-          const nome = (it.nome || it.name || "").trim();
-          const qty  = Number(it.qty || it.quantidade || 1);
-          if (nome) { if (!prodMap[nome]) prodMap[nome]={qtd:0,fat:0}; prodMap[nome].qtd+=qty; prodMap[nome].fat+=Number(pd["Total (R$)"]||0); }
-        });
-        parsed = true;
-      }
-    } catch(e) { /* silent: parse fallback */ }
-    if (!parsed) {
-      raw.split("|").forEach(function(item){
-        const m=item.trim().match(/^(.+?)\s+x(\d+)$/);
-        const nome=m?m[1].trim():item.trim(); const qty=m?Number(m[2]):1;
-        if(nome){if(!prodMap[nome])prodMap[nome]={qtd:0,fat:0};prodMap[nome].qtd+=qty;prodMap[nome].fat+=Number(pd["Total (R$)"]||0);}
-      });
-    }
-  });
+  finalizados.forEach(function(pd){ acumularItensPedido(pd, prodMap); });
   const topProdutos = Object.entries(prodMap).sort(function(a,b){return b[1].qtd-a[1].qtd;}).slice(0,10)
     .map(function(e){return{nome:e[0],qtd:e[1].qtd,faturamento:e[1].fat};});
   const diaFatMap = {};
@@ -3961,14 +4059,15 @@ function migrarAbas() {
     baseRows.forEach(function(r) {
       const tel = normTel(r["WhatsApp"]);
       if (tel && tels.includes(tel)) return;
-      cliSh.appendRow([
-        r["ID_Cliente"]||newId("CLI"),r["Nome"]||"",tel,
-        r["Email"]||"",r["CPF_CNPJ"]||"",
-        r["Endereco"]||"",r["CEP"]||"",r["Cidade"]||"",r["Estado"]||"",
-        r["Data_Cadastro"]||r["Data_Primeiro_Acesso"]||nowBR(),
-        1000,0,0,0,Number(r["Total_Compras_RS"]||r["Total_Gasto_RS"]||0),
-        r["Classificacao"]||"Novo","Importacao_Contato"
-      ]);
+      appendRowByHeaders("CLIENTES", {
+        ID_Cliente: r["ID_Cliente"] || newId("CLI"), Nome: r["Nome"] || "", WhatsApp: tel,
+        Email: r["Email"] || "", CPF_CNPJ: r["CPF_CNPJ"] || "",
+        Endereco: r["Endereco"] || "", CEP: r["CEP"] || "", Cidade: r["Cidade"] || "", Estado: r["Estado"] || "",
+        Data_Cadastro: r["Data_Cadastro"] || r["Data_Primeiro_Acesso"] || nowBR(),
+        Score_Atual: 1000,
+        Total_Gasto_RS: Number(r["Total_Compras_RS"] || r["Total_Gasto_RS"] || 0),
+        Classificacao: r["Classificacao"] || "Novo", Origem_Contato: "Importacao_Contato"
+      });
       if(tel)tels.push(tel);imp++;
     });
     log.push("Base_Clientes: "+imp+" migrados");
@@ -3998,9 +4097,16 @@ function migrarAbas() {
         }
       } else {
         const tels2=getTelsCLI();if(tel&&tels2.includes(tel))return;
-        cliSh.appendRow([s["ID"]||newId("CLI"),s["Nome"]||"",tel,"","","","","","",nowBR(),
-          Number(s["Score_Atual"]||1000),Number(s["Compras_No_Prazo"]||0),Number(s["Compras_Com_Atraso"]||0),
-          Number(s["Compras_Adiantadas"]||0),Number(s["Total_Gasto_RS"]||0),s["Classificacao"]||"Novo","Importacao_Contato"]);
+        appendRowByHeaders("CLIENTES", {
+          ID_Cliente: s["ID"] || newId("CLI"), Nome: s["Nome"] || "", WhatsApp: tel,
+          Data_Cadastro: nowBR(),
+          Score_Atual: Number(s["Score_Atual"] || 1000),
+          Compras_No_Prazo: Number(s["Compras_No_Prazo"] || 0),
+          Compras_Com_Atraso: Number(s["Compras_Com_Atraso"] || 0),
+          Compras_Adiantadas: Number(s["Compras_Adiantadas"] || 0),
+          Total_Gasto_RS: Number(s["Total_Gasto_RS"] || 0),
+          Classificacao: s["Classificacao"] || "Novo", Origem_Contato: "Importacao_Contato"
+        });
         novos++;
       }
     });
@@ -4014,7 +4120,7 @@ function migrarAbas() {
     const novoNome = "_OLD_" + nome;
     // Só renomeia se o nome _OLD_ não existir ainda
     if (!getSheet(novoNome)) {
-      try { sh.setName(novoNome); log.push(nome + " \u2192 " + novoNome); } catch(e) {}
+      try { sh.setName(novoNome); log.push(nome + " \u2192 " + novoNome); } catch(e) { console.error("rename aba: " + e.message); }
     }
   }
   arquivarAba("Base_Clientes");
@@ -4049,60 +4155,32 @@ function vendaPDV(p) {
 
     // Monta string de itens
     let itensArr = [];
-    try { itensArr = Array.isArray(dados.itens) ? dados.itens : JSON.parse(dados.itens || "[]"); } catch(e) {}
+    try { itensArr = Array.isArray(dados.itens) ? dados.itens : JSON.parse(dados.itens || "[]"); } catch(e) { console.error("vendaPDV itens JSON: " + e.message); }
     const itensStr = itensArr.map(function(i){ return i.nome + " (x" + i.qtd + ")"; }).join(" | ") || obs;
 
     // 1. Registra na aba Pedidos (mesma estrutura de novoPedido)
-    shPed.appendRow([
-      idPedido,    // ID Pedido
-      dataHora,    // Data/Hora
-      nome,        // Nome Cliente
-      telefone,    // Telefone
-      itensStr,    // Itens
-      subtotal,    // Subtotal (R$)
-      "",          // Cupom
-      abatimento,  // Desconto (R$) \u2014 abatimento vai aqui
-      "",          // Tipo Frete
-      0,           // Valor Frete
-      totalFinal,  // Total (R$)
-      forma,       // Forma Pagamento
-      "Finalizado",// Status
-      obs,         // Observações
-      "",          // Data_Vencimento
-      "",          // ID_Evento_Agenda_Cobranca
-      "",          // Fornecedor_Selecionado
-      "",          // Custo_Lote
-      dataHora,    // Data_Finalizacao
-      "",          // ID_Evento_Agenda_Status
-      dataHora,    // Data_Criacao
-      dataHora,    // Data_Confirmacao
-      1,           // Qtd_Parcelas
-      0,           // Intervalo_Dias
-      resp,        // Responsavel
-      "",          // Endereco
-      "",          // CEP
-      "",          // Data_Acordada
-      ""           // Data_Lembrete
-    ]);
+    appendRowByHeaders("Pedidos", {
+      "ID Pedido": idPedido, "Data/Hora": dataHora, "Nome Cliente": nome, "Telefone": telefone,
+      "Itens (JSON)": itensStr, "Subtotal (R$)": subtotal, "Cupom": "", "Desconto (R$)": abatimento,
+      "tipoFrete": "", "valorFrete": 0, "Total (R$)": totalFinal, "Forma Pagamento": forma,
+      "Status": "Finalizado", "Observações": obs, "Data_Vencimento": "",
+      "ID_Evento_Agenda_Cobranca": "", "Fornecedor_Selecionado": "", "Custo_Lote": "",
+      "Data_Finalizacao": dataHora, "ID_Evento_Agenda_Status": "", "Data_Criacao": dataHora,
+      "Data_Confirmacao": dataHora, "Qtd_Parcelas": 1, "Intervalo_Dias": 0, "Responsavel": resp,
+      "Endereco": "", "CEP": "", "Data_Acordada": "", "Data_Lembrete": ""
+    });
 
     // 2. Registra baixa inline em Financeiro_Fluxo (ordem correta \u2014 sessão 2)
-    shFin.appendRow([
-      newId("BX"),         // ID_Baixa
-      idPedido,            // ID_Pedido
-      nome,                // Nome_Cliente
-      subtotal,            // Valor_Original
-      "No Prazo",          // Status_Pagamento
-      0,                   // Dias_Atraso
-      "0.00",              // Taxa_Aplicada_RS
-      totalFinal.toFixed(2), // Valor_Final_Recebido
-      dataHora,            // Data_Baixa_Efetiva
-      "0.00",              // Saldo_Restante
-      "",                  // Proxima_Vencimento
-      telefone             // Telefone
-    ]);
+    appendRowByHeaders("Financeiro_Fluxo", {
+      ID_Baixa: newId("BX"), ID_Pedido: idPedido, Nome_Cliente: nome,
+      Valor_Original: subtotal, Status_Pagamento: "No Prazo", Dias_Atraso: 0,
+      Taxa_Aplicada_RS: "0.00", Valor_Final_Recebido: totalFinal.toFixed(2),
+      Data_Baixa_Efetiva: dataHora, Saldo_Restante: "0.00",
+      Proxima_Vencimento: "", Telefone: telefone
+    });
 
     // 3. Atualiza score do cliente (ignora erros)
-    try { atualizarScore(nome, telefone, "No Prazo", 0); } catch(e) {}
+    try { atualizarScore(nome, telefone, "No Prazo", 0); } catch(e) { console.error("vendaPDV atualizarScore: " + e.message); }
 
     return { ok: true, idPedido: idPedido, totalFinal: totalFinal };
   } catch(err) {
@@ -4147,7 +4225,7 @@ function setupTodosOsTriggers() {
   _criarTriggerMorningDigest();
   _criarTriggerSLA();
   _criarTriggerVencimento();
-  return { ok: true, msg: "4 triggers criados: dashboard (5min), morning digest (7h), SLA (1h seg-sex 8-18h), vencimento D-1 (9h)" };
+  return { ok: true, msg: "4 triggers criados: dashboard (1h), morning digest (7h), SLA (1h seg-sex 8-18h), vencimento D-1 (9h)" };
 }
 
 // \u2500\u2500 VERIFICAR SLA \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500

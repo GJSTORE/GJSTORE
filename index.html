@@ -3792,7 +3792,9 @@
       btn.disabled = true; btn.textContent = "Entrando...";
       try {
         const d = await apiPost("loginCliente", { telefone: tel, senha });
-        if (!d.ok) { showToast(d.erro || "Não foi possível entrar"); if (d.naoCadastrado) mcSwitchAuth("cadastro"); return; }
+        // S4: resposta genérica (anti-enumeração). Se ainda não tem cadastro,
+        // a aba "Criar conta" continua disponível para o usuário escolher.
+        if (!d.ok) { showToast(d.erro || "Não foi possível entrar"); return; }
         mcOnAuth(d, tel);
       } catch(e) { showToast("Erro de conexão"); }
       finally { btn.disabled = false; btn.textContent = "🔓 Entrar"; }
