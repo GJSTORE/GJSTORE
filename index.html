@@ -45,7 +45,9 @@
 
     /* ══ THEMES ════════════════════════════════════════════════════ */
     html.theme-light {
-      --g: #0070e0; --c: #0095b6; --o: #e55a00; --r: #cc2200;
+      /* T2 (2026-08-03): --c e --o originais falhavam contraste WCAG contra os fundos claros
+         (2.1-2.9:1, abaixo do mínimo 3:1) — escurecidos, testado até 5.3:1 nos fundos mais comuns */
+      --g: #0070e0; --c: #00707f; --o: #c24a00; --r: #cc2200;
       --dark: #f2f5f9; --d1: #e8edf5; --d2: #dde3ee; --d3: #cfd6e5;
       --d4: #c0cbda; --text: #1a2332;
       --muted: rgba(26,35,50,.55); --border: rgba(0,112,224,.18);

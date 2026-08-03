@@ -171,7 +171,7 @@ function handleAction(p) {
       case "debugSalvar":           result = debugSalvar(p);                    break;
       case "testarEscrita":         result = testarEscrita(p);                  break;
       case "deduplicarPorNome":     result = deduplicarPorNome(p);              break;
-      default:                     result = { error: "Ação desconhecida: " + action };
+      default:                     result = { ok: false, error: "Ação desconhecida: " + action };
     }
     // E1.2: auditoria automática de toda escrita sensível (excluirPedidoHard registra interno)
     const AUDIT = { novoPedido: "Pedido", atualizarStatus: "Pedido", editarPedido: "Pedido",
@@ -184,7 +184,9 @@ function handleAction(p) {
         p.status ? "status→" + p.status : (p.valorPago ? "valor R$" + p.valorPago : ""));
     }
   } catch (err) {
-    result = { error: err.message };
+    // X2: exceção não tratada de QUALQUER action sempre volta ok:false — front pode confiar em `if(!res.ok)`
+    // sem precisar checar `res.error` separado (padrão inconsistente era a causa raiz do X2)
+    result = { ok: false, error: err.message };
   }
   return result;
 }
