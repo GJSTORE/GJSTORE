@@ -2222,8 +2222,11 @@ function getCarrinhosAbandonados(p) {
   const data = sh.getDataRange().getValues();
   if (data.length < 2) return { carrinhos: [] };
   // Expected columns: Data | Nome | Tel | Itens | Total
+  // BUG-CARRINHO-DATA-DIASEMANA (2026-08-03): r[0] pode vir como Date object da planilha —
+  // String(dateObj).split(" ")[0] pegava "Sat"/"Sun" (dia da semana em EN) em vez da data,
+  // fazendo o filtro de cutoff nunca bater com nada (269 carrinhos reais, 0 exibidos sempre).
   const rows = data.slice(1).map(r => ({
-    data:  r[0] ? String(r[0]).split(" ")[0] : "",
+    data:  r[0] ? normalizarDataHora(r[0]).split(" ")[0] : "",
     nome:  r[1] || "",
     tel:   String(r[2] || "").replace(/\D/g, ""),
     itens: r[3] || "",
