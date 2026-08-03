@@ -3056,10 +3056,11 @@ function getKPIs() {
     const produtosMapKPI = {};
     produtosKPI.forEach(function(pr) { produtosMapKPI[String(pr["ID"] || "")] = pr; });
 
-    // G4: custo só de pedidos FINALIZADOS (venda concluída de verdade) — antes custoAno somava TODOS os
-    // status incluindo Cancelado, e custoMes/custoHoje somavam Pendente/Em andamento junto. Isso puxava o
-    // lucro pra baixo com custo de venda que nunca terminou (ou nunca aconteceu, no caso de cancelado).
-    const custoDe = function(arr) { return finalizadosDe(arr).reduce(function(s, p) { return s + calcCustoPedido(p, produtosMapKPI); }, 0); };
+    // G4: custo de qualquer pedido NÃO cancelado (cobre parcelado ainda "Pendente"/"Em andamento" recebendo
+    // baixa mensal — se fosse só "Finalizado" o custo ficaria zerado até quitar 100%, distorcendo a margem
+    // pro lado oposto). Bug corrigido de verdade: custoAno antes incluía Cancelado, agora não inclui nenhum dos 3.
+    const custoDe = function(arr) { return arr.filter(function(p) { return p["Status"] !== "Cancelado"; })
+      .reduce(function(s, p) { return s + calcCustoPedido(p, produtosMapKPI); }, 0); };
     const custoMes  = custoDe(pedidosMes);
     const custoHoje = custoDe(pedidosHojeArr);
     const custoAno  = custoDe(pedidosAno);
