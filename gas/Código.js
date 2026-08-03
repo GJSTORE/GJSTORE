@@ -156,6 +156,7 @@ function handleAction(p) {
       case "testarDigest":         enviarMorningDigest(); result = { ok: true, msg: "Digest enviado" }; break;
       case "testarVencimento":     alertaVencimentoAmanha(); result = { ok: true, msg: "Alerta D-1 enviado" }; break;
       case "excluirPedidoHard":    result = excluirPedidoHard(p);               break;
+      case "getCobrancasPendentes": result = getCobrancasPendentes();           break;
       case "getLogAcoes":          result = getLogAcoes(p);                     break;
       case "analyticsHealth":      result = analyticsHealth();                  break;
       case "getVisitorMap":        result = getVisitorMap(p);                   break;
@@ -1213,6 +1214,41 @@ function getLogAcoes(p) {
 }
 
 // ── E1.1 + E1.5: EXCLUSÃO REAL (linha some da aba; backup em _Lixeira_*) ──
+// E4.2: painel de cobrança — quem tá pra vencer / atrasado, ordenado por urgência
+function getCobrancasPendentes() {
+  try {
+    const baixas = getSheet("Financeiro_Fluxo") ? sheetToObjects("Financeiro_Fluxo") : [];
+    const pendentes = baixas.filter(function(b) { return String(b["Status_Pagamento"] || "") === "Pendente"; });
+    const hoje = new Date(); hoje.setHours(0, 0, 0, 0);
+    const itens = pendentes.map(function(b) {
+      const dvNorm = normalizarDataHora(b["Proxima_Vencimento"]);
+      const dv = dvNorm ? parseDateBR(dvNorm.split(" ")[0]) : null;
+      if (dv) dv.setHours(0, 0, 0, 0);
+      const diff = dv ? Math.round((dv - hoje) / 86400000) : null; // negativo = atrasado
+      const diasAtraso = diff !== null && diff < 0 ? -diff : 0;
+      return {
+        idPedido: b["ID_Pedido"] || "",
+        nome: b["Nome_Cliente"] || "",
+        telefone: b["Telefone"] || "",
+        valor: Number(b["Saldo_Restante"] || b["Valor_Original"] || 0),
+        vencimento: dvNorm ? dvNorm.split(" ")[0] : "",
+        diasAtraso: diasAtraso,
+        diasRestantes: diff !== null && diff >= 0 ? diff : null,
+        jurosEstimado: diasAtraso * 5, // regra R$5/dia (decisions.md) — estimativa exibida, aplicado de fato só na baixa
+        urgencia: diff === null ? "sem_data" : diff < 0 ? "atrasado" : diff === 0 ? "hoje" : diff <= 3 ? "proximo" : "futuro"
+      };
+    });
+    const ordem = { atrasado: 0, hoje: 1, proximo: 2, futuro: 3, sem_data: 4 };
+    itens.sort(function(a, b) {
+      const oa = ordem[a.urgencia], ob = ordem[b.urgencia];
+      if (oa !== ob) return oa - ob;
+      if (a.urgencia === "atrasado") return b.diasAtraso - a.diasAtraso;
+      return (a.diasRestantes || 0) - (b.diasRestantes || 0);
+    });
+    return { ok: true, cobrancas: itens };
+  } catch (e) { return { ok: false, error: e.message }; }
+}
+
 function excluirPedidoHard(p) {
   if (!_checkAdmin(p)) return { ok: false, erro: "Não autorizado — senha admin incorreta" };
   const id = String(p.id || "");
