@@ -141,7 +141,7 @@ function handleAction(p) {
       case "getParcelasPedido":    result = getParcelasPedido(p.idPedido);      break;
       case "getAnalytics":         result = getAnalytics(p);                    break;
       case "migrarAbas":           result = migrarAbas();                       break;
-      case "getCarrinhosAbandonados": result = getCarrinhosAbandonados();       break;
+      case "getCarrinhosAbandonados": result = getCarrinhosAbandonados(p);      break;
       case "rastrear":             result = rastrearPedido(p.id || "");                break;
       case "getMinhasCompras":    result = getMinhasCompras(p);                     break;
       case "ping":                 result = { ok: true, pong: true, ts: new Date().toISOString() }; break;
@@ -2215,7 +2215,8 @@ function logCarrinho(p) {
   return { ok: true };
 }
 
-function getCarrinhosAbandonados() {
+// G6/filtro (2026-08-03): dias configurável pelo admin. 0/"todos" = sem cutoff.
+function getCarrinhosAbandonados(p) {
   const sh = getSheet("CARRINHOS_ABANDONADOS");
   if (!sh) return { carrinhos: [] };
   const data = sh.getDataRange().getValues();
@@ -2228,11 +2229,13 @@ function getCarrinhosAbandonados() {
     itens: r[3] || "",
     total: Number(r[4] || 0)
   }));
-  // Cutoff 30 dias (ajustado 2026-08-03 — 7 dias ficava sempre vazio dado o volume de vendas da loja)
-  const cutoff = new Date(); cutoff.setDate(cutoff.getDate() - 30);
+  const diasParam = p && p.dias !== undefined ? String(p.dias) : "30";
+  const semCutoff = diasParam === "0" || diasParam === "todos";
+  const cutoff = new Date(); cutoff.setDate(cutoff.getDate() - (Number(diasParam) || 30));
   const recent = rows
     .filter(r => r.nome && r.tel)
     .filter(r => {
+      if (semCutoff) return true;
       if (!r.data) return false;
       const parts = String(r.data).split("/");
       if (parts.length < 3) return false;
@@ -2240,7 +2243,7 @@ function getCarrinhosAbandonados() {
       return !isNaN(d.getTime()) && d >= cutoff;
     })
     .reverse()
-    .slice(0, 20);
+    .slice(0, 30);
   return { carrinhos: recent };
 }
 
