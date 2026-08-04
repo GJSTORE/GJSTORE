@@ -163,6 +163,7 @@ function handleAction(p) {
       case "testarDigest":         result = { ok: true, msg: (enviarMorningDigest() || {}).motivo || "Digest enviado" }; break;
       case "testarVencimento":     result = { ok: true, msg: (alertaVencimentoAmanha() || {}).motivo || "Alerta D-1 verificado" }; break;
       case "testarGarantia":       result = { ok: true, msg: (verificarGarantia() || {}).motivo || "Verificação de garantia concluída" }; break;
+      case "testarBackup":         { const b = backupPlanilha(); result = b.ok ? { ok: true, msg: "Backup criado: " + b.arquivo + (b.removidos ? " · " + b.removidos + " antigo(s) removido(s)" : "") } : { ok: false, error: b.erro }; } break;
       case "excluirPedidoHard":    result = excluirPedidoHard(p);               break;
       case "getCobrancasPendentes": result = getCobrancasPendentes();           break;
       case "getLogAcoes":          result = getLogAcoes(p);                     break;
@@ -462,11 +463,15 @@ function loginCliente(p) {
     var telefone = String((p && p.telefone) || "").replace(/\D/g, "");
     var senha = (p && p.senha) || "";
     if (!telefone || !senha) return { ok: false, erro: "Informe telefone e senha" };
+    // N18: mesmo rate-limit do admin/operador — sem isso dava pra tentar senha à vontade contra
+    // um telefone conhecido (login de cliente é público/anônimo, sem captcha)
+    if (!_loginRateOk("cli_" + telefone)) return { ok: false, erro: "Muitas tentativas. Tente novamente em alguns minutos." };
     _ensureAuthCols();
     var cli = _findClienteRow(telefone);
-    if (!cli || !cli.obj["Senha_Hash"]) return { ok: false, erro: "Telefone ou senha incorretos" };
+    if (!cli || !cli.obj["Senha_Hash"]) { _loginRateHit("cli_" + telefone); return { ok: false, erro: "Telefone ou senha incorretos" }; }
     var hash = _hashSenha(senha, cli.obj["Salt"]);
-    if (hash !== cli.obj["Senha_Hash"]) return { ok: false, erro: "Telefone ou senha incorretos" };
+    if (hash !== cli.obj["Senha_Hash"]) { _loginRateHit("cli_" + telefone); return { ok: false, erro: "Telefone ou senha incorretos" }; }
+    _loginRateClear("cli_" + telefone);
     return { ok: true, token: _signToken(telefone), nome: cli.obj["Nome"] || "" };
   } catch (e) {
     return { ok: false, erro: String(e) };
@@ -4441,6 +4446,44 @@ function _criarTriggerGarantia() {
     .timeBased().everyDays(1).atHour(10).create();
 }
 
+// ── TRIGGER: BACKUP DIÁRIO DA PLANILHA (3h) — N19 ──
+function _criarTriggerBackup() {
+  ScriptApp.getProjectTriggers().forEach(function(t) {
+    if (t.getHandlerFunction() === "backupPlanilha") ScriptApp.deleteTrigger(t);
+  });
+  ScriptApp.newTrigger("backupPlanilha")
+    .timeBased().everyDays(1).atHour(3).create();
+}
+// N19: cópia diária da planilha inteira no Drive — protege contra edição/exclusão em massa
+// que a lixeira (_Lixeira_*) não cobre (ex: fórmula quebrada sobrescrevendo linhas).
+// Retenção de 30 dias, apaga backups mais velhos pra não crescer o Drive pra sempre.
+function backupPlanilha() {
+  try {
+    const nomeBackup = "GJ Store - Backup " + Utilities.formatDate(new Date(), "America/Sao_Paulo", "yyyy-MM-dd_HH'h'mm");
+    const folderName = "GJ Store - Backups Automaticos";
+    const folders = DriveApp.getFoldersByName(folderName);
+    const folder = folders.hasNext() ? folders.next() : DriveApp.createFolder(folderName);
+    const original = DriveApp.getFileById(SS.getId());
+    const copia = original.makeCopy(nomeBackup, folder);
+    copia.setSharing(DriveApp.Access.PRIVATE, DriveApp.Permission.NONE);
+
+    const limite = new Date(); limite.setDate(limite.getDate() - 30);
+    let removidos = 0;
+    const files = folder.getFiles();
+    while (files.hasNext()) {
+      const f = files.next();
+      if (f.getId() !== copia.getId() && f.getDateCreated() < limite) {
+        f.setTrashed(true);
+        removidos++;
+      }
+    }
+    return { ok: true, arquivo: nomeBackup, removidos: removidos };
+  } catch (e) {
+    console.error("backupPlanilha: " + e.message);
+    return { ok: false, erro: e.message };
+  }
+}
+
 // \u2500\u2500 SETUP COMPLETO DE TRIGGERS \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
 function setupTodosOsTriggers() {
   _criarTriggerDashboard();
@@ -4448,13 +4491,14 @@ function setupTodosOsTriggers() {
   _criarTriggerSLA();
   _criarTriggerVencimento();
   _criarTriggerGarantia();
-  return { ok: true, msg: "5 triggers criados: dashboard (1h), morning digest (7h), SLA (1h seg-sex 8-18h), vencimento D-1 (9h), garantia 7 dias (10h)" };
+  _criarTriggerBackup();
+  return { ok: true, msg: "6 triggers criados: dashboard (1h), morning digest (7h), SLA (1h seg-sex 8-18h), vencimento D-1 (9h), garantia 7 dias (10h), backup diário (3h)" };
 }
 
 // E4.4: sem isso não tinha como o dono saber se os triggers estavam realmente ativos —
 // só existia o botão "Ativar" (que sempre reporta sucesso), nunca uma forma de checar depois
 function getTriggersStatus() {
-  const esperados = ["atualizarDashboard", "enviarMorningDigest", "verificarSLA", "alertaVencimentoAmanha", "verificarGarantia"];
+  const esperados = ["atualizarDashboard", "enviarMorningDigest", "verificarSLA", "alertaVencimentoAmanha", "verificarGarantia", "backupPlanilha"];
   const ativos = ScriptApp.getProjectTriggers().map(function(t) { return t.getHandlerFunction(); });
   const status = esperados.map(function(fn) { return { funcao: fn, ativo: ativos.indexOf(fn) >= 0 }; });
   return { ok: true, triggers: status, total: status.filter(function(s) { return s.ativo; }).length, esperado: esperados.length };

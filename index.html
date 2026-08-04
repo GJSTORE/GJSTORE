@@ -6,7 +6,8 @@
   <!-- M6: user-scalable=no bloqueava zoom (viola WCAG 1.4.4) — removido, mantém initial-scale só como sugestão inicial -->
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <!-- A3: tema aplicado ANTES do CSS carregar, evita flash claro→escuro (ou vice-versa) no load -->
-  <script>(function(){try{var t=localStorage.getItem("gj_theme")||"cyberpunk";if(t==="botafogo")t="gold";if(t!=="cyberpunk")document.documentElement.className="theme-"+t;}catch(e){}})();</script>
+  <!-- N7: 1ª visita sem preferência salva → respeita o sistema (SO em modo claro = abre no tema claro) -->
+  <script>(function(){try{var saved=localStorage.getItem("gj_theme");var t=saved||(window.matchMedia&&window.matchMedia("(prefers-color-scheme: light)").matches?"light":"cyberpunk");if(t==="botafogo")t="gold";if(t!=="cyberpunk")document.documentElement.className="theme-"+t;}catch(e){}})();</script>
   <title>GJ Store - As Melhores Ofertas</title>
   <meta name="description"
     content="Compre eletrônicos, games, veículos e muito mais. Parcele do seu jeito com a GJ Store!">
@@ -2783,6 +2784,13 @@
     function pf(p) { const a = Number(p["Preço (R$)"] || 0), b = Number(p["Preço Promo (R$)"] || 0); return b > 0 && b < a ? b : a; }
     // C3: nome de produto vai direto pra innerHTML em vários cards — escapar evita HTML/script quebrar o layout ou executar
     function esc(s) { const d = document.createElement("div"); d.textContent = String(s || ""); return d.innerHTML; }
+    // N4: injeta transform Cloudinary (f_auto = formato ideal por navegador ex. WebP/AVIF,
+    // q_auto = qualidade automática, w_ = redimensiona no servidor) — menos peso sem tocar a URL salva
+    function cldOpt(url, w) {
+      if (!url || !url.includes("res.cloudinary.com") || !url.includes("/upload/")) return url;
+      const params = "f_auto,q_auto" + (w ? ",w_" + w : "");
+      return url.replace("/upload/", "/upload/" + params + "/");
+    }
 
     // ── LOG ACESSO (fire-and-forget) ──────────────────────
     function logAcesso(idProduto, tipoAcao) {
@@ -2930,7 +2938,7 @@
         const track = document.getElementById("recentTrack");
         track.innerHTML = list.map(p => {
           const pfv = pf(p);
-          const img = p["Imagem 1 (URL)"] || "";
+          const img = cldOpt(p["Imagem 1 (URL)"] || "", 240);
           const d = JSON.stringify(p).replace(/'/g, "&apos;");
           return `<div class="rpc" onclick='openP(${d})'>
         <div class="rpc-img">${img ? `<img src="${img}" alt="${(p["Nome do Produto"] || "").replace(/"/g, "")}" loading="lazy" onerror="this.style.display='none'">` : `<div class="rpc-img-ph">📦</div>`}</div>
@@ -2986,7 +2994,7 @@
         sec.style.display = "block";
       } else if (d.tipo === "Produto" && d.produto) {
         const p = d.produto;
-        const img = p["Imagem 1 (URL)"] || "";
+        const img = cldOpt(p["Imagem 1 (URL)"] || "", 240);
         const dj = JSON.stringify(p).replace(/'/g, "&apos;");
         sec.innerHTML = `<div class="dest-badge">⭐ Destaque</div>
           <div class="dest-produto" onclick='openP(${dj})'>
@@ -3043,7 +3051,7 @@
         if (titleEl) titleEl.textContent = nome ? `Especialmente para você, ${nome} 👋` : "Vistos Recentemente";
         track.innerHTML = viewed.slice(0, 8).map(p => {
           const pfv = pf(p);
-          const img = p["Imagem 1 (URL)"] || "";
+          const img = cldOpt(p["Imagem 1 (URL)"] || "", 240);
           const d = JSON.stringify(p).replace(/'/g, "&apos;");
           return `<div class="rpc" onclick='openP(${d})'>
             <div class="rpc-img">${img ? `<img src="${img}" loading="lazy" onerror="this.style.display='none'">` : `<div class="rpc-img-ph">📦</div>`}</div>
@@ -3161,7 +3169,7 @@
     }
     function buildPCard(p) {
       const pr = Number(p["Preço (R$)"] || 0), pm = Number(p["Preço Promo (R$)"] || 0), pfv = pf(p);
-      const imgs = [p["Imagem 1 (URL)"], p["Imagem 2 (URL)"], p["Imagem 3 (URL)"]].filter(Boolean);
+      const imgs = [p["Imagem 1 (URL)"], p["Imagem 2 (URL)"], p["Imagem 3 (URL)"]].filter(Boolean).map(u => cldOpt(u, 400));
       const badge = String(p["Destaque?"] || "").trim().toLowerCase() === "sim" ? `<div class="pb ph">🔥 Destaque</div>` : pm > 0 && pm < pr ? `<div class="pb ps">PROMO</div>` : `<div class="pb pn">Novo</div>`;
       const parc = Number(p["Parcelas Máx"] || 0);
       const estRaw = p["Estoque"];
@@ -3384,7 +3392,7 @@
       if (vars.length > 1) { vw.style.display = "block"; document.getElementById("varopts").innerHTML = vars.map((v, i) => `<div class="vo${i === 0 ? " on" : ""}" onclick="svar(this)">${v}</div>`).join(""); }
       else vw.style.display = "none";
       // media
-      cMedia = [p["Imagem 1 (URL)"], p["Imagem 2 (URL)"], p["Imagem 3 (URL)"], p["Vídeo (URL)"]].filter(Boolean);
+      cMedia = [cldOpt(p["Imagem 1 (URL)"], 1000), cldOpt(p["Imagem 2 (URL)"], 1000), cldOpt(p["Imagem 3 (URL)"], 1000), p["Vídeo (URL)"]].filter(Boolean);
       if (!cMedia.length) cMedia = [""];
       buildCar();
       _modalHistPushed = true;
@@ -3857,7 +3865,7 @@
       if (!favProds.length) return;
       track.innerHTML = favProds.map(p => {
         const pfv = pf(p);
-        const img = p["Imagem 1 (URL)"] || "";
+        const img = cldOpt(p["Imagem 1 (URL)"] || "", 240);
         const d = JSON.stringify(p).replace(/'/g, "&apos;");
         return `<div class="rpc" onclick='openP(${d})'>
           <div class="rpc-img" style="position:relative">

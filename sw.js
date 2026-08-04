@@ -1,4 +1,4 @@
-const CACHE = 'gjstore-v16';
+const CACHE = 'gjstore-v17';
 const SHELL = ['./index.html', './config.js', './manifest.json'];
 
 self.addEventListener('install', e => {
