@@ -825,8 +825,14 @@ function _ensureDestaquesSheet() {
   let sh = getSheet("Destaques");
   if (!sh) {
     sh = SS.insertSheet("Destaques");
-    sh.getRange(1, 1, 1, 7).setValues([["ID", "Tipo", "Ref", "Texto", "Data_Inicio", "Data_Fim", "Ativo"]]);
+    sh.getRange(1, 1, 1, 9).setValues([["ID", "Tipo", "Ref", "Texto", "Data_Inicio", "Data_Fim", "Ativo", "ImagemIdx", "MediaCustom"]]);
     sh.setFrozenRows(1);
+  } else {
+    // Migração: aba já existia (v1 do G5.1) sem as colunas de imagem/upload — adiciona no fim
+    const headers = sh.getRange(1, 1, 1, sh.getLastColumn()).getValues()[0];
+    ["ImagemIdx", "MediaCustom"].forEach(function(col) {
+      if (headers.indexOf(col) === -1) sh.getRange(1, sh.getLastColumn() + 1).setValue(col);
+    });
   }
   return sh;
 }
@@ -834,8 +840,9 @@ function getDestaques() {
   _ensureDestaquesSheet();
   return { ok: true, destaques: sheetToObjects("Destaques") };
 }
-// Destaque ativo agora: Ativo=Sim e dentro do per\u00edodo (se datas preenchidas).
-// Tipo=Produto j\u00e1 vem com o produto embutido pro front n\u00e3o precisar de 2\u00aa chamada.
+// Destaque ativo agora: Ativo=Sim e dentro do período (se datas preenchidas).
+// Tipo=Produto já vem com o produto embutido pro front não precisar de 2ª chamada.
+// MediaCustom (upload direto) tem prioridade sobre a imagem do produto quando preenchido.
 function getDestaqueAtivo() {
   const rows = sheetToObjects("Destaques");
   const hoje = new Date(); hoje.setHours(0, 0, 0, 0);
@@ -850,7 +857,11 @@ function getDestaqueAtivo() {
     return true;
   });
   if (!ativo) return { destaque: null };
-  const out = { id: ativo["ID"] || "", tipo: ativo["Tipo"] || "", ref: ativo["Ref"] || "", texto: ativo["Texto"] || "" };
+  const out = {
+    id: ativo["ID"] || "", tipo: ativo["Tipo"] || "", ref: ativo["Ref"] || "", texto: ativo["Texto"] || "",
+    imagemIdx: ativo["ImagemIdx"] !== undefined && ativo["ImagemIdx"] !== "" ? Number(ativo["ImagemIdx"]) : 0,
+    mediaCustom: ativo["MediaCustom"] || ""
+  };
   if (String(ativo["Tipo"]).toLowerCase() === "produto") {
     const prods = sheetToObjects("Produtos");
     const prod = prods.find(function(p) { return String(p["ID"]) === String(ativo["Ref"]); });
@@ -862,7 +873,11 @@ function salvarDestaque(p) {
   _ensureDestaquesSheet();
   const isNovo = !p.id;
   const id = p.id || ("DEST" + Date.now());
-  const obj = { ID: id, Tipo: p.tipo || "", Ref: p.ref || "", Texto: p.texto || "", Data_Inicio: p.dataInicio || "", Data_Fim: p.dataFim || "", Ativo: p.ativo || "N\u00e3o" };
+  const obj = {
+    ID: id, Tipo: p.tipo || "", Ref: p.ref || "", Texto: p.texto || "",
+    Data_Inicio: p.dataInicio || "", Data_Fim: p.dataFim || "", Ativo: p.ativo || "Não",
+    ImagemIdx: p.imagemIdx !== undefined ? p.imagemIdx : "", MediaCustom: p.mediaCustom || ""
+  };
   if (!isNovo) {
     const found = findRow("Destaques", 0, id);
     if (found) {
@@ -876,7 +891,7 @@ function salvarDestaque(p) {
 }
 function deletarDestaque(id) {
   const found = findRow("Destaques", 0, id);
-  if (!found) return { ok: false, error: "Destaque n\u00e3o encontrado" };
+  if (!found) return { ok: false, error: "Destaque não encontrado" };
   found.sh.deleteRow(found.rowNum);
   return { ok: true };
 }

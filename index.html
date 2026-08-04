@@ -622,11 +622,22 @@
       background: linear-gradient(135deg, rgba(255, 109, 0, .16), rgba(0, 188, 212, .12))
     }
 
+    /* G5.1.1: mídia enviada pro Promo — cancela o padding do card pra ficar full-bleed */
+    .dest-promo:has(img, video) {
+      padding: 0 0 16px
+    }
+
+    .dest-promo img, .dest-promo video {
+      border-radius: 0
+    }
+
     .dest-promo-txt {
       font-family: var(--H);
       font-weight: 800;
       font-size: 15px;
-      line-height: 1.35
+      line-height: 1.35;
+      padding: 0 18px;
+      margin-top: 12px
     }
 
     /* SECTION HEADER */
@@ -3034,11 +3045,18 @@
         sec.style.display = "block";
       } else if (d.tipo === "Produto" && d.produto) {
         const p = d.produto;
-        const img = cldOpt(p["Imagem 1 (URL)"] || "", 240);
+        // G5.1.1: MediaCustom (upload direto) tem prioridade; senão usa a foto do produto no
+        // índice escolhido pelo admin (ImagemIdx), com fallback pra Imagem 1
+        const isVideoCustom = d.mediaCustom && /\.(mp4|webm|mov)/i.test(d.mediaCustom);
+        const imgsProd = [p["Imagem 1 (URL)"], p["Imagem 2 (URL)"], p["Imagem 3 (URL)"]].filter(Boolean);
+        const imgProd = imgsProd[d.imagemIdx] || imgsProd[0] || "";
+        const midia = d.mediaCustom
+          ? (isVideoCustom ? `<video src="${d.mediaCustom}" autoplay muted loop playsinline style="width:100%;height:100%;object-fit:cover"></video>` : `<img src="${cldOpt(d.mediaCustom, 400)}" alt="${esc(p["Nome do Produto"] || "")}" loading="lazy" onerror="this.style.display='none'">`)
+          : (imgProd ? `<img src="${cldOpt(imgProd, 240)}" alt="${esc(p["Nome do Produto"] || "")}" loading="lazy" onerror="this.style.display='none'">` : `<div style="width:84px;height:84px;border-radius:12px;background:var(--d3);display:flex;align-items:center;justify-content:center;font-size:28px;flex-shrink:0">📦</div>`);
         const dj = JSON.stringify(p).replace(/'/g, "&apos;");
         sec.innerHTML = `<div class="dest-badge">⭐ Destaque</div>
           <div class="dest-produto" onclick='openP(${dj})'>
-            ${img ? `<img src="${img}" alt="${esc(p["Nome do Produto"] || "")}" loading="lazy" onerror="this.style.display='none'">` : `<div style="width:84px;height:84px;border-radius:12px;background:var(--d3);display:flex;align-items:center;justify-content:center;font-size:28px;flex-shrink:0">📦</div>`}
+            ${midia}
             <div class="dest-produto-body">
               ${d.texto ? `<div class="dest-produto-txt">${esc(d.texto)}</div>` : ""}
               <div class="dest-produto-nome">${esc(p["Nome do Produto"] || "—")}</div>
@@ -3047,8 +3065,12 @@
           </div>`;
         sec.style.display = "block";
       } else if (d.tipo === "Promo") {
-        if (!d.texto) { sec.style.display = "none"; return; }
-        sec.innerHTML = `<div class="dest-promo"><div class="dest-promo-txt">📢 ${esc(d.texto)}</div></div>`;
+        if (!d.texto && !d.mediaCustom) { sec.style.display = "none"; return; }
+        const isVideoCustom = d.mediaCustom && /\.(mp4|webm|mov)/i.test(d.mediaCustom);
+        const midia = d.mediaCustom
+          ? (isVideoCustom ? `<video src="${d.mediaCustom}" autoplay muted loop playsinline style="width:100%;display:block"></video>` : `<img src="${cldOpt(d.mediaCustom, 700)}" style="width:100%;display:block" loading="lazy">`)
+          : "";
+        sec.innerHTML = `<div class="dest-promo">${midia}${d.texto ? `<div class="dest-promo-txt">📢 ${esc(d.texto)}</div>` : ""}</div>`;
         sec.style.display = "block";
       } else {
         sec.style.display = "none";
