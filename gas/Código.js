@@ -1415,7 +1415,38 @@ function analyticsHealth() {
 }
 
 // \u2500\u2500 PEDIDOS \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
+// X4: idempotência — duplo toque/retry de rede não pode criar 2 pedidos iguais.
+// Chave = telefone+total+itens (conteúdo do pedido, não o timestamp). Janela de 60s.
+// O lock precisa segurar a criação INTEIRA (não só um check-and-mark curto): Calendar/email
+// dentro da criação podem levar vários segundos, e uma 2ª requisição concorrente que só espera
+// um pouco e desiste cria duplicata mesmo assim — só travar por um instante não resolve.
+function _dedupPedidoKey(p) {
+  const raw = String(p.telefone || "") + "|" + String(p.total || "") + "|" + String(p.itens || "");
+  const digest = Utilities.computeDigest(Utilities.DigestAlgorithm.MD5, raw);
+  return "dedupPed_" + digest.map(b => (b + 256) % 256).join("");
+}
 function novoPedido(p) {
+  const cache = CacheService.getScriptCache();
+  let dedupKey = "";
+  let gotLock = false;
+  let lock = null;
+  try {
+    dedupKey = _dedupPedidoKey(p);
+    lock = LockService.getScriptLock();
+    gotLock = lock.tryLock(20000);
+    const cached = cache.get(dedupKey);
+    if (cached) return JSON.parse(cached);
+  } catch (e) {
+    // Falha no mecanismo de dedup nunca pode bloquear um pedido de verdade (fail-open)
+    console.warn("dedup novoPedido: " + e.message);
+  }
+  try {
+    return _criarPedido(p, dedupKey, cache);
+  } finally {
+    if (gotLock) { try { lock.releaseLock(); } catch (e) {} }
+  }
+}
+function _criarPedido(p, dedupKey, cache) {
   const sh = getSheet("Pedidos");
   const id = newPedidoId(); // BUG-07: ID curto de 5 caracteres alfanuméricos
   const itens = p.itens || "[]";
@@ -1507,7 +1538,9 @@ function novoPedido(p) {
     }
   }
 
-  return { ok: true, idPedido: id, idEventoPendente, idEventoCobranca };
+  const result = { ok: true, idPedido: id, idEventoPendente, idEventoCobranca };
+  if (dedupKey && cache) { try { cache.put(dedupKey, JSON.stringify(result), 60); } catch (e) {} }
+  return result;
 }
 
 function getPedidos(p) {
