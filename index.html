@@ -2494,6 +2494,16 @@
     </div>
   </div>
 
+  <!-- G6.1: RODAPÉ — Instagram (se configurado) + WhatsApp -->
+  <div id="pageFooter" style="padding:28px 20px 100px;text-align:center;border-top:1px solid var(--border);margin-top:20px">
+    <div style="font-family:var(--H);font-weight:900;font-size:15px;background:linear-gradient(90deg,var(--g),var(--c));-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:10px">GJ STORE</div>
+    <div style="display:flex;justify-content:center;gap:12px;margin-bottom:10px">
+      <a id="footIgLink" href="#" target="_blank" style="display:none;width:38px;height:38px;border-radius:50%;background:rgba(255,255,255,.06);border:1px solid var(--border);align-items:center;justify-content:center;font-size:18px;text-decoration:none">📷</a>
+      <a id="footWppLink" href="#" target="_blank" style="width:38px;height:38px;border-radius:50%;background:rgba(37,211,102,.1);border:1px solid rgba(37,211,102,.25);display:flex;align-items:center;justify-content:center;font-size:18px;text-decoration:none">💬</a>
+    </div>
+    <div style="font-size:10px;color:var(--muted)">As melhores ofertas em eletrônicos e mais 🛒</div>
+  </div>
+
   <!-- FLOAT WPP -->
   <a id="fwpp" href="#" target="_blank">💬</a>
 
@@ -2723,7 +2733,12 @@
         // Instagram: preenche links dos banners de captacao
         const igUrl = cfg.INSTAGRAM || "https://www.instagram.com/guilherme_juraci";
         ["igFollowLink", "fvFollowLink"].forEach(id => { const el = document.getElementById(id); if (el) el.href = igUrl; });
+        // G6.1: rodapé só mostra o ícone do Instagram se INSTAGRAM_URL estiver preenchido na Config
+        const footIg = document.getElementById("footIgLink");
+        if (footIg) { if (cfg.INSTAGRAM) { footIg.href = cfg.INSTAGRAM; footIg.style.display = "flex"; } else { footIg.style.display = "none"; } }
         const wpp = getWpp();
+        const footWpp = document.getElementById("footWppLink");
+        if (footWpp) footWpp.href = `https://wa.me/${wpp}?text=Olá!+Vim+pelo+site+GJ+Store!`;
         document.getElementById("fwpp").href = `https://wa.me/${wpp}?text=Olá!+Vim+pelo+site+GJ+Store!`;
         document.getElementById("hcta").href = `https://wa.me/${wpp}?text=Olá!+Quero+conhecer+os+produtos+GJ+Store!`;
         banners = (br.banners || []).filter(b => String(b["Ativo?"]).toLowerCase() === "sim").sort((a, z) => Number(a["Ordem"]) - Number(z["Ordem"]));
