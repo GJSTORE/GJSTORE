@@ -52,6 +52,10 @@
       --d4: #c0cbda; --text: #1a2332;
       --muted: rgba(26,35,50,.55); --border: rgba(0,112,224,.18);
     }
+    /* T1: header usava rgba(4,9,15) fixo (glass escuro) mesmo no tema claro — virava
+       uma barra quase preta no topo de uma página clara. Só o tema light precisa disso;
+       gold/cyberpunk já são escuros por natureza, o glass escuro combina */
+    html.theme-light header { background: rgba(242, 245, 249, .85); }
     html.theme-gold {
       --g: #d4af37; --c: #ede0b0; --o: #b8860b; --r: #cc2222;
       --dark: #080808; --d1: #0d0d0d; --d2: #121212; --d3: #181818;
