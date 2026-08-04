@@ -2791,6 +2791,44 @@
       const params = "f_auto,q_auto" + (w ? ",w_" + w : "");
       return url.replace("/upload/", "/upload/" + params + "/");
     }
+    // N16: PIX "copia e cola" (BRCode/EMV) — string que o app do banco lê e já preenche
+    // chave+valor+beneficiário sozinho, sem o cliente digitar nada
+    function _pixField(id, value) { return id + String(value.length).padStart(2, "0") + value; }
+    function _pixCrc16(str) {
+      let crc = 0xFFFF;
+      for (let i = 0; i < str.length; i++) {
+        crc ^= str.charCodeAt(i) << 8;
+        for (let j = 0; j < 8; j++) { crc = (crc & 0x8000) ? ((crc << 1) ^ 0x1021) : (crc << 1); crc &= 0xFFFF; }
+      }
+      return crc.toString(16).toUpperCase().padStart(4, "0");
+    }
+    function _pixAscii(s, max) {
+      return (s || "").normalize("NFD").replace(/[̀-ͯ]/g, "").replace(/[^A-Za-z0-9 ]/g, "").toUpperCase().trim().substring(0, max) || "GJ STORE";
+    }
+    function gerarPixCopiaCola(chave, nome, cidade, valor, txid) {
+      if (!chave) return "";
+      const nomeF = _pixAscii(nome, 25), cidadeF = _pixAscii(cidade, 15), txidF = (txid || "***").substring(0, 25);
+      const merchantAccount = _pixField("00", "br.gov.bcb.pix") + _pixField("01", String(chave).trim());
+      let payload = _pixField("00", "01") + _pixField("01", "12")
+        + _pixField("26", merchantAccount)
+        + _pixField("52", "0000") + _pixField("53", "986")
+        + (valor > 0 ? _pixField("54", Number(valor).toFixed(2)) : "")
+        + _pixField("58", "BR") + _pixField("59", nomeF) + _pixField("60", cidadeF)
+        + _pixField("62", _pixField("05", txidF));
+      payload += "6304";
+      return payload + _pixCrc16(payload);
+    }
+    async function copiarPix(valor) {
+      const chave = cfg.PIX_CHAVE || "";
+      if (!chave) { showToast("Chave Pix não configurada"); return; }
+      const codigo = gerarPixCopiaCola(chave, cfg.PIX_NOME || cfg.NOME_LOJA || "GJ STORE", cfg.PIX_CIDADE || "SAO PAULO", valor, "");
+      try {
+        await navigator.clipboard.writeText(codigo);
+        showToast("✅ Código Pix copiado! Cole no app do seu banco");
+      } catch (e) {
+        showToast("Não deu pra copiar automático — chave Pix: " + chave);
+      }
+    }
 
     // ── LOG ACESSO (fire-and-forget) ──────────────────────
     function logAcesso(idProduto, tipoAcao) {
@@ -2841,7 +2879,9 @@
     // ── INIT ─────────────────────────────────────────────
     async function init() {
       try {
-        const [cr, br, pr, fr] = await Promise.all([apiG("getConfig"), apiG("getBanners"), apiG("getProdutos", {limit: _prodsLimit}), apiG("getFrete")]);
+        // N3: getCategorias entra no mesmo Promise.all — antes rodava só DEPOIS do resto
+        // terminar (1 round-trip a mais de latência à toa, já que não depende de nada acima)
+        const [cr, br, pr, fr, catR] = await Promise.all([apiG("getConfig"), apiG("getBanners"), apiG("getProdutos", {limit: _prodsLimit}), apiG("getFrete"), apiG("getCategorias").catch(() => null)]);
         cfg = cr.config || {};
         // Hero configurável via planilha (chaves: HERO_TITULO, HERO_SUBTITULO, HERO_PILL)
         if (cfg.HERO_TITULO) document.getElementById("heroTitle").innerHTML = cfg.HERO_TITULO;
@@ -2880,7 +2920,7 @@
         try {
           const cats = JSON.parse(localStorage.getItem("gj_cats") || "[]");
           if (cats.length) { allCats = cats; renderDynCats(cats); applyF(); }
-          const rc = await apiG("getCategorias");
+          const rc = catR || {};
           if (rc.categorias && rc.categorias.length) {
             const novo = JSON.stringify(rc.categorias);
             // E5.2 anti-flicker: só re-renderiza se categorias mudaram de fato
@@ -4327,10 +4367,15 @@
           <div style="font-size:8px;color:rgba(136,153,170,.5);margin-top:3px">${new Date().toLocaleDateString("pt-BR")} ${new Date().toLocaleTimeString("pt-BR", { hour: "2-digit", minute: "2-digit" })}</div>
         </div>`;
 
+      const valorPix = !quitado ? (saldo > 0 ? saldo : (valorParcelaCli || total)) : 0;
+      const pixBtn = (cfg.PIX_CHAVE && valorPix > 0)
+        ? `<button class="rbtn" style="max-width:420px;margin:8px auto 0;display:block;width:100%;background:#00875a" onclick="copiarPix(${valorPix})">📋 Copiar código Pix (${fmt(valorPix)})</button>`
+        : "";
       const area = document.getElementById("reciboArea");
       area.innerHTML = `
         <div id="rcCardCli" style="max-width:420px;margin:0 auto;background:#04090f;border:1px solid #1a2840;border-radius:16px;overflow:hidden;font-family:Inter,system-ui,sans-serif">${card}</div>
-        <button class="rbtn" id="rcImgBtnCli" style="max-width:420px;margin:14px auto 0;display:block;width:100%" onclick="gerarImagemReciboCli()">📸 Baixar / Compartilhar imagem</button>`;
+        <button class="rbtn" id="rcImgBtnCli" style="max-width:420px;margin:14px auto 0;display:block;width:100%" onclick="gerarImagemReciboCli()">📸 Baixar / Compartilhar imagem</button>
+        ${pixBtn}`;
       pdTab("recibo");
     }
 
