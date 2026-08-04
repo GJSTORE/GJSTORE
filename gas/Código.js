@@ -92,6 +92,8 @@ function handleAction(p) {
       case "getBanners":           result = getBanners();                       break;
       case "getDestaques":         result = getDestaques();                     break;
       case "getDestaqueAtivo":     result = getDestaqueAtivo();                 break;
+      case "getDestaquesAtivos":   result = getDestaquesAtivos();               break;
+      case "getDestaquesCliques":  result = getDestaquesCliques();              break;
       case "salvarDestaque":       result = salvarDestaque(p);                  break;
       case "deletarDestaque":      result = deletarDestaque(p.id);              break;
       case "getProdutos":          result = getProdutos(p);                     break;
@@ -840,23 +842,10 @@ function getDestaques() {
   _ensureDestaquesSheet();
   return { ok: true, destaques: sheetToObjects("Destaques") };
 }
-// Destaque ativo agora: Ativo=Sim e dentro do período (se datas preenchidas).
+// Destaque(s) ativo(s) agora: Ativo=Sim e dentro do período (se datas preenchidas).
 // Tipo=Produto já vem com o produto embutido pro front não precisar de 2ª chamada.
 // MediaCustom (upload direto) tem prioridade sobre a imagem do produto quando preenchido.
-function getDestaqueAtivo() {
-  const rows = sheetToObjects("Destaques");
-  const hoje = new Date(); hoje.setHours(0, 0, 0, 0);
-  const ativo = rows.find(function(r) {
-    if (String(r["Ativo"] || "").trim().toLowerCase() !== "sim") return false;
-    const iniStr = r["Data_Inicio"] ? normalizarDataHora(r["Data_Inicio"]).split(" ")[0] : "";
-    const fimStr = r["Data_Fim"] ? normalizarDataHora(r["Data_Fim"]).split(" ")[0] : "";
-    const ini = iniStr ? parseDateBR(iniStr) : null;
-    const fim = fimStr ? parseDateBR(fimStr) : null;
-    if (ini && hoje < ini) return false;
-    if (fim) { const fimEnd = new Date(fim); fimEnd.setHours(23, 59, 59, 999); if (hoje > fimEnd) return false; }
-    return true;
-  });
-  if (!ativo) return { destaque: null };
+function _destaqueParaSaida(ativo) {
   const out = {
     id: ativo["ID"] || "", tipo: ativo["Tipo"] || "", ref: ativo["Ref"] || "", texto: ativo["Texto"] || "",
     imagemIdx: ativo["ImagemIdx"] !== undefined && ativo["ImagemIdx"] !== "" ? Number(ativo["ImagemIdx"]) : 0,
@@ -867,7 +856,44 @@ function getDestaqueAtivo() {
     const prod = prods.find(function(p) { return String(p["ID"]) === String(ativo["Ref"]); });
     if (prod) out.produto = prod;
   }
-  return { destaque: out };
+  return out;
+}
+function _destaquesAtivosFiltrados() {
+  const rows = sheetToObjects("Destaques");
+  const hoje = new Date(); hoje.setHours(0, 0, 0, 0);
+  return rows.filter(function(r) {
+    if (String(r["Ativo"] || "").trim().toLowerCase() !== "sim") return false;
+    const iniStr = r["Data_Inicio"] ? normalizarDataHora(r["Data_Inicio"]).split(" ")[0] : "";
+    const fimStr = r["Data_Fim"] ? normalizarDataHora(r["Data_Fim"]).split(" ")[0] : "";
+    const ini = iniStr ? parseDateBR(iniStr) : null;
+    const fim = fimStr ? parseDateBR(fimStr) : null;
+    if (ini && hoje < ini) return false;
+    if (fim) { const fimEnd = new Date(fim); fimEnd.setHours(23, 59, 59, 999); if (hoje > fimEnd) return false; }
+    return true;
+  });
+}
+// G5.1.2: carrossel — vários destaques podem ficar ativos ao mesmo tempo, o front alterna entre eles
+function getDestaquesAtivos() {
+  return { destaques: _destaquesAtivosFiltrados().map(_destaqueParaSaida) };
+}
+// Mantido pra compatibilidade: mesma filtragem, só devolve o 1º ativo
+function getDestaqueAtivo() {
+  const lista = _destaquesAtivosFiltrados();
+  if (!lista.length) return { destaque: null };
+  return { destaque: _destaqueParaSaida(lista[0]) };
+}
+// G5.1.3: contador de clique por destaque — soma quantas vezes cada ID apareceu em
+// Logs_Metricas com Acao=DESTAQUE_CLICK (gravado pelo front via logAcao ao clicar)
+function getDestaquesCliques() {
+  const rows = sheetToObjects("Logs_Metricas");
+  const contagem = {};
+  rows.forEach(function(r) {
+    if (r["Acao"] !== "DESTAQUE_CLICK") return;
+    const id = String(r["Detalhe"] || "");
+    if (!id) return;
+    contagem[id] = (contagem[id] || 0) + 1;
+  });
+  return { ok: true, cliques: contagem };
 }
 function salvarDestaque(p) {
   _ensureDestaquesSheet();

@@ -534,7 +534,40 @@
       border-radius: 18px;
       overflow: hidden;
       border: 1px solid var(--border);
-      background: var(--d2)
+      background: var(--d2);
+      transition: opacity .18s ease
+    }
+
+    #destSec.fading {
+      opacity: 0
+    }
+
+    /* G5.1.2: dots do carrossel — só aparece quando há mais de 1 destaque ativo */
+    .dest-dots {
+      position: absolute;
+      bottom: 8px;
+      left: 0;
+      right: 0;
+      display: flex;
+      justify-content: center;
+      gap: 6px;
+      z-index: 2;
+      pointer-events: none
+    }
+
+    .dest-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, .35);
+      cursor: pointer;
+      pointer-events: auto;
+      transition: background .2s, transform .2s
+    }
+
+    .dest-dot.on {
+      background: var(--g);
+      transform: scale(1.3)
     }
 
     .dest-badge {
@@ -2914,7 +2947,7 @@
         banners = (br.banners || []).filter(b => String(b["Ativo?"]).toLowerCase() === "sim").sort((a, z) => Number(a["Ordem"]) - Number(z["Ordem"]));
         renderBanners();
         // G5.1: destaque dinâmico não trava o boot — carrega em paralelo e renderiza quando chegar
-        apiG("getDestaqueAtivo").then(dr => renderDestaque(dr.destaque)).catch(() => {});
+        apiG("getDestaquesAtivos").then(dr => renderDestaques(dr.destaques)).catch(() => {});
         allProds = pr.produtos || [];
         _prodsTotal = pr.total || allProds.length;
         prods = allProds;
@@ -3032,20 +3065,19 @@
       const m = String(url || "").match(/(?:youtube\.com\/(?:watch\?v=|embed\/|shorts\/)|youtu\.be\/)([A-Za-z0-9_-]{11})/);
       return m ? m[1] : "";
     }
-    function renderDestaque(d) {
-      const sec = document.getElementById("destSec");
-      if (!sec) return;
-      if (!d || !d.tipo) { sec.style.display = "none"; return; }
+    // G5.1.2: monta o HTML de 1 slide (sem tocar no DOM) — usado tanto pro slide único
+    // quanto por cada posição do carrossel quando há mais de 1 destaque ativo
+    function _destSlideHtml(d) {
+      if (!d || !d.tipo) return "";
       if (d.tipo === "Video") {
         const id = _ytId(d.ref);
-        if (!id) { sec.style.display = "none"; return; }
-        sec.innerHTML = `<div class="dest-badge">🎬 Destaque</div>
+        if (!id) return "";
+        return `<div class="dest-badge">🎬 Destaque</div>
           <div class="dest-video"><iframe src="https://www.youtube.com/embed/${id}" title="Destaque" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen loading="lazy"></iframe></div>
           ${d.texto ? `<div style="padding:10px 14px;font-size:13px;font-weight:600">${esc(d.texto)}</div>` : ""}`;
-        sec.style.display = "block";
       } else if (d.tipo === "Produto" && d.produto) {
         const p = d.produto;
-        // G5.1.1: MediaCustom (upload direto) tem prioridade; senão usa a foto do produto no
+        // MediaCustom (upload direto) tem prioridade; senão usa a foto do produto no
         // índice escolhido pelo admin (ImagemIdx), com fallback pra Imagem 1
         const isVideoCustom = d.mediaCustom && /\.(mp4|webm|mov)/i.test(d.mediaCustom);
         const imgsProd = [p["Imagem 1 (URL)"], p["Imagem 2 (URL)"], p["Imagem 3 (URL)"]].filter(Boolean);
@@ -3054,8 +3086,9 @@
           ? (isVideoCustom ? `<video src="${d.mediaCustom}" autoplay muted loop playsinline style="width:100%;height:100%;object-fit:cover"></video>` : `<img src="${cldOpt(d.mediaCustom, 400)}" alt="${esc(p["Nome do Produto"] || "")}" loading="lazy" onerror="this.style.display='none'">`)
           : (imgProd ? `<img src="${cldOpt(imgProd, 240)}" alt="${esc(p["Nome do Produto"] || "")}" loading="lazy" onerror="this.style.display='none'">` : `<div style="width:84px;height:84px;border-radius:12px;background:var(--d3);display:flex;align-items:center;justify-content:center;font-size:28px;flex-shrink:0">📦</div>`);
         const dj = JSON.stringify(p).replace(/'/g, "&apos;");
-        sec.innerHTML = `<div class="dest-badge">⭐ Destaque</div>
-          <div class="dest-produto" onclick='openP(${dj})'>
+        const destId = String(d.id || "").replace(/'/g, "\\'");
+        return `<div class="dest-badge">⭐ Destaque</div>
+          <div class="dest-produto" onclick='logAcao("DESTAQUE_CLICK","${destId}");openP(${dj})'>
             ${midia}
             <div class="dest-produto-body">
               ${d.texto ? `<div class="dest-produto-txt">${esc(d.texto)}</div>` : ""}
@@ -3063,19 +3096,59 @@
               <div class="dest-produto-preco">${fmt(pf(p))}</div>
             </div>
           </div>`;
-        sec.style.display = "block";
       } else if (d.tipo === "Promo") {
-        if (!d.texto && !d.mediaCustom) { sec.style.display = "none"; return; }
+        if (!d.texto && !d.mediaCustom) return "";
         const isVideoCustom = d.mediaCustom && /\.(mp4|webm|mov)/i.test(d.mediaCustom);
         const midia = d.mediaCustom
           ? (isVideoCustom ? `<video src="${d.mediaCustom}" autoplay muted loop playsinline style="width:100%;display:block"></video>` : `<img src="${cldOpt(d.mediaCustom, 700)}" style="width:100%;display:block" loading="lazy">`)
           : "";
-        sec.innerHTML = `<div class="dest-promo">${midia}${d.texto ? `<div class="dest-promo-txt">📢 ${esc(d.texto)}</div>` : ""}</div>`;
-        sec.style.display = "block";
-      } else {
-        sec.style.display = "none";
+        return `<div class="dest-promo">${midia}${d.texto ? `<div class="dest-promo-txt">📢 ${esc(d.texto)}</div>` : ""}</div>`;
+      }
+      return "";
+    }
+    // G5.1.2: carrossel — quando há mais de 1 destaque ativo, alterna sozinho a cada 6s
+    // (mesmo espírito do #bwrap de banners, mas troca conteúdo em vez de empilhar camadas,
+    // já que produto/vídeo/promo têm alturas diferentes entre si)
+    let _destList = [], _destIdx = 0, _destInterval = null;
+    function renderDestaques(list) {
+      const sec = document.getElementById("destSec");
+      if (!sec) return;
+      _destList = (list || []).filter(d => _destSlideHtml(d));
+      _destIdx = 0;
+      if (!_destList.length) { sec.style.display = "none"; if (_destInterval) { clearInterval(_destInterval); _destInterval = null; } return; }
+      _paintDestSlide(0);
+      _destRestartAutoplay();
+    }
+    function _paintDestSlide(idx) {
+      const sec = document.getElementById("destSec");
+      const d = _destList[idx];
+      if (!sec || !d) return;
+      const dotsHtml = _destList.length > 1
+        ? `<div class="dest-dots">${_destList.map((_, i) => `<div class="dest-dot${i === idx ? " on" : ""}" onclick="event.stopPropagation();_destGoTo(${i})"></div>`).join("")}</div>`
+        : "";
+      sec.innerHTML = _destSlideHtml(d) + dotsHtml;
+      sec.style.display = "block";
+    }
+    function _destRestartAutoplay() {
+      if (_destInterval) { clearInterval(_destInterval); _destInterval = null; }
+      if (_destList.length > 1) {
+        _destInterval = setInterval(() => _destGoTo((_destIdx + 1) % _destList.length), 6000);
       }
     }
+    // idx: troca de slide com fade — usado tanto pelo auto-avanço quanto pelo clique nos dots
+    function _destGoTo(idx) {
+      _destIdx = idx;
+      const sec = document.getElementById("destSec");
+      if (!sec) return;
+      sec.classList.add("fading");
+      setTimeout(() => {
+        _paintDestSlide(_destIdx);
+        requestAnimationFrame(() => requestAnimationFrame(() => sec.classList.remove("fading")));
+      }, 180);
+      _destRestartAutoplay(); // navegação manual reinicia a contagem, senão pode trocar de novo logo em seguida
+    }
+    // Back-compat: quem ainda chamar renderDestaque(d) direto com um único objeto continua funcionando
+    function renderDestaque(d) { renderDestaques(d ? [d] : []); }
 
     // ── CAT CAROUSEL — scroll nativo (overflow-x: auto no .cat-outer) ──────
 
