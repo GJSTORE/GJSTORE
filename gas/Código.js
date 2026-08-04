@@ -4848,6 +4848,7 @@ function salvarProdutosBatch(p) {
 }
 
 function atualizarProdutosBatch(p) {
+  if (!_checkAdmin(p)) return { ok: false, erro: "Não autorizado" }; // ganhou caller real (margem em lote) — precisa de senha
   const itens = p.itens || [];
   if (!itens.length) return { ok: false, erro: 'itens obrigatório' };
   const sh = getSheet("Produtos");
