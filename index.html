@@ -520,6 +520,109 @@
       transform: scale(.94)
     }
 
+    /* DESTAQUE DINÂMICO DA HOME (G5.1) */
+    #destSec {
+      position: relative;
+      z-index: 1;
+      margin: 14px 14px 0;
+      border-radius: 18px;
+      overflow: hidden;
+      border: 1px solid var(--border);
+      background: var(--d2)
+    }
+
+    .dest-badge {
+      position: absolute;
+      top: 10px;
+      left: 10px;
+      z-index: 2;
+      background: var(--o);
+      color: #fff;
+      font-size: 10px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: .6px;
+      padding: 3px 10px;
+      border-radius: 20px;
+      box-shadow: 0 0 14px rgba(255, 109, 0, .4)
+    }
+
+    .dest-video {
+      position: relative;
+      width: 100%;
+      aspect-ratio: 16/9;
+      background: #000
+    }
+
+    .dest-video iframe {
+      width: 100%;
+      height: 100%;
+      border: 0;
+      display: block
+    }
+
+    .dest-produto {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 16px;
+      cursor: pointer
+    }
+
+    .dest-produto img {
+      width: 84px;
+      height: 84px;
+      object-fit: cover;
+      border-radius: 12px;
+      flex-shrink: 0;
+      background: var(--d3)
+    }
+
+    .dest-produto-body {
+      flex: 1;
+      min-width: 0
+    }
+
+    .dest-produto-txt {
+      font-size: 12px;
+      color: var(--muted);
+      font-weight: 600;
+      margin-bottom: 3px
+    }
+
+    .dest-produto-nome {
+      font-family: var(--H);
+      font-weight: 800;
+      font-size: 15px;
+      line-height: 1.25;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical
+    }
+
+    .dest-produto-preco {
+      font-family: var(--H);
+      font-weight: 800;
+      font-size: 16px;
+      color: var(--g);
+      margin-top: 5px
+    }
+
+    .dest-promo {
+      padding: 20px 18px;
+      text-align: center;
+      background: linear-gradient(135deg, rgba(255, 109, 0, .16), rgba(0, 188, 212, .12))
+    }
+
+    .dest-promo-txt {
+      font-family: var(--H);
+      font-weight: 800;
+      font-size: 15px;
+      line-height: 1.35
+    }
+
     /* SECTION HEADER */
     .shdr {
       display: flex;
@@ -2247,6 +2350,9 @@
     </div>
   </div>
 
+  <!-- DESTAQUE DINÂMICO (G5.1) -->
+  <div id="destSec" style="display:none"></div>
+
   <!-- RECENT PRODUCTS -->
   <div id="recentSec" style="display:none">
     <div style="padding:0 14px">
@@ -2743,6 +2849,8 @@
         document.getElementById("hcta").href = `https://wa.me/${wpp}?text=Olá!+Quero+conhecer+os+produtos+GJ+Store!`;
         banners = (br.banners || []).filter(b => String(b["Ativo?"]).toLowerCase() === "sim").sort((a, z) => Number(a["Ordem"]) - Number(z["Ordem"]));
         renderBanners();
+        // G5.1: destaque dinâmico não trava o boot — carrega em paralelo e renderiza quando chegar
+        apiG("getDestaqueAtivo").then(dr => renderDestaque(dr.destaque)).catch(() => {});
         allProds = pr.produtos || [];
         _prodsTotal = pr.total || allProds.length;
         prods = allProds;
@@ -2853,6 +2961,45 @@
         return `<div class="bslide${i === 0 ? " on" : ""}" style="background:#${b["Cor Fundo (hex)"] || "FF6D00"};color:#${b["Cor Texto (hex)"] || "FFFFFF"};${lnk?"cursor:pointer":""}">${inner}</div>`;
       }).join("");
       if (banners.length > 1) { _banInterval = setInterval(() => { const s = w.querySelectorAll(".bslide"); s[banIdx].classList.remove("on"); banIdx = (banIdx + 1) % s.length; s[banIdx].classList.add("on"); }, 4000); }
+    }
+
+    // ── DESTAQUE DINÂMICO DA HOME (G5.1) ──────────────────
+    function _ytId(url) {
+      const m = String(url || "").match(/(?:youtube\.com\/(?:watch\?v=|embed\/|shorts\/)|youtu\.be\/)([A-Za-z0-9_-]{11})/);
+      return m ? m[1] : "";
+    }
+    function renderDestaque(d) {
+      const sec = document.getElementById("destSec");
+      if (!sec) return;
+      if (!d || !d.tipo) { sec.style.display = "none"; return; }
+      if (d.tipo === "Video") {
+        const id = _ytId(d.ref);
+        if (!id) { sec.style.display = "none"; return; }
+        sec.innerHTML = `<div class="dest-badge">🎬 Destaque</div>
+          <div class="dest-video"><iframe src="https://www.youtube.com/embed/${id}" title="Destaque" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen loading="lazy"></iframe></div>
+          ${d.texto ? `<div style="padding:10px 14px;font-size:13px;font-weight:600">${esc(d.texto)}</div>` : ""}`;
+        sec.style.display = "block";
+      } else if (d.tipo === "Produto" && d.produto) {
+        const p = d.produto;
+        const img = p["Imagem 1 (URL)"] || "";
+        const dj = JSON.stringify(p).replace(/'/g, "&apos;");
+        sec.innerHTML = `<div class="dest-badge">⭐ Destaque</div>
+          <div class="dest-produto" onclick='openP(${dj})'>
+            ${img ? `<img src="${img}" alt="${esc(p["Nome do Produto"] || "")}" loading="lazy" onerror="this.style.display='none'">` : `<div style="width:84px;height:84px;border-radius:12px;background:var(--d3);display:flex;align-items:center;justify-content:center;font-size:28px;flex-shrink:0">📦</div>`}
+            <div class="dest-produto-body">
+              ${d.texto ? `<div class="dest-produto-txt">${esc(d.texto)}</div>` : ""}
+              <div class="dest-produto-nome">${esc(p["Nome do Produto"] || "—")}</div>
+              <div class="dest-produto-preco">${fmt(pf(p))}</div>
+            </div>
+          </div>`;
+        sec.style.display = "block";
+      } else if (d.tipo === "Promo") {
+        if (!d.texto) { sec.style.display = "none"; return; }
+        sec.innerHTML = `<div class="dest-promo"><div class="dest-promo-txt">📢 ${esc(d.texto)}</div></div>`;
+        sec.style.display = "block";
+      } else {
+        sec.style.display = "none";
+      }
     }
 
     // ── CAT CAROUSEL — scroll nativo (overflow-x: auto no .cat-outer) ──────

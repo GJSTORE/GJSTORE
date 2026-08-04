@@ -90,6 +90,10 @@ function handleAction(p) {
       // LEITURA
       case "getConfig":            result = getConfig();                        break;
       case "getBanners":           result = getBanners();                       break;
+      case "getDestaques":         result = getDestaques();                     break;
+      case "getDestaqueAtivo":     result = getDestaqueAtivo();                 break;
+      case "salvarDestaque":       result = salvarDestaque(p);                  break;
+      case "deletarDestaque":      result = deletarDestaque(p.id);              break;
       case "getProdutos":          result = getProdutos(p);                     break;
       case "getFrete":             result = getFrete();                         break;
       case "getCupom":             result = getCupom(p.codigo);                 break;
@@ -178,7 +182,8 @@ function handleAction(p) {
     const AUDIT = { novoPedido: "Pedido", atualizarStatus: "Pedido", editarPedido: "Pedido",
       darBaixa: "Baixa", deletarPedido: "Pedido", salvarProduto: "Produto", deletarProduto: "Produto",
       toggleCategoria: "Categoria", salvarCategoria: "Categoria", deletarCategoria: "Categoria",
-      salvarCliente: "Cliente", deletarCliente: "Cliente", salvarCupom: "Cupom", vendaPDV: "Pedido" };
+      salvarCliente: "Cliente", deletarCliente: "Cliente", salvarCupom: "Cupom", vendaPDV: "Pedido",
+      salvarDestaque: "Destaque", deletarDestaque: "Destaque" };
     if (AUDIT[action] && result && result.ok) {
       registrarAcao(p.operador, action, AUDIT[action],
         p.id || p.idPedido || (result.idPedido || result.id) || "",
@@ -804,6 +809,67 @@ function getConfig() {
   rows.forEach(r => { cfg[r["Chave"]] = r["Valor"]; });
   delete cfg["ADMIN_SENHA"];
   return { config: cfg };
+}
+
+// \u2500\u2500 DESTAQUES (G5.1) \u2500\u2500 conte\u00fado configur\u00e1vel na home (produto/v\u00eddeo/promo) \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
+function _ensureDestaquesSheet() {
+  let sh = getSheet("Destaques");
+  if (!sh) {
+    sh = SS.insertSheet("Destaques");
+    sh.getRange(1, 1, 1, 7).setValues([["ID", "Tipo", "Ref", "Texto", "Data_Inicio", "Data_Fim", "Ativo"]]);
+    sh.setFrozenRows(1);
+  }
+  return sh;
+}
+function getDestaques() {
+  _ensureDestaquesSheet();
+  return { ok: true, destaques: sheetToObjects("Destaques") };
+}
+// Destaque ativo agora: Ativo=Sim e dentro do per\u00edodo (se datas preenchidas).
+// Tipo=Produto j\u00e1 vem com o produto embutido pro front n\u00e3o precisar de 2\u00aa chamada.
+function getDestaqueAtivo() {
+  const rows = sheetToObjects("Destaques");
+  const hoje = new Date(); hoje.setHours(0, 0, 0, 0);
+  const ativo = rows.find(function(r) {
+    if (String(r["Ativo"] || "").trim().toLowerCase() !== "sim") return false;
+    const iniStr = r["Data_Inicio"] ? normalizarDataHora(r["Data_Inicio"]).split(" ")[0] : "";
+    const fimStr = r["Data_Fim"] ? normalizarDataHora(r["Data_Fim"]).split(" ")[0] : "";
+    const ini = iniStr ? parseDateBR(iniStr) : null;
+    const fim = fimStr ? parseDateBR(fimStr) : null;
+    if (ini && hoje < ini) return false;
+    if (fim) { const fimEnd = new Date(fim); fimEnd.setHours(23, 59, 59, 999); if (hoje > fimEnd) return false; }
+    return true;
+  });
+  if (!ativo) return { destaque: null };
+  const out = { id: ativo["ID"] || "", tipo: ativo["Tipo"] || "", ref: ativo["Ref"] || "", texto: ativo["Texto"] || "" };
+  if (String(ativo["Tipo"]).toLowerCase() === "produto") {
+    const prods = sheetToObjects("Produtos");
+    const prod = prods.find(function(p) { return String(p["ID"]) === String(ativo["Ref"]); });
+    if (prod) out.produto = prod;
+  }
+  return { destaque: out };
+}
+function salvarDestaque(p) {
+  _ensureDestaquesSheet();
+  const isNovo = !p.id;
+  const id = p.id || ("DEST" + Date.now());
+  const obj = { ID: id, Tipo: p.tipo || "", Ref: p.ref || "", Texto: p.texto || "", Data_Inicio: p.dataInicio || "", Data_Fim: p.dataFim || "", Ativo: p.ativo || "N\u00e3o" };
+  if (!isNovo) {
+    const found = findRow("Destaques", 0, id);
+    if (found) {
+      const headers = getHeaders("Destaques");
+      headers.forEach(function(h, i) { found.sh.getRange(found.rowNum, i + 1).setValue(obj[h] !== undefined ? obj[h] : ""); });
+      return { ok: true, id: id };
+    }
+  }
+  appendRowByHeaders("Destaques", obj);
+  return { ok: true, id: id };
+}
+function deletarDestaque(id) {
+  const found = findRow("Destaques", 0, id);
+  if (!found) return { ok: false, error: "Destaque n\u00e3o encontrado" };
+  found.sh.deleteRow(found.rowNum);
+  return { ok: true };
 }
 
 // \u2500\u2500 BANNERS \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
