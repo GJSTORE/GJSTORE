@@ -26,7 +26,7 @@ Regra de nome: repo com **"ADM"** = painel (admin + gestão). Repo sem = loja (i
 | `gestao_unificada.html` | GJSTORE-ADM | gestão operacional (roda no escopo PWA do admin) |
 | `config.js` | ambos (cópia própria) | ⚠️ **NÃO unificado** — ver abaixo |
 | `sw.js` / `manifest.json` / `icon-*` | GJSTORE | PWA loja |
-| `sw.js` / `manifest-admin.json` / icons | GJSTORE-ADM | PWA admin |
+| `sw-admin.js` → vira `sw.js` | GJSTORE-ADM | PWA admin. Fonte local se chama `sw-admin.js` (SHELL diferente da loja), `deploy.sh` copia renomeando pra `sw.js` — é esse nome que `admin.html` registra. (X6, 2026-08-04: antes `deploy.sh` não tocava nisso, o `sw.js` do repo ADM ficava travado numa cópia manual velha, sem nunca ser atualizado) |
 | `mind/`, `gas/`, `REPO-MAP.md`, `deploy.sh` | só workspace | nunca vão pro ar |
 
 Esta pasta local (`GJ STORE/`) é o clone do repo **GJSTORE**. `admin.html` e
