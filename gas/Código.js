@@ -638,13 +638,20 @@ function safeNum(v) {
 }
 
 // \u2500\u2500 ID CURTO PARA PEDIDOS (BUG-07) \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
+// X3/A2/A3 (2026-08-03): 5 chars (33^5≈39M) tinha entropia baixa pro volume crescendo, recursão sem
+// limite arriscava stack overflow em caso raro de colisões seguidas, e lia a planilha INTEIRA a cada
+// tentativa. Agora: 7 chars (33^7≈42 bilhões), loop com limite de 10 tentativas + fallback determinístico
+// (timestamp+rand), e lê a planilha 1x só fora do loop.
 function newPedidoId() {
   const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
-  let id = "";
-  for (let i = 0; i < 5; i++) id += chars[Math.floor(Math.random() * chars.length)];
   const existing = sheetToObjects("Pedidos").map(function(p) { return p["ID Pedido"]; });
-  if (existing.includes(id)) return newPedidoId();
-  return id;
+  for (let tentativa = 0; tentativa < 10; tentativa++) {
+    let id = "";
+    for (let i = 0; i < 7; i++) id += chars[Math.floor(Math.random() * chars.length)];
+    if (existing.indexOf(id) === -1) return id;
+  }
+  // Fallback determinístico — praticamente impossível de colidir, garante que sempre retorna algo
+  return "P" + Date.now().toString(36).toUpperCase() + chars[Math.floor(Math.random() * chars.length)];
 }
 
 function nowBR() {
