@@ -542,7 +542,42 @@
       opacity: 0
     }
 
-    /* G5.1.2: dots do carrossel — só aparece quando há mais de 1 destaque ativo */
+    /* G5.1.2: setas + dots do carrossel — só aparece quando há mais de 1 destaque ativo.
+       Setas (padrão .carr já usado no carrossel de fotos do produto) resolvem "no PC nem
+       aparece" — dot sozinho é pouco visível. Dot ganhou área de toque maior (padding +
+       background-clip) sem crescer visualmente, resolve "difícil de clicar no celular". */
+    .dest-arr {
+      position: absolute;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
+      background: rgba(4, 9, 15, .6);
+      border: 1px solid rgba(255, 255, 255, .25);
+      color: #fff;
+      font-size: 18px;
+      line-height: 1;
+      cursor: pointer;
+      z-index: 5;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background .15s
+    }
+
+    .dest-arr:active {
+      background: rgba(4, 9, 15, .85)
+    }
+
+    .dest-prev {
+      left: 8px
+    }
+
+    .dest-next {
+      right: 8px
+    }
+
     .dest-dots {
       position: absolute;
       bottom: 8px;
@@ -550,9 +585,8 @@
       right: 0;
       display: flex;
       justify-content: center;
-      gap: 6px;
-      z-index: 2;
-      pointer-events: none
+      gap: 8px;
+      z-index: 2
     }
 
     .dest-dot {
@@ -561,8 +595,12 @@
       border-radius: 50%;
       background: rgba(255, 255, 255, .35);
       cursor: pointer;
-      pointer-events: auto;
-      transition: background .2s, transform .2s
+      transition: background .2s, transform .2s;
+      /* área de toque real ~30px mesmo com o dot visual de 6px */
+      padding: 12px;
+      margin: -12px;
+      background-clip: content-box;
+      box-sizing: content-box
     }
 
     .dest-dot.on {
@@ -3123,12 +3161,18 @@
       const sec = document.getElementById("destSec");
       const d = _destList[idx];
       if (!sec || !d) return;
-      const dotsHtml = _destList.length > 1
-        ? `<div class="dest-dots">${_destList.map((_, i) => `<div class="dest-dot${i === idx ? " on" : ""}" onclick="event.stopPropagation();_destGoTo(${i})"></div>`).join("")}</div>`
-        : "";
-      sec.innerHTML = _destSlideHtml(d) + dotsHtml;
+      let navHtml = "";
+      if (_destList.length > 1) {
+        const dotsHtml = _destList.map((_, i) => `<div class="dest-dot${i === idx ? " on" : ""}" onclick="event.stopPropagation();_destGoTo(${i})"></div>`).join("");
+        navHtml = `<button class="dest-arr dest-prev" onclick="event.stopPropagation();_destPrev()" aria-label="Destaque anterior">‹</button>
+          <button class="dest-arr dest-next" onclick="event.stopPropagation();_destNext()" aria-label="Próximo destaque">›</button>
+          <div class="dest-dots">${dotsHtml}</div>`;
+      }
+      sec.innerHTML = _destSlideHtml(d) + navHtml;
       sec.style.display = "block";
     }
+    function _destPrev() { _destGoTo((_destIdx - 1 + _destList.length) % _destList.length); }
+    function _destNext() { _destGoTo((_destIdx + 1) % _destList.length); }
     function _destRestartAutoplay() {
       if (_destInterval) { clearInterval(_destInterval); _destInterval = null; }
       if (_destList.length > 1) {
