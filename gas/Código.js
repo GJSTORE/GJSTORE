@@ -155,11 +155,14 @@ function handleAction(p) {
       case "atualizarDashboard":  atualizarDashboard(); result = { ok: true }; break;
       case "vendaPDV":             result = vendaPDV(p);                        break;
       case "setupTriggers":       result = setupTodosOsTriggers();            break;
+      case "getTriggersStatus":   result = getTriggersStatus();               break;
       case "corrigirHeaders":     result = corrigirHeaders();                  break;
-      case "testarSLA":            verificarSLA(); result = { ok: true, msg: "SLA verificado" }; break;
-      case "testarDigest":         enviarMorningDigest(); result = { ok: true, msg: "Digest enviado" }; break;
-      case "testarVencimento":     alertaVencimentoAmanha(); result = { ok: true, msg: "Alerta D-1 enviado" }; break;
-      case "testarGarantia":       verificarGarantia(); result = { ok: true, msg: "Verificação de garantia enviada (se houver pedido de 7 dias atrás)" }; break;
+      // E4.4: mensagem reflete o resultado real da função (enviado ou não, e por quê) —
+      // antes sempre dizia "enviado" mesmo quando a função não achava nada pra mandar
+      case "testarSLA":            result = { ok: true, msg: (verificarSLA() || {}).motivo || "SLA verificado" }; break;
+      case "testarDigest":         result = { ok: true, msg: (enviarMorningDigest() || {}).motivo || "Digest enviado" }; break;
+      case "testarVencimento":     result = { ok: true, msg: (alertaVencimentoAmanha() || {}).motivo || "Alerta D-1 verificado" }; break;
+      case "testarGarantia":       result = { ok: true, msg: (verificarGarantia() || {}).motivo || "Verificação de garantia concluída" }; break;
       case "excluirPedidoHard":    result = excluirPedidoHard(p);               break;
       case "getCobrancasPendentes": result = getCobrancasPendentes();           break;
       case "getLogAcoes":          result = getLogAcoes(p);                     break;
@@ -2802,7 +2805,7 @@ function deletarCategoria(id) {
 // \u2500\u2500 MORNING DIGEST \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
 function enviarMorningDigest() {
   const emailDest = getConfigValue("EMAIL_NOTIFICACAO");
-  if (!emailDest) return;
+  if (!emailDest) return { enviado: false, motivo: "EMAIL_NOTIFICACAO não configurado na aba Config" };
   const nomeLoja3 = getConfigValue("NOME_LOJA") || "GJ Store";
 
   const pedidos  = sheetToObjects("Pedidos") || [];
@@ -2882,6 +2885,7 @@ function enviarMorningDigest() {
   GmailApp.sendEmail(emailDest, "\uD83D\uDCCA Morning Digest " + nomeLoja3 + " \u2014 " + hoje, "", {
     htmlBody: htmlBody, name: nomeLoja3
   });
+  return { enviado: true, motivo: "Digest matinal enviado" };
 }
 
 // \u2500\u2500 TEMAS \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
@@ -4431,6 +4435,15 @@ function setupTodosOsTriggers() {
   return { ok: true, msg: "5 triggers criados: dashboard (1h), morning digest (7h), SLA (1h seg-sex 8-18h), vencimento D-1 (9h), garantia 7 dias (10h)" };
 }
 
+// E4.4: sem isso não tinha como o dono saber se os triggers estavam realmente ativos —
+// só existia o botão "Ativar" (que sempre reporta sucesso), nunca uma forma de checar depois
+function getTriggersStatus() {
+  const esperados = ["atualizarDashboard", "enviarMorningDigest", "verificarSLA", "alertaVencimentoAmanha", "verificarGarantia"];
+  const ativos = ScriptApp.getProjectTriggers().map(function(t) { return t.getHandlerFunction(); });
+  const status = esperados.map(function(fn) { return { funcao: fn, ativo: ativos.indexOf(fn) >= 0 }; });
+  return { ok: true, triggers: status, total: status.filter(function(s) { return s.ativo; }).length, esperado: esperados.length };
+}
+
 // \u2500\u2500 VERIFICAR SLA \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
 // Roda a cada hora (horário comercial seg-sex 8h-18h).
 // Envia email se pedido Pendente ou Em Andamento
@@ -4442,9 +4455,9 @@ function _isBusinessHours() {
   return dia >= 1 && dia <= 5 && h >= 8 && h < 18;
 }
 function verificarSLA() {
-  if (!_isBusinessHours()) return;
+  if (!_isBusinessHours()) return { enviado: false, motivo: "Fora do horário comercial (seg-sex 8h-18h) — não roda agora" };
   const emailDest = getConfigValue("EMAIL_NOTIFICACAO");
-  if (!emailDest) return;
+  if (!emailDest) return { enviado: false, motivo: "EMAIL_NOTIFICACAO não configurado na aba Config" };
   const nomeLoja = getConfigValue("NOME_LOJA") || "GJ Store";
   const slaPend  = Number(getConfigValue("SLA_PENDENTE_HORAS") || "24");
   const slaAnd   = Number(getConfigValue("SLA_ANDAMENTO_HORAS") || "48");
@@ -4465,7 +4478,7 @@ function verificarSLA() {
     return horasPassadas > limite;
   });
 
-  if (!vencidos.length) return;
+  if (!vencidos.length) return { enviado: false, motivo: "Nenhum pedido passou do prazo de SLA agora" };
 
   const linhas = vencidos.slice(0, 10).map(function(p) {
     const horas = Math.floor((agora - (function(){
@@ -4499,6 +4512,7 @@ function verificarSLA() {
   GmailApp.sendEmail(emailDest, "\u26A0\uFE0F [SLA] " + vencidos.length + " pedido(s) atrasado(s) \u2014 " + nomeLoja, "", {
     htmlBody: htmlBody, name: nomeLoja
   });
+  return { enviado: true, motivo: vencidos.length + " pedido(s) atrasado(s) — email enviado" };
 }
 
 // \u2500\u2500 ALERTA D-1 VENCIMENTO \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
@@ -4506,7 +4520,7 @@ function verificarSLA() {
 // que vencem AMANHÃ e ainda não estão quitadas.
 function alertaVencimentoAmanha() {
   const emailDest = getConfigValue("EMAIL_NOTIFICACAO");
-  if (!emailDest) return;
+  if (!emailDest) return { enviado: false, motivo: "EMAIL_NOTIFICACAO não configurado na aba Config" };
   const nomeLoja = getConfigValue("NOME_LOJA") || "GJ Store";
   const pedidos  = sheetToObjects("Pedidos") || [];
   const baixas   = getSheet("Financeiro_Fluxo") ? sheetToObjects("Financeiro_Fluxo") : [];
@@ -4534,7 +4548,7 @@ function alertaVencimentoAmanha() {
     return (tot - pago) > 0.01;
   });
 
-  if (!cobrar.length) return;
+  if (!cobrar.length) return { enviado: false, motivo: "Nenhuma cobrança em aberto vence amanhã (" + amanhaStr + ")" };
 
   const linhas = cobrar.slice(0, 15).map(function(p) {
     const id    = String(p["ID Pedido"] || "?");
@@ -4576,6 +4590,7 @@ function alertaVencimentoAmanha() {
   GmailApp.sendEmail(emailDest, "\uD83D\uDCB0 [D-1] " + cobrar.length + " cobrança(s) vencem amanhã \u2014 " + nomeLoja, "", {
     htmlBody: htmlBody, name: nomeLoja
   });
+  return { enviado: true, motivo: cobrar.length + " cobrança(s) vencem amanhã — email enviado" };
 }
 
 // W5: aviso de garantia — pedidos Finalizado/Entregue há exatamente 7 dias. GAS não manda
@@ -4584,7 +4599,7 @@ function alertaVencimentoAmanha() {
 // BUG-EMAIL-EMOJI: emoji literal corrompe no paste do editor Apps Script — sempre \u escape aqui.
 function verificarGarantia() {
   const emailDest = getConfigValue("EMAIL_NOTIFICACAO");
-  if (!emailDest) return;
+  if (!emailDest) return { enviado: false, motivo: "EMAIL_NOTIFICACAO não configurado na aba Config" };
   const nomeLoja = getConfigValue("NOME_LOJA") || "GJ Store";
   const pedidos = sheetToObjects("Pedidos") || [];
   const hoje = new Date(); hoje.setHours(0, 0, 0, 0);
@@ -4598,7 +4613,7 @@ function verificarGarantia() {
     const dtNorm = dtFin ? normalizarDataHora(dtFin).split(" ")[0] : "";
     return dtNorm === alvoStr;
   });
-  if (!entregues.length) return;
+  if (!entregues.length) return { enviado: false, motivo: "Nenhum pedido completou 7 dias de entrega em " + alvoStr };
 
   const linhas = entregues.slice(0, 15).map(function(p) {
     const id = String(p["ID Pedido"] || "?");
@@ -4633,6 +4648,7 @@ function verificarGarantia() {
   GmailApp.sendEmail(emailDest, "🔒 Garantia — " + entregues.length + " pedido(s) pra checar — " + nomeLoja, "", {
     htmlBody: htmlBody, name: nomeLoja
   });
+  return { enviado: true, motivo: entregues.length + " pedido(s) completaram 7 dias — email enviado" };
 }
 
 // ── IDENTIFICAÇÃO DE PRODUTOS POR IMAGEM (Gemini Vision) ──
