@@ -144,6 +144,7 @@ function handleAction(p) {
       case "importarContatos":     result = importarContatos(p);                break;
       case "getParcelasPedido":    result = getParcelasPedido(p.idPedido);      break;
       case "getAnalytics":         result = getAnalytics(p);                    break;
+      case "getLucroPorProduto":   result = getLucroPorProduto(p);              break;
       case "migrarAbas":           result = migrarAbas();                       break;
       case "getCarrinhosAbandonados": result = getCarrinhosAbandonados(p);      break;
       case "rastrear":             result = rastrearPedido(p.id || "");                break;
@@ -4178,6 +4179,69 @@ function getParcelasPedido(idPedido) {
 }
 
 // \u2500\u2500 ANALYTICS COM FILTRO DE PERÍODO \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
+// N13: lucro agregado por produto/categoria, cruzando Itens (JSON) de cada pedido com
+// Custo_Unitario/Categoria cadastrados em Produtos (casamento por nome, normalizado).
+// Produto sem custo configurado entra com custo=0 (lucro=receita) - sinalizado em `semCusto`
+// pra nao passar a impressao enganosa de 100% de margem quando e so falta de cadastro.
+function _normNome(s) {
+  return String(s || "").normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim().toLowerCase();
+}
+function getLucroPorProduto(p) {
+  const statusExcluir = ["Cancelado", "Deletado"];
+  const pedidos = sheetToObjects("Pedidos").filter(function(r) { return statusExcluir.indexOf(r["Status"]) === -1; });
+  const produtos = sheetToObjects("Produtos");
+  const custoPorNome = {}, catPorNome = {}, temCadastro = {};
+  produtos.forEach(function(prod) {
+    const key = _normNome(prod["Nome do Produto"]);
+    if (!key) return;
+    custoPorNome[key] = Number(prod["Custo_Unitario"] || 0);
+    catPorNome[key] = prod["Categoria"] || "Sem categoria";
+    temCadastro[key] = true;
+  });
+
+  const porProduto = {}, porCategoria = {};
+  pedidos.forEach(function(ped) {
+    let itens;
+    try { itens = JSON.parse(ped["Itens (JSON)"] || "[]"); } catch (e) { return; }
+    if (!Array.isArray(itens)) return;
+    itens.forEach(function(it) {
+      const nome = String(it.nome || it.name || "").trim();
+      if (!nome) return;
+      const key = _normNome(nome);
+      const qtd = Number(it.qtd || it.qty || 1);
+      const valorUnit = Number(it.valor || it.preco || 0);
+      const receita = valorUnit * qtd;
+      const custoUnit = custoPorNome[key] || 0;
+      const custo = custoUnit * qtd;
+      const cat = catPorNome[key] || "Sem categoria";
+      const semCusto = !temCadastro[key] || custoUnit === 0;
+
+      if (!porProduto[nome]) porProduto[nome] = { nome: nome, receita: 0, custo: 0, qtd: 0, semCusto: false };
+      porProduto[nome].receita += receita;
+      porProduto[nome].custo += custo;
+      porProduto[nome].qtd += qtd;
+      if (semCusto) porProduto[nome].semCusto = true;
+
+      if (!porCategoria[cat]) porCategoria[cat] = { categoria: cat, receita: 0, custo: 0, qtd: 0, semCusto: false };
+      porCategoria[cat].receita += receita;
+      porCategoria[cat].custo += custo;
+      porCategoria[cat].qtd += qtd;
+      if (semCusto) porCategoria[cat].semCusto = true;
+    });
+  });
+
+  const toArr = function(obj) {
+    return Object.keys(obj).map(function(k) {
+      const x = obj[k];
+      x.lucro = x.receita - x.custo;
+      x.margem = x.receita > 0 ? Number((x.lucro / x.receita * 100).toFixed(1)) : 0;
+      return x;
+    }).sort(function(a, b) { return b.lucro - a.lucro; });
+  };
+
+  return { ok: true, produtos: toArr(porProduto), categorias: toArr(porCategoria) };
+}
+
 function getAnalytics(p) {
   const periodo = p.periodo || "30d";
   const hoje = new Date(); hoje.setHours(23,59,59,0);
