@@ -578,6 +578,17 @@
       right: 8px
     }
 
+    /* Dica visual depois de 4s parado num slide — pisca em vez de trocar sozinho */
+    @keyframes destNeonPulse {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(0, 230, 118, .55), 0 0 6px rgba(0, 230, 118, .3); border-color: rgba(0, 230, 118, .4) }
+      50% { box-shadow: 0 0 0 5px rgba(0, 230, 118, 0), 0 0 18px rgba(0, 230, 118, .9); border-color: var(--g) }
+    }
+
+    .dest-next.pulse {
+      animation: destNeonPulse 1.3s ease-in-out infinite;
+      color: var(--g)
+    }
+
     .dest-dots {
       position: absolute;
       bottom: 8px;
@@ -3147,15 +3158,19 @@
     // G5.1.2: carrossel — quando há mais de 1 destaque ativo, alterna sozinho a cada 6s
     // (mesmo espírito do #bwrap de banners, mas troca conteúdo em vez de empilhar camadas,
     // já que produto/vídeo/promo têm alturas diferentes entre si)
-    let _destList = [], _destIdx = 0, _destInterval = null;
+    // G5.1.2: NÃO troca sozinho mais — pedido do dono, pulava até no meio de vídeo sendo
+    // assistido. Em vez disso, a seta "próximo" pisca (glow neon) depois de 4s parado, como
+    // dica visual de que tem mais destaque pra ver, sem forçar a troca.
+    let _destList = [], _destIdx = 0, _destPulseTimer = null;
     function renderDestaques(list) {
       const sec = document.getElementById("destSec");
       if (!sec) return;
       _destList = (list || []).filter(d => _destSlideHtml(d));
       _destIdx = 0;
-      if (!_destList.length) { sec.style.display = "none"; if (_destInterval) { clearInterval(_destInterval); _destInterval = null; } return; }
+      if (_destPulseTimer) { clearTimeout(_destPulseTimer); _destPulseTimer = null; }
+      if (!_destList.length) { sec.style.display = "none"; return; }
       _paintDestSlide(0);
-      _destRestartAutoplay();
+      _destArmPulse();
     }
     function _paintDestSlide(idx) {
       const sec = document.getElementById("destSec");
@@ -3173,13 +3188,15 @@
     }
     function _destPrev() { _destGoTo((_destIdx - 1 + _destList.length) % _destList.length); }
     function _destNext() { _destGoTo((_destIdx + 1) % _destList.length); }
-    function _destRestartAutoplay() {
-      if (_destInterval) { clearInterval(_destInterval); _destInterval = null; }
-      if (_destList.length > 1) {
-        _destInterval = setInterval(() => _destGoTo((_destIdx + 1) % _destList.length), 6000);
-      }
+    function _destArmPulse() {
+      if (_destPulseTimer) { clearTimeout(_destPulseTimer); _destPulseTimer = null; }
+      if (_destList.length <= 1) return;
+      _destPulseTimer = setTimeout(() => {
+        const btn = document.querySelector("#destSec .dest-next");
+        if (btn) btn.classList.add("pulse");
+      }, 4000);
     }
-    // idx: troca de slide com fade — usado tanto pelo auto-avanço quanto pelo clique nos dots
+    // idx: troca de slide com fade — só acontece por clique (seta/dot), nunca sozinho
     function _destGoTo(idx) {
       _destIdx = idx;
       const sec = document.getElementById("destSec");
@@ -3189,7 +3206,7 @@
         _paintDestSlide(_destIdx);
         requestAnimationFrame(() => requestAnimationFrame(() => sec.classList.remove("fading")));
       }, 180);
-      _destRestartAutoplay(); // navegação manual reinicia a contagem, senão pode trocar de novo logo em seguida
+      _destArmPulse(); // reinicia a contagem dos 4s pra piscar de novo no novo slide
     }
     // Back-compat: quem ainda chamar renderDestaque(d) direto com um único objeto continua funcionando
     function renderDestaque(d) { renderDestaques(d ? [d] : []); }
