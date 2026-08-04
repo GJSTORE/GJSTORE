@@ -1234,9 +1234,23 @@ function fixarIDsVazios() {
   return { ok: true, fixed: updates.length };
 }
 
+// X7: backup genérico antes de exclusão física — mesmo padrão de _Lixeira_Pedidos/_Lixeira_Financeiro,
+// generalizado pra qualquer aba. Sem isso, exclusão de produto era irreversível e sem rastro nenhum.
+function _backupLinha(lixeiraName, headers, row) {
+  try {
+    let lix = SS.getSheetByName(lixeiraName);
+    if (!lix) {
+      lix = SS.insertSheet(lixeiraName);
+      lix.getRange(1, 1, 1, headers.length + 1).setValues([["_Excluido_Em", ...headers]]);
+      lix.setFrozenRows(1);
+    }
+    lix.appendRow([nowBR(), ...row]);
+  } catch (e) { console.warn("_backupLinha " + lixeiraName + ": " + e.message); }
+}
 function excluirProdutoHard(p) {
   if (!_checkAdmin(p)) return { ok: false, erro: "Não autorizado" };
   const id = String(p.id || "");
+  const headers = getHeaders("Produtos");
   if (!id) {
     // Delete rows without ID by name match (for cleanup)
     const name = String(p.nome || "").trim();
@@ -1246,6 +1260,7 @@ function excluirProdutoHard(p) {
     let deleted = 0;
     for (let i = data.length - 1; i >= 1; i--) {
       if (String(data[i][0]).trim() === "" && String(data[i][1] || "").trim().toUpperCase() === name.toUpperCase()) {
+        _backupLinha("_Lixeira_Produtos", headers, data[i]);
         sh.deleteRow(i + 1);
         deleted++;
       }
@@ -1255,6 +1270,7 @@ function excluirProdutoHard(p) {
   }
   const found = findRow("Produtos", 0, id);
   if (!found) return { ok: false, erro: "Produto não encontrado" };
+  _backupLinha("_Lixeira_Produtos", headers, found.row);
   found.sh.deleteRow(found.rowNum);
   _clearProdCache();
   return { ok: true, deleted: 1 };
@@ -4755,6 +4771,7 @@ function atualizarProdutosBatch(p) {
 }
 
 function excluirProdutosBatch(p) {
+  if (!_checkAdmin(p)) return { ok: false, erro: "Não autorizado" }; // X7: faltava — batch podia apagar em massa sem senha
   const ids = p.ids || [];
   if (!ids.length) return { ok: false, erro: 'ids obrigatório' };
   const sh = getSheet("Produtos");
@@ -4769,6 +4786,7 @@ function excluirProdutosBatch(p) {
   }
   rowNums.sort((a, b) => b - a);
   for (const rn of rowNums) {
+    _backupLinha("_Lixeira_Produtos", headers, allRows[rn - 1]);
     sh.deleteRow(rn);
   }
   _clearProdCache();
