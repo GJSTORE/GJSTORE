@@ -14,3 +14,6 @@ const CFG_GESTAO_URL = "https://gjstore.github.io/GJSTORE-ADM/gestao_unificada.h
 // Cloudinary — conta do GJ Store (admin usa pra subir imagens)
 const CFG_CLOUDINARY_CLOUD  = "eslbyl14";
 const CFG_CLOUDINARY_PRESET = "gjstore2";
+
+// Openinary — self-hosted no Nuvário (substitui Cloudinary pra imagens do catálogo)
+const CFG_OPENINARY_URL = "https://servidor-1.tailc513c6.ts.net:3100";

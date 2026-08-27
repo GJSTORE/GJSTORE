@@ -2877,12 +2877,21 @@
     function pf(p) { const a = Number(p["Preço (R$)"] || 0), b = Number(p["Preço Promo (R$)"] || 0); return b > 0 && b < a ? b : a; }
     // C3: nome de produto vai direto pra innerHTML em vários cards — escapar evita HTML/script quebrar o layout ou executar
     function esc(s) { const d = document.createElement("div"); d.textContent = String(s || ""); return d.innerHTML; }
-    // N4: injeta transform Cloudinary (f_auto = formato ideal por navegador ex. WebP/AVIF,
+    // N4: injeta transform Cloudinary/Openinary (f_auto = formato ideal por navegador ex. WebP/AVIF,
     // q_auto = qualidade automática, w_ = redimensiona no servidor) — menos peso sem tocar a URL salva
     function cldOpt(url, w) {
-      if (!url || !url.includes("res.cloudinary.com") || !url.includes("/upload/")) return url;
-      const params = "f_auto,q_auto" + (w ? ",w_" + w : "");
-      return url.replace("/upload/", "/upload/" + params + "/");
+      if (!url) return url;
+      // Cloudinary
+      if (url.includes("res.cloudinary.com") && url.includes("/upload/")) {
+        const params = "f_auto,q_auto" + (w ? ",w_" + w : "");
+        return url.replace("/upload/", "/upload/" + params + "/");
+      }
+      // Openinary — já usa /t/ pra transforms, injeta params se não tiver
+      if (url.includes("/t/") && !url.includes("/t/f_")) {
+        const params = "f_auto,q_auto" + (w ? ",w_" + w : "");
+        return url.replace("/t/", "/t/" + params + ",");
+      }
+      return url;
     }
     // N16: PIX "copia e cola" (BRCode/EMV) — string que o app do banco lê e já preenche
     // chave+valor+beneficiário sozinho, sem o cliente digitar nada

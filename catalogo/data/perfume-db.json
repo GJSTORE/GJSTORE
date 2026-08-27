@@ -1,0 +1,2312 @@
+{
+  "_meta": {
+    "tipo": "pesquisa-olfativa",
+    "projeto": "GJ STORE",
+    "data": "2026-08-05",
+    "fontes": "Fragrantica, Parfumo, sites oficiais das marcas, lojas (Notino/Amazon)",
+    "nota": "Dado nao encontrado = declarado como 'nao encontrado' (nunca inventar)."
+  },
+  "perfumes": {
+    "9PM NIGHT OUT": {
+      "nome_oficial": "9 PM Night Out",
+      "marca": "Afnan",
+      "genero": "Unissex",
+      "familia": "Oriental Especiado",
+      "inspirado_em": "",
+      "concentracao": "Extrait de Parfum",
+      "volume": "100ml",
+      "ano": "2026",
+      "notas_saida": [
+        "Fruta do Dragão",
+        "Bergamota",
+        "Cognac",
+        "Lavanda",
+        "Maçã"
+      ],
+      "notas_coracao": [
+        "Cardamomo",
+        "Mahonial",
+        "Camurça",
+        "Toffee",
+        "Cedro"
+      ],
+      "notas_fundo": [
+        "Fava Tonka",
+        "Akigalawood",
+        "Ambrofix",
+        "Patchouli"
+      ],
+      "fixacao": "6-12h",
+      "silagem": "Forte",
+      "descricao": "Flanco noturno da linha 9PM da Afnan. Abertura vibrante com fruta do dragão, lavanda e cognac, evoluindo para um coração de camurça e toffee sobre base âmbar-amadeirada.",
+      "quando_usar": "Noite, festas, baladas e encontros; clima frio a ameno."
+    },
+    "AFEEF": {
+      "nome_oficial": "Afeef",
+      "marca": "Lattafa",
+      "genero": "Unissex",
+      "familia": "Floral Frutal",
+      "inspirado_em": "Não é clone declarado; comparado a Xerjoff Erba Pura, Parfums de Marly Valaya e Bond No. 9 Greenwich Village",
+      "concentracao": "Eau de Parfum",
+      "volume": "100 ml",
+      "ano": "2024",
+      "notas_saida": [
+        "Pêssego",
+        "Pimenta Rosa",
+        "Bergamota"
+      ],
+      "notas_coracao": [
+        "Tuberosa",
+        "Flor de Laranjeira",
+        "Jasmim"
+      ],
+      "notas_fundo": [
+        "Praliné",
+        "Âmbar",
+        "Sândalo",
+        "Patchouli"
+      ],
+      "fixacao": "6-8h",
+      "silagem": "Moderada",
+      "descricao": "Abre frutado com pêssego, pimenta rosa e bergamota, com coração floral de tuberosa, jasmim e flor de laranjeira; base quente e doce de praliné, âmbar, sândalo e patchouli. Floral frutado cremoso, feminino e confortável.",
+      "quando_usar": "Dia e noites de clima ameno; ótimo para primavera/verão, encontros e ocasiões românticas. Frutado-floral leve, bom para uso diário."
+    },
+    "AL NOBLE SAFEER": {
+      "nome_oficial": "Al Noble Safeer",
+      "marca": "Lattafa",
+      "genero": "Unissex",
+      "familia": "Ambarado Amadeirado (cítrico)",
+      "inspirado_em": "Initio Oud for Happiness (clone amplamente citado por usuários)",
+      "concentracao": "Eau de Parfum",
+      "volume": "100 ml",
+      "ano": "2023",
+      "notas_saida": [
+        "Gengibre",
+        "Pimenta Preta",
+        "Bergamota",
+        "Toranja"
+      ],
+      "notas_coracao": [
+        "Heliotrópio",
+        "Jasmim",
+        "Caramelo"
+      ],
+      "notas_fundo": [
+        "Almíscar",
+        "Cipriol",
+        "Cashmeran",
+        "Âmbar Gris",
+        "Baunilha",
+        "Pau de Guaiaco"
+      ],
+      "fixacao": "8-10h",
+      "silagem": "Moderada",
+      "descricao": "Abre cítrico e picante com toranja, bergamota e gengibre, com coração floral adocicado de jasmim, heliotrópio e caramelo; base ambarada de almíscar, cashmeran e madeiras. Fresco, cremoso e com leve pegada gourmand.",
+      "quando_usar": "Dias amenos e noites frescas; ótimo para uso diário, trabalho e ocasiões casuais. O lado cítrico refrescante também agrada em clima quente, com borrifadas moderadas."
+    },
+    "AL NOBLE WAZEER": {
+      "nome_oficial": "Al Noble Wazeer",
+      "marca": "Lattafa",
+      "genero": "Unissex",
+      "familia": "Fruta Amadeirado",
+      "inspirado_em": "Não é clone declarado; comparação citada: Parfums de Marly Layton",
+      "concentracao": "Eau de Parfum",
+      "volume": "100 ml",
+      "ano": "2023",
+      "notas_saida": [
+        "Cognac",
+        "Açafrão",
+        "Noz-moscada",
+        "Maçã"
+      ],
+      "notas_coracao": [
+        "Cedro",
+        "Sândalo",
+        "Uísque",
+        "Carvalho"
+      ],
+      "notas_fundo": [
+        "Mirra",
+        "Ambroxan",
+        "Baunilha",
+        "Almíscar"
+      ],
+      "fixacao": "8-10h",
+      "silagem": "Moderada",
+      "descricao": "Abre frutado e especiado com maçã, cognac e açafrão, com coração amadeirado e toque alcoólico de uísque e carvalho; base quente e doce de mirra, baunilha e almíscar. Frutado-amadeirado oriental, acolhedor e sofisticado.",
+      "quando_usar": "Noites e climas frios; ótimo para encontros, festas e ocasiões especiais. Também funciona bem em dias amenos."
+    },
+    "AMEERAT AL ARAB (VERMELHO)": {
+      "nome_oficial": "Ameerat Al Arab Prive Rose (versão de frasco vermelho/rosa; a marca é Asdaaf, do grupo Lattafa)",
+      "marca": "Asdaaf (grupo Lattafa)",
+      "genero": "Feminino",
+      "familia": "Floral Frutado",
+      "inspirado_em": "",
+      "concentracao": "Eau de Parfum",
+      "volume": "100ml",
+      "ano": "2023",
+      "notas_saida": [
+        "Morango",
+        "Uva",
+        "Laranja"
+      ],
+      "notas_coracao": [
+        "Rosa",
+        "Almíscar Branco",
+        "Jasmim",
+        "Gardênia",
+        "Ylang-Ylang",
+        "Lírio"
+      ],
+      "notas_fundo": [
+        "Fava Tonka",
+        "Âmbar",
+        "Sândalo"
+      ],
+      "fixacao": "",
+      "silagem": "",
+      "descricao": "Versão 'Prive Rose' da linha Ameerat Al Arab, floral-frutado com abertura de morango, uva e laranja, coração de rosas com jasmim e gardênia e base quente de fava tonka, âmbar e sândalo — perfil 'regal' que combina com a descrição do vendedor. Não foi localizada versão da Al Wataniah; o perfume é da Asdaaf.",
+      "quando_usar": "Floral frutado versátil para uso diário, dia ou noite, clima ameno; agrada em ocasiões românticas, eventos sociais e como assinatura feminina elegante."
+    },
+    "AMEERATI GOLD": {
+      "nome_oficial": "Ameerati (o sufixo 'Gold' é nome de revenda brasileira; o produto oficial é Ameerati da Al Wataniah, 2019)",
+      "marca": "Al Wataniah",
+      "genero": "Unissex",
+      "familia": "Aromático Especiado",
+      "inspirado_em": "",
+      "concentracao": "Eau de Parfum",
+      "volume": "100ml",
+      "ano": "2019",
+      "notas_saida": [
+        "Cítricos",
+        "Notas Verdes",
+        "Almíscar"
+      ],
+      "notas_coracao": [
+        "Notas Amadeiradas",
+        "Notas Herbais"
+      ],
+      "notas_fundo": [
+        "Notas Especiadas",
+        "Notas Atalcadas"
+      ],
+      "fixacao": "",
+      "silagem": "",
+      "descricao": "[Ameerati Gold não consta no site oficial da Al Wataniah; corresponde ao Ameerati (2019) vendido no Brasil com esse nome] Aromático-especiado com abertura cítrica, verde e almiscarada, coração amadeirado/herbal e fundo especiado e atalcado. Açafrão e 'âmbar dourado' citados pelo vendedor não constam na pirâmide oficial.",
+      "quando_usar": "Versátil, funciona de dia e de noite em clima ameno; boa escolha para trabalho e uso diário, com um toque mais requintado."
+    },
+    "ASAD BOURBON": {
+      "nome_oficial": "Asad Bourbon",
+      "marca": "Lattafa",
+      "genero": "Unissex",
+      "familia": "Oriental Especiado (gourmand especiado)",
+      "inspirado_em": "Não é clone direto; comparado a Azzaro The Most Wanted, Valentino Born in Roma Intense e Stronger With You Intensely",
+      "concentracao": "EDP",
+      "volume": "100ml",
+      "ano": "2025 (Fragrantica; Parfumo lista 2024)",
+      "notas_saida": [
+        "Lavanda",
+        "Ameixa Mirabel",
+        "Pimenta Rosa"
+      ],
+      "notas_coracao": [
+        "Cacau",
+        "Noz-moscada",
+        "Davana"
+      ],
+      "notas_fundo": [
+        "Baunilha Bourbon",
+        "Âmbar",
+        "Vetiver"
+      ],
+      "fixacao": "8-10h",
+      "silagem": "Moderada",
+      "descricao": "Gourmand-especiado e adocicado: abertura de pimenta rosa, lavanda e ameixa, coração de cacau e noz-moscada, secagem em baunilha bourbon cremosa com âmbar e vetiver. Apesar do nome, não é dupe do Sauvage Elixir — mistura os DNAs de The Most Wanted e Born in Roma Intense. Melhor em clima frio e à noite.",
+      "quando_usar": "Noites e clima frio, uso versátil. Confortável e envolvente: vai bem do encontro ao jantar. No calor intenso, prefira menos borrifadas."
+    },
+    "ATHENA": {
+      "nome_oficial": "Athena",
+      "marca": "Maison Alhambra",
+      "genero": "Feminino",
+      "familia": "Floral Frutado",
+      "inspirado_em": "",
+      "concentracao": "Eau de Parfum",
+      "volume": "100ml",
+      "ano": "2023",
+      "notas_saida": [
+        "Tangerina",
+        "Pimenta Rosa",
+        "Bergamota"
+      ],
+      "notas_coracao": [
+        "Jasmim Sambac",
+        "Ylang-Ylang",
+        "Lírio do Vale"
+      ],
+      "notas_fundo": [
+        "Baunilha",
+        "Sândalo",
+        "Patchouli"
+      ],
+      "fixacao": "3-6h",
+      "silagem": "Moderada",
+      "descricao": "Floral feminino com abertura cítrica picante, coração de flores brancas cremosas e fundo de baunilha, sândalo e patchouli. As notas oficiais não listam mel nem âmbar, apesar da descrição do vendedor.",
+      "quando_usar": "Para climas amenos, uso diurno e ocasiões casuais ou de trabalho; projeção discreta e elegante."
+    },
+    "ATTAR GOLD": {
+      "nome_oficial": "Attar Gold (sem correspondência confirmada em bases internacionais; provável blend exclusivo de importador)",
+      "marca": "",
+      "genero": "Unissex",
+      "familia": "Oriental Âmbar",
+      "inspirado_em": "",
+      "concentracao": "Eau de Parfum",
+      "volume": "100ml",
+      "ano": "",
+      "notas_saida": [
+        "Açafrão (segundo vendedor)"
+      ],
+      "notas_coracao": [],
+      "notas_fundo": [
+        "Âmbar intenso (segundo vendedor)",
+        "Almíscar (segundo vendedor)"
+      ],
+      "fixacao": "",
+      "silagem": "",
+      "descricao": "[não localizado em bases internacionais] Perfume não encontrado em Fragrantica/Parfumo entre marcas árabes conhecidas; pela descrição do vendedor (açafrão, âmbar intenso e almíscar), trata-se de um oriental âmbar, possivelmente blend exclusivo de importador.",
+      "quando_usar": "Pelo perfil âmbar e especiado informado pelo vendedor, provável uso noturno e em clima frio; não confirmado em fontes oficiais."
+    },
+    "BADEE AL OUD AMETHYST": {
+      "nome_oficial": "Bade'e Al Oud Amethyst",
+      "marca": "Lattafa",
+      "genero": "Unissex",
+      "familia": "Oriental Vanilado",
+      "inspirado_em": "Initio Atomic Rose (clone amplamente citado por usuários)",
+      "concentracao": "Eau de Parfum",
+      "volume": "100 ml",
+      "ano": "2021",
+      "notas_saida": [
+        "Pimenta Rosa",
+        "Bergamota"
+      ],
+      "notas_coracao": [
+        "Rosa Turca",
+        "Rosa Búlgara",
+        "Jasmim"
+      ],
+      "notas_fundo": [
+        "Oud (Agarwood)",
+        "Âmbar",
+        "Baunilha"
+      ],
+      "fixacao": "10-12h",
+      "silagem": "Intensa",
+      "descricao": "Abre picante e cítrica com pimenta rosa e bergamota, com coração exuberante de rosas e jasmim; base quente de oud, âmbar e baunilha. Rosa-oud oriental, doce, potente e sofisticado.",
+      "quando_usar": "Noites e climas frios; ideal para encontros, eventos formais e ocasiões marcantes. Potente — aplicar com moderação."
+    },
+    "BADEE AL OUD BLUSH": {
+      "nome_oficial": "Badee Al Oud Noble Blush",
+      "marca": "Lattafa",
+      "genero": "Feminino",
+      "familia": "Floral Frutal Gourmand",
+      "inspirado_em": "Carolina Herrera Good Girl Blush (inspirado, conforme varejistas autorizados)",
+      "concentracao": "Eau de Parfum",
+      "volume": "100 ml",
+      "ano": "2024",
+      "notas_saida": [
+        "Leite de Rosa"
+      ],
+      "notas_coracao": [
+        "Merengue",
+        "Amêndoa"
+      ],
+      "notas_fundo": [
+        "Baunilha",
+        "Sândalo",
+        "Almíscar"
+      ],
+      "fixacao": "6-8h",
+      "silagem": "Moderada",
+      "descricao": "Abre cremoso com leite de rosa, com coração gourmand de merengue e amêndoa; base suave e aveludada de baunilha, sândalo e almíscar. Floral gourmand doce, delicado e feminino.",
+      "quando_usar": "Dia e noites amenas; ótimo para encontros, ocasiões casuais e uso diário. Doce e acolhedor, rende bem em climas amenos a frios."
+    },
+    "BADEE AL OUD HONOR & GLORY": {
+      "nome_oficial": "Bade'e Al Oud Honor & Glory",
+      "marca": "Lattafa",
+      "genero": "Unissex",
+      "familia": "Oriental Gourmand",
+      "inspirado_em": "Não é clone declarado; comparado a Nishane Hacivat, Qaed Al Fursan e Nishane Ani",
+      "concentracao": "Eau de Parfum",
+      "volume": "100 ml",
+      "ano": "2023",
+      "notas_saida": [
+        "Abacaxi",
+        "Crème Brûlée"
+      ],
+      "notas_coracao": [
+        "Canela",
+        "Cúrcuma",
+        "Pimenta Preta",
+        "Benjoim"
+      ],
+      "notas_fundo": [
+        "Baunilha",
+        "Sândalo",
+        "Cashmeran",
+        "Musgo"
+      ],
+      "fixacao": "10-12h",
+      "silagem": "Intensa",
+      "descricao": "Abre com abacaxi suculento e creme brûlée, evoluindo para um coração picante de canela, cúrcuma e pimenta; secagem cremosa de baunilha, sândalo e cashmeran. Gourmand frutado-ambrado, doce e muito envolvente.",
+      "quando_usar": "Noites e climas frios; marcante para encontros, festas e eventos especiais. Por ser doce e potente, use com moderação e evite calor extremo."
+    },
+    "BLACK SCENT": {
+      "nome_oficial": "Black Scent",
+      "marca": "Arqus",
+      "genero": "Unissex",
+      "familia": "Amadeirado Especiado",
+      "inspirado_em": "",
+      "concentracao": "Eau de Parfum",
+      "volume": "100ml",
+      "ano": "",
+      "notas_saida": [
+        "Flor de Laranjeira",
+        "Laranja",
+        "Limão Bigarade"
+      ],
+      "notas_coracao": [
+        "Cardamomo",
+        "Lavanda",
+        "Gerânio",
+        "Coentro",
+        "Noz-moscada",
+        "Alecrim"
+      ],
+      "notas_fundo": [
+        "Oud (Agarwood)",
+        "Fava Tonka",
+        "Vetiver",
+        "Líquen",
+        "Teca"
+      ],
+      "fixacao": "",
+      "silagem": "Forte",
+      "descricao": "Arqus Black Scent é um amadeirado-especiado de silagem forte com saída de flor de laranjeira e cítricos, coração de cardamomo, lavanda, gerânio e noz-moscada e fundo de oud, fava tonka, vetiver e teca. 'Café escuro', âmbar e almíscar citados pelo vendedor não constam na pirâmide verificada.",
+      "quando_usar": "Clima frio e uso noturno; indicado para saídas e eventos, por ser intenso, misterioso e de forte projeção."
+    },
+    "CLUB DE NUIT ICÔNIC": {
+      "nome_oficial": "Club de Nuit Iconic (Blue Iconic)",
+      "marca": "Armaf",
+      "genero": "Masculino",
+      "familia": "Âmbar Amadeirado",
+      "inspirado_em": "Bleu de Chanel (Chanel)",
+      "concentracao": "Eau de Parfum",
+      "volume": "105 ml",
+      "ano": "2022",
+      "notas_saida": [
+        "Toranja",
+        "Limão",
+        "Menta",
+        "Pimenta Rosa",
+        "Coentro"
+      ],
+      "notas_coracao": [
+        "Gengibre",
+        "Melão",
+        "Jasmim",
+        "Noz-moscada"
+      ],
+      "notas_fundo": [
+        "Madeiras",
+        "Incenso",
+        "Sândalo",
+        "Âmbar",
+        "Cedro",
+        "Patchouli",
+        "Ládano"
+      ],
+      "fixacao": "6-10 horas",
+      "silagem": "Forte",
+      "descricao": "O clone 'blue' de referência da Armaf: abertura cítrica vibrante de toranja e menta, coração picante-floral e base ambarada amadeirada com incenso, muito próximo do Bleu de Chanel.",
+      "quando_usar": "Versátil o ano todo: clima ameno a quente, dia a dia, trabalho, ocasiões casuais e encontros; presença elegante e profissional."
+    },
+    "CLUB DE NUIT IMPERIALE": {
+      "nome_oficial": "Club de Nuit Imperiale (também registrado como Club de Nuit White Imperiale)",
+      "marca": "Armaf",
+      "genero": "Feminino",
+      "familia": "Floral Frutado",
+      "inspirado_em": "Parfums de Marly Delina / Delina Exclusif (a alegação do vendedor de 'Lady Million' não é confirmada)",
+      "concentracao": "Eau de Parfum",
+      "volume": "105ml",
+      "ano": "2022",
+      "notas_saida": [
+        "Lichia",
+        "Bergamota",
+        "Noz-moscada"
+      ],
+      "notas_coracao": [
+        "Rosa Turca",
+        "Baunilha",
+        "Almíscar",
+        "Peônia"
+      ],
+      "notas_fundo": [
+        "Baunilha",
+        "Incenso",
+        "Cashmeran",
+        "Cedro"
+      ],
+      "fixacao": "6-10h",
+      "silagem": "Forte",
+      "descricao": "Abre frutado com lichia, bergamota e noz-moscada; coração floral de rosa turca, peônia, baunilha e almíscar; secagem quente de cashmeran, cedro e incenso. Réplica do DNA floral-frutado doce de Delina, com projeção forte.",
+      "quando_usar": "Noite, primavera e outono; encontros, festas e ocasiões especiais mais sofisticadas."
+    },
+    "CLUB DE NUIT INTENSE": {
+      "nome_oficial": "Club de Nuit Intense Man",
+      "marca": "Armaf",
+      "genero": "Masculino",
+      "familia": "Amadeirado Especiado (Woody Spicy)",
+      "inspirado_em": "Creed Aventus",
+      "concentracao": "EDT",
+      "volume": "105ml",
+      "ano": "2015",
+      "notas_saida": [
+        "Limão",
+        "Abacaxi",
+        "Bergamota",
+        "Groselha Preta",
+        "Maçã"
+      ],
+      "notas_coracao": [
+        "Bétula",
+        "Jasmim",
+        "Rosa"
+      ],
+      "notas_fundo": [
+        "Almíscar",
+        "Âmbar Cinzento",
+        "Patchouli",
+        "Baunilha"
+      ],
+      "fixacao": "8-12h",
+      "silagem": "Forte",
+      "descricao": "Fragrância masculina famosa como clone acessível do Creed Aventus, com abertura cítrica intensa e defumada que suaviza ao longo do tempo. Desempenho beast mode: forte projeção nas primeiras horas e secagem amadeirada, doce e esfumaçada.",
+      "quando_usar": "Noites e clima ameno/frio. Presença forte: ótimo para sair, eventos e ocasiões que pedem destaque. Na rotina, aplique com moderação."
+    },
+    "CLUB DE NUIT LIONHERAT": {
+      "nome_oficial": "Club de Nuit Lionheart Man",
+      "marca": "Armaf (Sterling Perfumes)",
+      "genero": "Masculino",
+      "familia": "Oriental Fougère",
+      "inspirado_em": "",
+      "concentracao": "Eau de Parfum",
+      "volume": "100 ml",
+      "ano": "2025",
+      "notas_saida": [
+        "Lavanda",
+        "Menta"
+      ],
+      "notas_coracao": [
+        "Benjoim",
+        "Baunilha"
+      ],
+      "notas_fundo": [
+        "Mel",
+        "Fava Tonka",
+        "Tabaco"
+      ],
+      "fixacao": "4-6 horas",
+      "silagem": "Moderada",
+      "descricao": "Fougère oriental que abre com lavanda e menta refrescantes, coração quente e adocicado de benjoim e baunilha e fundo gourmand de mel, fava tonka e tabaco.",
+      "quando_usar": "Feito para clima frio, noite e encontros; ideal para outono/inverno e ocasiões mais elegantes, com presença acolhedora e confortável."
+    },
+    "CLUB DE NUIT MALEKA": {
+      "nome_oficial": "Club de Nuit Maleka",
+      "marca": "Armaf (Sterling Perfumes)",
+      "genero": "Feminino",
+      "familia": "Floral Frutado",
+      "inspirado_em": "",
+      "concentracao": "Eau de Parfum",
+      "volume": "105 ml",
+      "ano": "2025",
+      "notas_saida": [
+        "Lichia",
+        "Bergamota",
+        "Pimenta Rosa"
+      ],
+      "notas_coracao": [
+        "Íris (Orris)"
+      ],
+      "notas_fundo": [
+        "Pralinê",
+        "Sândalo",
+        "Ambroxan"
+      ],
+      "fixacao": "8-10 horas",
+      "silagem": "Moderada",
+      "descricao": "Floral frutado elegante com lichia e bergamota vibrantes, coração de íris empoado e base quente de pralinê, sândalo e ambroxan; criação do perfumista Olivier Cresp.",
+      "quando_usar": "Versátil o ano todo: funciona de dia e de noite, para encontros, eventos e ocasiões especiais; elegante, feminino e moderno."
+    },
+    "CLUB DE NUIT MILESTONE": {
+      "nome_oficial": "Club de Nuit Milestone",
+      "marca": "Armaf",
+      "genero": "Unissex",
+      "familia": "Aquático Frutado",
+      "inspirado_em": "Creed Millesime Imperial (o vendedor errou: não é inspirado em 1 Million Lucky)",
+      "concentracao": "Eau de Parfum",
+      "volume": "105ml",
+      "ano": "2019",
+      "notas_saida": [
+        "Notas Marinhas",
+        "Frutas Vermelhas",
+        "Bergamota"
+      ],
+      "notas_coracao": [
+        "Violeta",
+        "Madeiras Brancas",
+        "Sândalo"
+      ],
+      "notas_fundo": [
+        "Almíscar",
+        "Ambroxan",
+        "Vetiver"
+      ],
+      "fixacao": "5-7h",
+      "silagem": "Moderada",
+      "descricao": "Aquático frutado com abertura salgada de notas marinhas e frutas vermelhas (a famosa melancia salgada), coração empoado de violeta e base de almíscar e ambroxan.",
+      "quando_usar": "Perfeito para dias quentes e verão, uso diurno, ocasiões casuais e de praia."
+    },
+    "CLUB DE NUIT PRECIEUX": {
+      "nome_oficial": "Club de Nuit Precieux I",
+      "marca": "Armaf",
+      "genero": "Unissex (viés masculino)",
+      "familia": "Oriental Woody",
+      "inspirado_em": "Creed Aventus Absolu",
+      "concentracao": "Extrait de Parfum",
+      "volume": "55ml",
+      "ano": "2024",
+      "notas_saida": [
+        "Abacaxi",
+        "Limão",
+        "Bergamota",
+        "Caramelo",
+        "Pimenta Rosa",
+        "Pera",
+        "Pimenta Preta"
+      ],
+      "notas_coracao": [
+        "Musgo de Carvalho",
+        "Madeira Branca",
+        "Jasmim",
+        "Lírio do Vale",
+        "Anis"
+      ],
+      "notas_fundo": [
+        "Ambroxan",
+        "Almíscar Branco",
+        "Cedro",
+        "Âmbar",
+        "Patchouli",
+        "Couro",
+        "Baunilha"
+      ],
+      "fixacao": "8-10h",
+      "silagem": "Forte",
+      "descricao": "Versão premium da linha Club de Nuit, com abacaxi, especiarias e musgo de carvalho, reconhecida como inspiração do Creed Aventus Absolu com qualidade superior ao CDN Intense Man.",
+      "quando_usar": "Dia e noite em clima ameno; trabalho, encontros e ocasiões que pedem presença sem exagero."
+    },
+    "CLUB DE NUIT SILLAGE": {
+      "nome_oficial": "Club de Nuit Sillage",
+      "marca": "Armaf",
+      "genero": "Unissex",
+      "familia": "Floral Boisé Musqué (Floral Amadeirado Almiscarado)",
+      "inspirado_em": "Creed Silver Mountain Water",
+      "concentracao": "Eau de Parfum",
+      "volume": "100ml",
+      "ano": "2020",
+      "notas_saida": [
+        "Bergamota",
+        "Limão",
+        "Lima",
+        "Groselha Negra",
+        "Folha de Violeta",
+        "Gengibre"
+      ],
+      "notas_coracao": [
+        "Rosa",
+        "Jasmim",
+        "Íris"
+      ],
+      "notas_fundo": [
+        "Ambroxan",
+        "Almíscar",
+        "Sândalo",
+        "Cedro"
+      ],
+      "fixacao": "8-12h",
+      "silagem": "Intensa",
+      "descricao": "Abertura metálica e cítrica com bergamota, limão, cassis e gengibre (estilo chá gelado); coração floral atalcado de rosa, jasmim e íris; secagem limpa e ambarada de ambroxan, almíscar e madeiras. Réplica fresca e potente de Silver Mountain Water.",
+      "quando_usar": "Clima quente a ameno, uso diário e diurno; excelente para trabalho, atividades ao ar livre e ocasiões casuais, agradando pela limpeza e versatilidade."
+    },
+    "CLUB DE NUIT UNTOLD": {
+      "nome_oficial": "Club de Nuit Untold",
+      "marca": "Armaf",
+      "genero": "Unissex",
+      "familia": "Amber Floral Amadeirado",
+      "inspirado_em": "Maison Francis Kurkdjian Baccarat Rouge 540",
+      "concentracao": "Eau de Parfum",
+      "volume": "105ml",
+      "ano": "2022",
+      "notas_saida": [
+        "Açafrão",
+        "Jasmim"
+      ],
+      "notas_coracao": [
+        "Amberwood",
+        "Âmbar Cinzento"
+      ],
+      "notas_fundo": [
+        "Resina de Abeto",
+        "Cedro"
+      ],
+      "fixacao": "8-12h",
+      "silagem": "Intensa",
+      "descricao": "Abre com jasmim e açafrão doces e levemente metálicos, evolui para um corpo âmbar-resinoso com toque de algodão-doce e seca em cedro e resina de abeto. Réplica de alto desempenho do DNA doce e envolvente de Baccarat Rouge 540.",
+      "quando_usar": "Melhor em dias amenos a frios e à noite; ideal para festas, encontros e ocasiões noturnas. Evitar calor extremo, pois pode ficar enjoativo."
+    },
+    "DELIGHT WOODY": {
+      "nome_oficial": "Delight Woody",
+      "marca": "Arqus",
+      "genero": "Feminino",
+      "familia": "Floral Amadeirado",
+      "inspirado_em": "Gucci Bamboo (confirmado por varejista; a Arqus não publica pirâmide própria)",
+      "concentracao": "Eau de Parfum",
+      "volume": "100ml",
+      "ano": "",
+      "notas_saida": [
+        "Bergamota"
+      ],
+      "notas_coracao": [
+        "Ylang-Ylang",
+        "Lírio Casablanca",
+        "Flor de Laranjeira"
+      ],
+      "notas_fundo": [
+        "Sândalo",
+        "Baunilha",
+        "Âmbar",
+        "Cedro"
+      ],
+      "fixacao": "",
+      "silagem": "",
+      "descricao": "[produto Arqus não listado em Fragrantica/Parfumo; notas abaixo são do original inspirado, Gucci Bamboo] Floral-amadeirado feminino com bergamota na saída, ylang-ylang, lírio Casablanca e flor de laranjeira no coração e fundo de sândalo, baunilha, cedro e âmbar. 'Frutas' e 'almíscar' citados pelo vendedor não constam na composição verificada.",
+      "quando_usar": "Clima ameno e quente (primavera/verão); uso diurno, trabalho e ocasiões elegantes, por ser suave e refinado."
+    },
+    "DELILAH BLANC": {
+      "nome_oficial": "Delilah Blanc",
+      "marca": "Maison Alhambra",
+      "genero": "Feminino",
+      "familia": "Floral Frutado Fresco",
+      "inspirado_em": "Parfums de Marly Valaya",
+      "concentracao": "Eau de Parfum",
+      "volume": "100ml",
+      "ano": "2023",
+      "notas_saida": [
+        "Bergamota",
+        "Pêssego Branco",
+        "Mandarina"
+      ],
+      "notas_coracao": [
+        "Flor de Laranjeira",
+        "Vetiver"
+      ],
+      "notas_fundo": [
+        "Almíscar",
+        "Baunilha"
+      ],
+      "fixacao": "4-6h",
+      "silagem": "Moderada",
+      "descricao": "Floral frutado fresco e limpo, dupe do Parfums de Marly Valaya, com cítricos e pêssego branco abrindo para flor de laranjeira e fecho almiscarado de baunilha. Perfume 'clean girl', elegante e discreto.",
+      "quando_usar": "Ótimo para o dia, primavera e verão, trabalho e uso diário; ideal para quem prefere frescor limpo em vez de doces pesados."
+    },
+    "DURRAT AL AROOS": {
+      "nome_oficial": "Durrat Al Aroos",
+      "marca": "Al Wataniah",
+      "genero": "Feminino",
+      "familia": "Oriental Amadeirado",
+      "inspirado_em": "Sem clone confirmado; resenhistas da Fragrantica aproximam de Xerjoff Erba Pura (versão mais almiscarada e amarga)",
+      "concentracao": "Eau de Parfum",
+      "volume": "100ml",
+      "ano": "2022",
+      "notas_saida": [
+        "Almíscar Branco",
+        "Cipriol (Nagarmotha)"
+      ],
+      "notas_coracao": [
+        "Baunilha",
+        "Cardamomo",
+        "Açafrão"
+      ],
+      "notas_fundo": [
+        "Fava Tonka",
+        "Madeira Guaiac"
+      ],
+      "fixacao": "",
+      "silagem": "Intensa",
+      "descricao": "Perfume oriental da Al Wataniah para mulheres, com abertura de almíscar branco e cipriol, coração de baunilha, cardamomo e açafrão e base de fava tonka e madeira guaiac. As 'flores nupciais' e o 'âmbar delicado' citados pelo vendedor não constam na pirâmide oficial.",
+      "quando_usar": "Clima ameno a frio; ótimo para noite, encontros e ocasiões especiais, com forte presença. Quem gosta de projeção marcante pode usar também no dia."
+    },
+    "EMAAN": {
+      "nome_oficial": "Emaan",
+      "marca": "Lattafa",
+      "genero": "Feminino",
+      "familia": "Chipre Floral",
+      "inspirado_em": "Não é clone declarado; comparado a Giorgio Armani My Way / My Way Intense",
+      "concentracao": "Eau de Parfum",
+      "volume": "100 ml",
+      "ano": "2022",
+      "notas_saida": [
+        "Flor de Laranjeira",
+        "Groselha Preta",
+        "Bergamota"
+      ],
+      "notas_coracao": [
+        "Tuberosa",
+        "Jasmim",
+        "Tagetes (Cravo-de-defunto)"
+      ],
+      "notas_fundo": [
+        "Almíscar",
+        "Baunilha",
+        "Cedro",
+        "Patchouli"
+      ],
+      "fixacao": "6-8h",
+      "silagem": "Moderada",
+      "descricao": "Abre cítrica e frutada com bergamota, groselha preta e flor de laranjeira, evoluindo para um coração cremoso de tuberosa e jasmim; secagem quente de baunilha, almíscar e madeiras. Floral branco chypre, doce e elegante.",
+      "quando_usar": "Dia e noites amenas; ótimo para trabalho, uso diário e encontros. Doce e floral, rende melhor em climas amenos ou frescos do que no calor extremo."
+    },
+    "FAKHAR BLACK": {
+      "nome_oficial": "Fakhar Black",
+      "marca": "Lattafa Perfumes",
+      "genero": "Masculino",
+      "familia": "Amadeirado Aromático (blue)",
+      "inspirado_em": "Yves Saint Laurent Y Eau de Parfum",
+      "concentracao": "Eau de Parfum",
+      "volume": "100ml",
+      "ano": "2023",
+      "notas_saida": [
+        "Maçã",
+        "Bergamota",
+        "Gengibre"
+      ],
+      "notas_coracao": [
+        "Lavanda",
+        "Sálvia",
+        "Bagas de Zimbro",
+        "Gerânio"
+      ],
+      "notas_fundo": [
+        "Fava Tonka",
+        "Cedro",
+        "Amberwood",
+        "Vetiver"
+      ],
+      "fixacao": "4-6h",
+      "silagem": "Moderada",
+      "descricao": "Clone bastante fiel do YSL Y EDP: abertura fresca de maçã, bergamota e gengibre, coração aromático de lavanda e sálvia e fundo amadeirado-adocicado. Perfume limpo, azulado e seguro.",
+      "quando_usar": "Versátil, serve para dia e noite, trabalho, faculdade e uso diário em climas amenos; não é um 'beast mode'."
+    },
+    "FAKHAR PLATIN": {
+      "nome_oficial": "Fakhar Platin (Fakhar Lattafa Platin)",
+      "marca": "Lattafa",
+      "genero": "Unissex",
+      "familia": "Aromático Fougère",
+      "inspirado_em": "Não é clone declarado; parte da linha Fakhar (Fakhar Black é inspirado em YSL Y). Comparado a YSL Y Elixir e ao DNA de Initio Paragon (Vintage Radio)",
+      "concentracao": "Eau de Parfum",
+      "volume": "100 ml",
+      "ano": "2025",
+      "notas_saida": [
+        "Bergamota",
+        "Pimenta Rosa",
+        "Cardamomo"
+      ],
+      "notas_coracao": [
+        "Goiaba",
+        "Lavanda",
+        "Gengibre"
+      ],
+      "notas_fundo": [
+        "Incenso",
+        "Palo Santo",
+        "Sândalo"
+      ],
+      "fixacao": "6-8h",
+      "silagem": "Moderada",
+      "descricao": "Abre fresco e especiado com bergamota, cardamomo e pimenta rosa, com coração de goiaba, lavanda e gengibre; base amadeirada e resinosa de incenso, palo santo e sândalo. Fougère frutado moderno, limpo e elegante.",
+      "quando_usar": "Dia e trabalho; fresco e versátil, funciona em qualquer estação, do casual ao formal. Boa opção para uso diário e eventos leves."
+    },
+    "FAKHAR PLATIN HOJE": {
+      "nome_oficial": "Fakhar Platin (nova edição 2025)",
+      "marca": "Lattafa Perfumes",
+      "genero": "Unissex",
+      "familia": "Fougère Aromático",
+      "inspirado_em": "Comparações informais de usuários com YSL Y (Elixir/EDP), não confirmadas pela marca",
+      "concentracao": "Eau de Parfum",
+      "volume": "100ml",
+      "ano": "2025",
+      "notas_saida": [
+        "Bergamota",
+        "Pimenta Rosa",
+        "Cardamomo"
+      ],
+      "notas_coracao": [
+        "Goiaba",
+        "Lavanda",
+        "Gengibre"
+      ],
+      "notas_fundo": [
+        "Palo Santo",
+        "Incenso",
+        "Sândalo"
+      ],
+      "fixacao": "6-8h",
+      "silagem": "Moderada",
+      "descricao": "Nova edição 2025 da linha Fakhar: fougère aromático fresco e especiado, com abertura de bergamota e cardamomo, coração frutado de goiaba com lavanda e gengibre e fundo amadeirado de incenso, palo santo e sândalo. A descrição do vendedor (âmbar/almíscar) não consta nas notas oficiais.",
+      "quando_usar": "Perfume moderno para dia a dia e trabalho, adequado a clima ameno a frio; o incenso no fundo pede ocasiões casuais e semi-formais, melhor em temperaturas não muito altas."
+    },
+    "FAKHAR ROSE": {
+      "nome_oficial": "Fakhar Rose",
+      "marca": "Lattafa Perfumes",
+      "genero": "Feminino",
+      "familia": "Floral Branco Adocicado",
+      "inspirado_em": "Givenchy L'Interdit (perfume feminino)",
+      "concentracao": "Eau de Parfum",
+      "volume": "100ml",
+      "ano": "2023",
+      "notas_saida": [
+        "Frutas",
+        "Lírio",
+        "Romã",
+        "Aldeídos"
+      ],
+      "notas_coracao": [
+        "Tuberosa",
+        "Jasmim",
+        "Gardênia",
+        "Ylang-Ylang",
+        "Madressilva",
+        "Rosa",
+        "Peônia"
+      ],
+      "notas_fundo": [
+        "Baunilha",
+        "Almíscar Branco",
+        "Sândalo",
+        "Ambroxan"
+      ],
+      "fixacao": "8-10h",
+      "silagem": "Forte",
+      "descricao": "Floral branco adocicado inspirado no Givenchy L'Interdit, dominado por tuberosa, jasmim e gardenia sobre frutas, baunilha e almíscar. A descrição do vendedor ('rosas frescas, especiarias delicadas') não confere com as notas reais.",
+      "quando_usar": "Para uso diurno e noturno em climas amenos e frios; serve para trabalho, eventos e encontros, mas é doce e intenso."
+    },
+    "GHALA": {
+      "nome_oficial": "Ghala (identificado como Al Wataniah Ghala, 2023)",
+      "marca": "Al Wataniah",
+      "genero": "Feminino (também listado como unissex)",
+      "familia": "Oriental Floral/Ambarado",
+      "inspirado_em": "",
+      "concentracao": "Eau de Parfum",
+      "volume": "100ml",
+      "ano": "2023",
+      "notas_saida": [
+        "Açafrão",
+        "Jasmim"
+      ],
+      "notas_coracao": [
+        "Âmbar Cinzento",
+        "Amberwood"
+      ],
+      "notas_fundo": [
+        "Abeto Bálsamo",
+        "Resinas",
+        "Cedro"
+      ],
+      "fixacao": "",
+      "silagem": "",
+      "descricao": "Perfume oriental da Al Wataniah com abertura de açafrão e jasmim, coração ambarado e base resinosa de abeto e cedro. Existem vários 'Ghala' no mercado (Al Wataniah, Jazeel, Anfas, Faberlic); a descrição do vendedor (frutas vibrantes/almíscar) não coincide com as notas oficiais da Al Wataniah.",
+      "quando_usar": "Oriental ambarado que funciona em clima ameno a frio, dia ou noite; indicado para uso diário e eventos, com perfil quente e envolvente."
+    },
+    "HAWAS BLACK": {
+      "nome_oficial": "Hawas Black",
+      "marca": "Rasasi",
+      "genero": "Masculino",
+      "familia": "Aromático Frutado",
+      "inspirado_em": "",
+      "concentracao": "Colônia",
+      "volume": "",
+      "ano": "2024",
+      "notas_saida": [
+        "Bergamota",
+        "Abacaxi",
+        "Toranja"
+      ],
+      "notas_coracao": [
+        "Patchouli",
+        "Cedro",
+        "Jasmim"
+      ],
+      "notas_fundo": [
+        "Musgo de Carvalho",
+        "Notas Amadeiradas",
+        "Âmbar"
+      ],
+      "fixacao": "8-12h",
+      "silagem": "Forte",
+      "descricao": "Abertura cítrica e frutada de bergamota, abacaxi e toranja; coração amadeirado de patchouli, cedro e jasmim; fundo terroso de musgo de carvalho, madeiras secas e âmbar. Perfil fresco-verde, mais escuro e amadeirado que o Hawas original.",
+      "quando_usar": "Dias amenos a frios e à noite; versátil para encontros, festas e uso casual noturno, funciona bem no trabalho com aplicação moderada."
+    },
+    "HAWAS ELIXIR": {
+      "nome_oficial": "Hawas Elixir",
+      "marca": "Rasasi",
+      "genero": "Unissex",
+      "familia": "Fougère Gourmand",
+      "inspirado_em": "Jean Paul Gaultier Le Male Elixir (com toque próprio de chocolate e hortelã)",
+      "concentracao": "Eau de Parfum",
+      "volume": "100ml",
+      "ano": "2025",
+      "notas_saida": [
+        "Hortelã",
+        "Bergamota",
+        "Artemísia"
+      ],
+      "notas_coracao": [
+        "Chocolate Amargo",
+        "Lavanda",
+        "Benjoim"
+      ],
+      "notas_fundo": [
+        "Baunilha",
+        "Fava Tonka",
+        "Almíscar Branco"
+      ],
+      "fixacao": "9-13h",
+      "silagem": "Intensa",
+      "descricao": "Elixir gourmand-doce da linha Hawas, quase idêntico ao Le Male Elixir porém mais fresco, com hortelã e chocolate amargo sobre baunilha e fava tonka. Performance monstruosa, confirmada por resenhas.",
+      "quando_usar": "Para climas frios e amenos, uso noturno, encontros e festas; borrifar com moderação por ser muito potente."
+    },
+    "HAWAS FOR HER": {
+      "nome_oficial": "Hawas for Her",
+      "marca": "Rasasi",
+      "genero": "Feminino",
+      "familia": "Floral Frutado Doce",
+      "inspirado_em": "Armani Si / Lancôme La Vie Est Belle (comparações comuns; não é clone 1:1)",
+      "concentracao": "Eau de Parfum",
+      "volume": "100ml",
+      "ano": "2022",
+      "notas_saida": [
+        "Romã",
+        "Maçã",
+        "Toranja"
+      ],
+      "notas_coracao": [
+        "Íris",
+        "Jasmim Sambac",
+        "Cítricos"
+      ],
+      "notas_fundo": [
+        "Pralinê",
+        "Patchouli",
+        "Vetiver"
+      ],
+      "fixacao": "6-8h",
+      "silagem": "Forte",
+      "descricao": "Doce e envolvente, criado por Claire Liégent e Dominique Ropion: abertura frutada de romã, maçã e toranja, coração de íris e jasmim sambac e fundo quente de pralinê, patchouli e vetiver.",
+      "quando_usar": "Ótimo para noite, encontros e clima frio (outono/inverno); a projeção forte exige borrifadas moderadas."
+    },
+    "HER CONFESSION": {
+      "nome_oficial": "Her Confession",
+      "marca": "Lattafa",
+      "genero": "Feminino",
+      "familia": "Floral Gourmand (Ambarado)",
+      "inspirado_em": "Blanche Bête (Les Liquides Imaginaires)",
+      "concentracao": "Eau de Parfum",
+      "volume": "100 ml",
+      "ano": "2024",
+      "notas_saida": [
+        "Canela",
+        "Mystikal (Almíscar)"
+      ],
+      "notas_coracao": [
+        "Tuberosa",
+        "Jasmim",
+        "Incenso",
+        "Mahonial"
+      ],
+      "notas_fundo": [
+        "Baunilha",
+        "Almíscar",
+        "Fava Tonka"
+      ],
+      "fixacao": "8-10 horas",
+      "silagem": "Forte",
+      "descricao": "Gourmand floral leitoso com abertura de canela e almíscar, coração de tuberosa, jasmim e incenso e base quente de baunilha, tonka e almíscar; doce, cremoso e hipnótico.",
+      "quando_usar": "Perfeito para noite, encontros e ocasiões especiais em clima frio ou ameno; deixa rastro forte, ideal para quem gosta de fragrâncias doces e sensuais."
+    },
+    "JORGE DI PROFUMO": {
+      "nome_oficial": "Jorge di Profumo",
+      "marca": "Maison Alhambra (Lattafa)",
+      "genero": "Masculino",
+      "familia": "Aromático",
+      "inspirado_em": "Acqua di Gio Profumo (Giorgio Armani)",
+      "concentracao": "Eau de Parfum",
+      "volume": "100ml",
+      "ano": "2022",
+      "notas_saida": [
+        "Bergamota",
+        "Pimenta-preta",
+        "Limão Siciliano"
+      ],
+      "notas_coracao": [
+        "Lavanda",
+        "Tabaco",
+        "Gerânio"
+      ],
+      "notas_fundo": [
+        "Sândalo",
+        "Vetiver",
+        "Almíscar"
+      ],
+      "fixacao": "6h",
+      "silagem": "Moderada",
+      "descricao": "Aromático masculino da Maison Alhambra (2022), clone de Acqua di Gio Profumo (Giorgio Armani), com abertura cítrica e apimentada, coração de lavanda, tabaco e gerânio e base de sândalo, vetiver e almíscar. Confirma-se o original indicado pelo vendedor.",
+      "quando_usar": "Perfeito para clima quente e ameno, dia e noite; ótimo para trabalho, uso diário e ocasiões versáteis."
+    },
+    "KHAMRAH QAHWAH": {
+      "nome_oficial": "Khamrah Qahwa",
+      "marca": "Lattafa",
+      "genero": "Unissex",
+      "familia": "Oriental Vanilla (oriental gourmand)",
+      "inspirado_em": "Kilian Angel's Share (com twist de café; flanker da linha Khamrah)",
+      "concentracao": "EDP",
+      "volume": "100ml",
+      "ano": "2023",
+      "notas_saida": [
+        "Canela",
+        "Cardamomo",
+        "Gengibre"
+      ],
+      "notas_coracao": [
+        "Praliné",
+        "Frutas Cristalizadas",
+        "Flores Brancas"
+      ],
+      "notas_fundo": [
+        "Café Arábica",
+        "Baunilha",
+        "Fava Tonka",
+        "Benjoim",
+        "Almíscar"
+      ],
+      "fixacao": "10-12h",
+      "silagem": "Forte",
+      "descricao": "Oriental gourmand unissex lançado em 2023 como sucessor do Khamrah, acrescentando acorde de café. Abre com canela, cardamomo e gengibre, evolui para praliné e frutas cristalizadas e seca em fundo cremoso de café arábica, baunilha, fava tonka, benjoim e almíscar. Alto desempenho, ideal para clima frio e uso noturno.",
+      "quando_usar": "Noite, inverno e ocasiões especiais. Acolhedor e marcante: ideal para encontros, celebrações e dias frios. Evite calor extremo."
+    },
+    "KHAMRAM WAHA": {
+      "nome_oficial": "Khamrah Waha",
+      "marca": "Lattafa",
+      "genero": "Unissex",
+      "familia": "Aromatic Aquatic / Âmbar Fresco",
+      "inspirado_em": "",
+      "concentracao": "Eau de Parfum",
+      "volume": "100ml",
+      "ano": "2026",
+      "notas_saida": [
+        "Bergamota",
+        "Yuzu",
+        "Zimbro",
+        "Gengibre"
+      ],
+      "notas_coracao": [
+        "Pepino",
+        "Sal Marinho",
+        "Sálvia",
+        "Íris"
+      ],
+      "notas_fundo": [
+        "Baunilha",
+        "Fava Tonka",
+        "Almíscar",
+        "Akigalawood",
+        "Ambrofix"
+      ],
+      "fixacao": "5-7h",
+      "silagem": "Moderada",
+      "descricao": "Flanco fresco e aquático da linha Khamrah, criado por Jordi Fernández e apresentado como o 'oásis' do deserto. Abertura cítrica gelada com pepino e sal marinho, evoluindo para um seco adocicado de baunilha, tonka e madeiras.",
+      "quando_usar": "Clima quente, primavera/verão; ótimo para o dia, trabalho e uso casual."
+    },
+    "KIT BADEE COMPLETO OFICIAL 5 ML": {
+      "nome_oficial": "Badee Al Oud Collection 5 x 5ml EDP (Lattafa)",
+      "marca": "Lattafa",
+      "genero": "Unissex",
+      "familia": "Linha Oud Amadeirado",
+      "inspirado_em": "",
+      "concentracao": "Eau de Parfum (5 miniaturas de 5ml)",
+      "volume": "25ml (5 x 5ml)",
+      "ano": "",
+      "notas_saida": [],
+      "notas_coracao": [],
+      "notas_fundo": [
+        "Agarwood (Oud)",
+        "Almíscar",
+        "Patchouli"
+      ],
+      "fixacao": "",
+      "silagem": "",
+      "descricao": "Kit oficial Lattafa da linha Badee Al Oud com 5 miniaturas de 5 ml (25 ml no total): Badee Al Oud Oud for Glory, Badee Al Oud Amethyst, Badee Al Oud Sublime, Badee Al Oud Honor & Glory e Badee Al Oud Noble Blush. A linha tem DNA de oud, almíscar e patchouli, com perfis que vão do especiado-amadeirado ao frutado-gourmand.",
+      "quando_usar": "Ideal para descoberta e viagem, permitindo testar a linha antes do frasco grande. Os amadeirados especiados funcionam melhor à noite e em clima frio; os gourmands servem para o dia a dia e clima ameno."
+    },
+    "LA ROUGE BAROQUE": {
+      "nome_oficial": "La Rouge Baroque (também conhecido como Baroque Rouge 540)",
+      "marca": "Maison Alhambra (grupo Lattafa)",
+      "genero": "Unissex",
+      "familia": "Oriental Ambarado",
+      "inspirado_em": "Baccarat Rouge 540 (Maison Francis Kurkdjian)",
+      "concentracao": "Eau de Parfum",
+      "volume": "100ml",
+      "ano": "2021",
+      "notas_saida": [
+        "Açafrão",
+        "Pêra",
+        "Tangerina"
+      ],
+      "notas_coracao": [
+        "Jasmim",
+        "Ylang-Ylang",
+        "Lírio"
+      ],
+      "notas_fundo": [
+        "Âmbar",
+        "Madeira Caxemira",
+        "Almíscar"
+      ],
+      "fixacao": "6-8h",
+      "silagem": "Forte",
+      "descricao": "Versão original do clone de Baccarat Rouge 540: doçura caramelizada e aérea com açafrão, jasmim e base ambarada de caxemira e almíscar. A descrição do vendedor ('rosas suaves') não consta nas notas oficiais.",
+      "quando_usar": "Muito versátil: dia ou noite, clima ameno a frio, trabalho, festas e ocasiões especiais; silagem notável, descrito por usuários como 'besta disfarçada'."
+    },
+    "LA ROUGE BAROQUE EXTREME": {
+      "nome_oficial": "La Rouge Baroque Extreme (também comercializado como Baroque Rouge Extrait)",
+      "marca": "Maison Alhambra (grupo Lattafa)",
+      "genero": "Unissex",
+      "familia": "Oriental Ambarado Especiado",
+      "inspirado_em": "Baccarat Rouge 540 Extrait (Maison Francis Kurkdjian)",
+      "concentracao": "Eau de Parfum",
+      "volume": "100ml",
+      "ano": "2022",
+      "notas_saida": [
+        "Amêndoa Amarga",
+        "Açafrão"
+      ],
+      "notas_coracao": [
+        "Cipreste",
+        "Jasmim Egípcio"
+      ],
+      "notas_fundo": [
+        "Âmbar Cinzento",
+        "Almíscar",
+        "Notas Amadeiradas"
+      ],
+      "fixacao": "8-10h",
+      "silagem": "Forte",
+      "descricao": "Versão Extreme, mais densa e opulenta, com abertura de amêndoa amarga e açafrão, coração de jasmim egípcio com cipreste e base quente de âmbar cinzento, almíscar e madeiras. A descrição do vendedor ('rosas profundas') não consta nas notas oficiais.",
+      "quando_usar": "Ideal para noite, clima frio a ameno e ocasiões especiais (jantares, festas); tem fixação e projeção fortes, então evite excesso de borrifadas."
+    },
+    "LIQUID BRUN": {
+      "nome_oficial": "Liquid Brun",
+      "marca": "French Avenue",
+      "genero": "Masculino (amplamente usado como Unissex)",
+      "familia": "Amadeirado gourmand doce e quente-especiado",
+      "inspirado_em": "Althaïr, da Parfums de Marly",
+      "concentracao": "EDP",
+      "volume": "100ml",
+      "ano": "2024",
+      "notas_saida": [
+        "Canela",
+        "Flor de Laranjeira",
+        "Cardamomo",
+        "Bergamota"
+      ],
+      "notas_coracao": [
+        "Baunilha Bourbon",
+        "Elemi"
+      ],
+      "notas_fundo": [
+        "Pralinê",
+        "Ambroxan",
+        "Almíscar",
+        "Madeira Guaiaco"
+      ],
+      "fixacao": "8-12h",
+      "silagem": "Forte",
+      "descricao": "Amadeirado gourmand doce e especiado: abertura canelada/cítrica, coração de baunilha bourbon e secagem cremosa de pralinê, madeira e almíscar. Reconhecido como alternativa acessível ao Althaïr da Parfums de Marly, com excelente fixação e projeção. Recomendado para noites e clima frio.",
+      "quando_usar": "Noite e clima frio. Sedutor e marcante: ótimo para encontros, festas e ocasiões especiais. Uso diurno só com moderação."
+    },
+    "MAAHIR HONOR": {
+      "nome_oficial": "Maahir Honor (grafia oficial do site da Lattafa: Maahir Honour)",
+      "marca": "Lattafa",
+      "genero": "Unissex",
+      "familia": "Citrus Aromatic (Agrumado Aromático)",
+      "inspirado_em": "",
+      "concentracao": "Eau de Parfum",
+      "volume": "100ml",
+      "ano": "2025",
+      "notas_saida": [
+        "Hortelã",
+        "Limão",
+        "Bergamota",
+        "Tomilho"
+      ],
+      "notas_coracao": [
+        "Alecrim",
+        "Lavanda",
+        "Jasmim",
+        "Flor de Moringa"
+      ],
+      "notas_fundo": [
+        "Almíscar",
+        "Cedro",
+        "Âmbar"
+      ],
+      "fixacao": "4-7h",
+      "silagem": "Moderada",
+      "descricao": "Abertura vibrante e refrescante de bergamota e limão com hortelã fresca e tomilho herbal; coração aromático de lavanda, alecrim e toque floral; secagem suave de almíscar, cedro e âmbar. Perfil citrato-herbal fresco, do perfumista Julien Rasquinet.",
+      "quando_usar": "Clima quente a ameno, uso diurno; ótimo para trabalho, uso diário e encontros casuais."
+    },
+    "MAAHIR LEGACY": {
+      "nome_oficial": "Maahir Legacy",
+      "marca": "Lattafa Perfumes",
+      "genero": "Unissex",
+      "familia": "Aromático Fougère Fresco",
+      "inspirado_em": "Parfums de Marly Sedley",
+      "concentracao": "Eau de Parfum",
+      "volume": "100ml",
+      "ano": "2022",
+      "notas_saida": [
+        "Lima",
+        "Hortelã",
+        "Toranja",
+        "Lavanda",
+        "Abacaxi"
+      ],
+      "notas_coracao": [
+        "Pimenta-preta",
+        "Alecrim",
+        "Bagas de Zimbro",
+        "Gerânio",
+        "Olíbano"
+      ],
+      "notas_fundo": [
+        "Ambroxan",
+        "Vetiver",
+        "Musgo de Carvalho",
+        "Cashmeran",
+        "Fava Tonka"
+      ],
+      "fixacao": "4-6h",
+      "silagem": "Moderada",
+      "descricao": "Fougere fresco e cítrico inspirado no Parfums de Marly Sedley, com abertura de lima 'tipo Sprite' e secagem amadeirada, mosqueada e com ambroxan, lembrando espuma de barbear moderna.",
+      "quando_usar": "Perfeito para primavera e verão, uso diurno, trabalho e clima quente; fecha bem do dia ao começo da noite."
+    },
+    "MASHIMALLOW BLUSH": {
+      "nome_oficial": "Marshmallow Blush",
+      "marca": "Paris Corner",
+      "genero": "Compartilhável (Feminino predominante)",
+      "familia": "Floral Frutado Gourmand",
+      "inspirado_em": "Yum Boujee Marshmallow 81 (Kayali)",
+      "concentracao": "Eau de Parfum",
+      "volume": "100 ml",
+      "ano": "2025",
+      "notas_saida": [
+        "Morango",
+        "Framboesa",
+        "Limão"
+      ],
+      "notas_coracao": [
+        "Ambroxan",
+        "Flor de Laranjeira"
+      ],
+      "notas_fundo": [
+        "Marshmallow",
+        "Almíscar"
+      ],
+      "fixacao": "6-8 horas",
+      "silagem": "Suave",
+      "descricao": "Gourmand doce e nostálgico de morango, framboesa e marshmallow cremoso, com almíscar limpo ao fundo, remetendo a balas frutadas da infância.",
+      "quando_usar": "Ótimo para uso diário casual, encontros e clima ameno/frio; doce e acolhedor, ideal para quem gosta de fragrâncias cremosas. Evitar calor extremo."
+    },
+    "MUSAMAM BLACK": {
+      "nome_oficial": "Musamam Black Intense",
+      "marca": "Lattafa",
+      "genero": "Unissex (viés masculino)",
+      "familia": "Woody Aromatic",
+      "inspirado_em": "",
+      "concentracao": "Eau de Parfum",
+      "volume": "100ml",
+      "ano": "2025",
+      "notas_saida": [
+        "Lavanda",
+        "Noz-moscada",
+        "Sálvia",
+        "Bergamota"
+      ],
+      "notas_coracao": [
+        "Cedro",
+        "Gerânio",
+        "Rosyfolia",
+        "Mahonial"
+      ],
+      "notas_fundo": [
+        "Cocoapulse",
+        "Fava Tonka",
+        "Madeira de Bordo",
+        "Ambrofix",
+        "Patchouli"
+      ],
+      "fixacao": "8-10h",
+      "silagem": "Forte",
+      "descricao": "Produto verificado: Musamam Black Intense da Lattafa (2025). Amadeirado-aromático intenso, de abertura barbershop a seco gourmand de bordo e chocolate.",
+      "quando_usar": "Noite e clima frio; ocasiões que exigem presença, projeção forte e longa duração."
+    },
+    "MUSAMAM BRANCO INTENSE": {
+      "nome_oficial": "Musamam White Intense",
+      "marca": "Lattafa",
+      "genero": "Unissex (Compartilhável)",
+      "familia": "Floral Oriental",
+      "inspirado_em": "",
+      "concentracao": "Eau de Parfum",
+      "volume": "100 ml",
+      "ano": "2023",
+      "notas_saida": [
+        "Especiarias",
+        "Bergamota",
+        "Laranja"
+      ],
+      "notas_coracao": [
+        "Coco",
+        "Ylang Ylang",
+        "Ambroxan",
+        "Mahonial"
+      ],
+      "notas_fundo": [
+        "Sândalo",
+        "Almíscar",
+        "Benjoim"
+      ],
+      "fixacao": "8-10 horas",
+      "silagem": "Moderada",
+      "descricao": "Floral oriental cremoso: saída cítrica e picante, coração de coco, ylang ylang e ambroxan e base amadeirada de sândalo, almíscar e benjoim, com perfil elegante e sofisticado.",
+      "quando_usar": "Perfeito para clima quente e verão, uso diário e ocasiões especiais; versátil do dia à noite, com sofisticação sem ser invasivo."
+    },
+    "OPERA ROUGE": {
+      "nome_oficial": "Opera Rouge",
+      "marca": "Maison Alhambra (Lattafa)",
+      "genero": "Unissex",
+      "familia": "Oriental Floral",
+      "inspirado_em": "",
+      "concentracao": "Eau de Parfum",
+      "volume": "100ml",
+      "ano": "2025",
+      "notas_saida": [
+        "Cereja",
+        "Tangerina"
+      ],
+      "notas_coracao": [
+        "Chá de Jasmim",
+        "Flor de Laranjeira"
+      ],
+      "notas_fundo": [
+        "Baunilha",
+        "Café",
+        "Patchouli"
+      ],
+      "fixacao": "4h",
+      "silagem": "Moderada",
+      "descricao": "Oriental floral unissex da Maison Alhambra (2025) com abertura de cereja e tangerina; coração de chá de jasmim e flor de laranjeira; base de baunilha, café e patchouli. A descrição do vendedor (rosas, especiarias, âmbar, almíscar) não consta nas notas oficiais.",
+      "quando_usar": "Ótimo para clima ameno a frio, noites e encontros; também funciona em primavera/verão em ambientes controlados."
+    },
+    "OPULENT DUBAI": {
+      "nome_oficial": "Opulent Dubai",
+      "marca": "Lattafa Perfumes",
+      "genero": "Unissex",
+      "familia": "Oriental Floral",
+      "inspirado_em": "Sospiro Vibrato (comparação comum, não clone confirmado)",
+      "concentracao": "Eau de Parfum",
+      "volume": "100ml",
+      "ano": "2025",
+      "notas_saida": [
+        "Manga",
+        "Toranja",
+        "Limão",
+        "Gengibre"
+      ],
+      "notas_coracao": [
+        "Jasmim",
+        "Cedro",
+        "Violeta"
+      ],
+      "notas_fundo": [
+        "Notas Amadeiradas",
+        "Âmbar-gris",
+        "Musgo de Carvalho",
+        "Benjoim"
+      ],
+      "fixacao": "6h",
+      "silagem": "Moderada",
+      "descricao": "Oriental floral unissex da Lattafa (2025) com abertura tropical de manga, toranja, limão e gengibre; coração de jasmim, cedro e violeta; base de madeiras, âmbar-gris, musgo de carvalho e benjoim. A descrição do vendedor (especiarias e almíscar) não consta nas notas oficiais.",
+      "quando_usar": "Versátil para clima quente, dia e noite; bom para uso diário e ocasiões casuais, sem enjoar mesmo no calor."
+    },
+    "ORIENTICA VELVET GOLD": {
+      "nome_oficial": "Velvet Gold",
+      "marca": "Orientica Premium (Luxury Collection)",
+      "genero": "Feminino",
+      "familia": "Floral",
+      "inspirado_em": "Gentle Fluidity Gold (Maison Francis Kurkdjian)",
+      "concentracao": "Eau de Parfum",
+      "volume": "80ml",
+      "ano": "2022",
+      "notas_saida": [
+        "Caramelo",
+        "Violeta",
+        "Pimenta Rosa",
+        "Bergamota"
+      ],
+      "notas_coracao": [
+        "Notas Pulverosas",
+        "Rosa",
+        "Patchouli"
+      ],
+      "notas_fundo": [
+        "Baunilha",
+        "Almíscar",
+        "Notas Animais"
+      ],
+      "fixacao": "8-12h",
+      "silagem": "Intensa",
+      "descricao": "Floral gourmand pulveroso com caramelo, rosa e patchouli, apontado por críticos como réplica de ~99% do Gentle Fluidity Gold da MFK. Longevidade e projeção notavelmente fortes.",
+      "quando_usar": "Clima frio/ameno; ocasiões especiais e à noite, ou uso diário mais sofisticado."
+    },
+    "PHILOS  SHINE": {
+      "nome_oficial": "Philos Shine",
+      "marca": "Maison Alhambra",
+      "genero": "Feminino",
+      "familia": "Floral Frutado",
+      "inspirado_em": "Sospiro Maraschino",
+      "concentracao": "Eau de Parfum",
+      "volume": "100ml",
+      "ano": "2023",
+      "notas_saida": [
+        "Cereja",
+        "Bergamota",
+        "Limão"
+      ],
+      "notas_coracao": [
+        "Rosa",
+        "Jasmim",
+        "Amêndoa"
+      ],
+      "notas_fundo": [
+        "Cedro",
+        "Almíscar",
+        "Baunilha"
+      ],
+      "fixacao": "6-8h",
+      "silagem": "Moderada",
+      "descricao": "Inspirado no Sospiro Maraschino: abertura frutada e luminosa de cereja, bergamota e limão, coração floral de rosa e jasmim com amêndoa e base cremosa de cedro, almíscar e baunilha.",
+      "quando_usar": "Perfume de dia: trabalho, uso diário e momentos casuais; primavera e verão, clima quente a ameno."
+    },
+    "PHILOS CENTRO": {
+      "nome_oficial": "Philos Centro",
+      "marca": "Maison Alhambra (grupo Lattafa)",
+      "genero": "Unissex",
+      "familia": "Floral Chipre",
+      "inspirado_em": "Xerjoff Accento",
+      "concentracao": "Eau de Parfum",
+      "volume": "100ml",
+      "ano": "2023",
+      "notas_saida": [
+        "Jacinto",
+        "Abacaxi"
+      ],
+      "notas_coracao": [
+        "Íris",
+        "Pimenta Rosa",
+        "Jasmim"
+      ],
+      "notas_fundo": [
+        "Almíscar",
+        "Âmbar",
+        "Baunilha",
+        "Patchouli",
+        "Vetiver"
+      ],
+      "fixacao": "6h",
+      "silagem": "Moderada",
+      "descricao": "Clone do Xerjoff Accento: floral chipre com abertura de abacaxi e jacinto, coração atalcado de íris e secagem almiscarada-ambreada. A descrição do vendedor (especiarias/âmbar) não corresponde à pirâmide registrada.",
+      "quando_usar": "Fragrância limpa e versátil, segura para o trabalho e uso diário; brilha em clima ameno, embora a fixação fique na casa de 4-6 horas."
+    },
+    "PHILOS PURA": {
+      "nome_oficial": "Philos Pura",
+      "marca": "Maison Alhambra (grupo Lattafa)",
+      "genero": "Unissex",
+      "familia": "Âmbar Frutado",
+      "inspirado_em": "Xerjoff Erba Pura",
+      "concentracao": "Eau de Parfum",
+      "volume": "100ml",
+      "ano": "2023",
+      "notas_saida": [
+        "Laranja",
+        "Bergamota",
+        "Limão"
+      ],
+      "notas_coracao": [
+        "Notas Frutadas"
+      ],
+      "notas_fundo": [
+        "Almíscar Branco",
+        "Âmbar",
+        "Baunilha de Madagascar"
+      ],
+      "fixacao": "8h",
+      "silagem": "Intensa",
+      "descricao": "Clone do Erba Pura: cítrico frutado doce que evolui para um fundo cremoso de almíscar branco, âmbar e baunilha. A descrição do vendedor (flores limpas, âmbar suave, almíscar) aproxima-se do perfil ambarado-muscado da secagem.",
+      "quando_usar": "Bom para clima quente a ameno, dia e noite; projetor forte, ideal para festas e encontros, com generoso rastro."
+    },
+    "PRIDE QEEN OF ARABIA": {
+      "nome_oficial": "Pride Queen of Arabia",
+      "marca": "Lattafa Pride",
+      "genero": "Feminino / Unissex",
+      "familia": "Oriental Floral",
+      "inspirado_em": "Vanilla Powder (Matière Première)",
+      "concentracao": "Eau de Parfum",
+      "volume": "100ml",
+      "ano": "2025",
+      "notas_saida": [
+        "Coco",
+        "Sal"
+      ],
+      "notas_coracao": [
+        "Heliotrópio",
+        "Sândalo"
+      ],
+      "notas_fundo": [
+        "Baunilha",
+        "Âmbar Seco"
+      ],
+      "fixacao": "8-10h",
+      "silagem": "Moderada",
+      "descricao": "Grafia correta: 'Pride Queen of Arabia' (sub-linha Pride da Lattafa). Coco cremoso com sal marinho, heliotrópio pulveroso e base de baunilha e âmbar, muito próxima ao Vanilla Powder da Matière Première.",
+      "quando_usar": "Clima quente, primavera/verão; uso diário, eventos ao ar livre e encontros."
+    },
+    "QAAED": {
+      "nome_oficial": "Qaa'ed",
+      "marca": "Lattafa Perfumes",
+      "genero": "Unissex",
+      "familia": "Oriental",
+      "inspirado_em": "",
+      "concentracao": "Eau de Parfum",
+      "volume": "100ml",
+      "ano": "2018",
+      "notas_saida": [
+        "Canela",
+        "Cardamomo",
+        "Bergamota"
+      ],
+      "notas_coracao": [
+        "Açafrão",
+        "Sândalo",
+        "Cedro",
+        "Cravo"
+      ],
+      "notas_fundo": [
+        "Agarwood (Oud)",
+        "Couro",
+        "Baunilha",
+        "Âmbar"
+      ],
+      "fixacao": "8-10h",
+      "silagem": "Forte",
+      "descricao": "Oriental unissex da Lattafa (2018) com canela, cardamomo e bergamota na saída; coração de açafrão, sândalo, cedro e cravo; base de oud, couro, baunilha e âmbar. Confirmam-se as especiarias nobres e madeiras; almíscar não consta nas notas oficiais.",
+      "quando_usar": "Melhor em clima frio, à noite; ótimo para festas, encontros e ocasiões especiais com projeção marcante."
+    },
+    "QAED AL FURSAN": {
+      "nome_oficial": "Qaed Al Fursan",
+      "marca": "Lattafa Perfumes",
+      "genero": "Unissex",
+      "familia": "Oriental Amadeirado",
+      "inspirado_em": "DNA de abacaxi/açafrão comparado ao Creed Aventus (não é clone oficial); também associado a Nishane Hacivat",
+      "concentracao": "Eau de Parfum",
+      "volume": "100ml",
+      "ano": "2016",
+      "notas_saida": [
+        "Abacaxi",
+        "Açafrão"
+      ],
+      "notas_coracao": [
+        "Abeto Bálsamo",
+        "Jasmim"
+      ],
+      "notas_fundo": [
+        "Cedro",
+        "Âmbar",
+        "Agarwood (Oud)"
+      ],
+      "fixacao": "6-8h",
+      "silagem": "Forte",
+      "descricao": "Explosão suculenta de abacaxi com açafrão levemente metálico, coração verde-balsâmico de abeto e jasmim e base quente de cedro, âmbar e oud limpo — sem o aspecto fumacento do Aventus. Doçura viscosa, linear e bem projetada.",
+      "quando_usar": "Excelente no calor e em clima ameno, dia ou noite; ótimo para uso diário, churrascos, passeios ao ar livre e encontros casuais, além de servir de base para camadas (layering)."
+    },
+    "ROYAL AMBER": {
+      "nome_oficial": "Royal Amber",
+      "marca": "Orientica Premium (Luxury Collection)",
+      "genero": "Unissex",
+      "familia": "Oriental Vanilla",
+      "inspirado_em": "Xerjoff Erba Pura",
+      "concentracao": "Eau de Parfum",
+      "volume": "80ml",
+      "ano": "2021",
+      "notas_saida": [
+        "Bergamota",
+        "Notas Verdes"
+      ],
+      "notas_coracao": [
+        "Melão",
+        "Abacaxi",
+        "Âmbar",
+        "Notas Doces"
+      ],
+      "notas_fundo": [
+        "Almíscar",
+        "Notas Amadeiradas",
+        "Baunilha"
+      ],
+      "fixacao": "8-12h",
+      "silagem": "Intensa",
+      "descricao": "Âmbar frutado, cremoso e adocicado no estilo Erba Pura, com abacaxi e melão sobre base de baunilha e almíscar. Produto verificado: Royal Amber da Orientica Premium, marca irmã da Al Haramain.",
+      "quando_usar": "Clima quente a ameno, do dia à noite; ótimo para uso diário e ocasiões descontraídas, com projeção marcante."
+    },
+    "ROYAL AMBER ROUGE": {
+      "nome_oficial": "Amber Rouge",
+      "marca": "Orientica Premium (Luxury Collection)",
+      "genero": "Unissex",
+      "familia": "Woody Spicy",
+      "inspirado_em": "Baccarat Rouge 540 (Maison Francis Kurkdjian)",
+      "concentracao": "Eau de Parfum",
+      "volume": "80ml",
+      "ano": "2021",
+      "notas_saida": [
+        "Açafrão",
+        "Jasmim"
+      ],
+      "notas_coracao": [
+        "Amberwood",
+        "Âmbar Cinzento"
+      ],
+      "notas_fundo": [
+        "Cedro",
+        "Resina de Abeto"
+      ],
+      "fixacao": "3-6h",
+      "silagem": "Forte",
+      "descricao": "Açafrão, âmbar e madeiras ambaradas — reconhecido como um dos melhores clones do Baccarat Rouge 540. Produto verificado: Amber Rouge da Orientica Premium (provável confusão com o nome Royal Amber).",
+      "quando_usar": "Noite e clima frio/ameno; ocasiões formais, encontros e eventos especiais."
+    },
+    "SABAH": {
+      "nome_oficial": "Sabah Al Ward (provável referência; 'Sabah' isolado não consta em bases internacionais)",
+      "marca": "Al Wataniah (provável)",
+      "genero": "Feminino",
+      "familia": "Floral Oriental",
+      "inspirado_em": "",
+      "concentracao": "Eau de Parfum",
+      "volume": "100ml",
+      "ano": "",
+      "notas_saida": [
+        "Mandarina",
+        "Pimenta Rosa"
+      ],
+      "notas_coracao": [
+        "Cacau",
+        "Flor de Laranjeira",
+        "Jasmim Sambac"
+      ],
+      "notas_fundo": [
+        "Baunilha",
+        "Fava Tonka",
+        "Patchouli"
+      ],
+      "fixacao": "",
+      "silagem": "Forte",
+      "descricao": "[nome não localizado em bases internacionais como 'Sabah' isolado; provável referência ao Sabah Al Ward da Al Wataniah] Floral oriental feminino com mandarina e pimenta rosa na saída, coração de cacau, flor de laranjeira e jasmim sambac e fundo de baunilha, fava tonka e patchouli. As notas de bergamota, âmbar e almíscar citadas pelo vendedor não constam na pirâmide oficial.",
+      "quando_usar": "Clima ameno a frio; adequado para o dia (o nome significa 'manhã') e para eventos à tarde, com perfil romântico e feminino."
+    },
+    "SAKENA": {
+      "nome_oficial": "Sakena (não localizado; grafia provável)",
+      "marca": "",
+      "genero": "Feminino",
+      "familia": "Floral Ambarada",
+      "inspirado_em": "",
+      "concentracao": "Eau de Parfum",
+      "volume": "100ml",
+      "ano": "",
+      "notas_saida": [
+        "Flores de Cerejeira"
+      ],
+      "notas_coracao": [
+        "Almíscar Suave"
+      ],
+      "notas_fundo": [
+        "Baunilha",
+        "Âmbar"
+      ],
+      "fixacao": "",
+      "silagem": "",
+      "descricao": "[não localizado em bases internacionais] Não há registro confiável de um perfume 'Sakena' em Fragrantica/Parfumo. Dados preenchidos com base na descrição do vendedor: floral feminino de flores de cerejeira sobre almíscar suave, baunilha e âmbar. (Atenção: 'Sakeena' da Lattafa existe, mas é floral-frutado gourmand, sem cerejeira — provavelmente outro produto.)",
+      "quando_usar": "Pelo perfil descrito, é um floral doce e suave para uso diurno e cotidiano, em clima ameno; boa aposta para uso diário feminino."
+    },
+    "SALVO ELIXIR": {
+      "nome_oficial": "Salvo Elixir",
+      "marca": "Maison Alhambra (grupo Lattafa)",
+      "genero": "Masculino",
+      "familia": "Fougère Oriental",
+      "inspirado_em": "Dior Sauvage Elixir",
+      "concentracao": "Eau de Parfum",
+      "volume": "100ml",
+      "ano": "2023",
+      "notas_saida": [
+        "Pimenta Preta",
+        "Tabaco",
+        "Abacaxi"
+      ],
+      "notas_coracao": [
+        "Patchouli",
+        "Íris",
+        "Café"
+      ],
+      "notas_fundo": [
+        "Notas Amadeiradas",
+        "Âmbar",
+        "Baunilha",
+        "Benjoim",
+        "Ládano"
+      ],
+      "fixacao": "12h",
+      "silagem": "Intensa",
+      "descricao": "Clone do Dior Sauvage Elixir: especiarias picantes (pimenta preta), tabaco e abacaxi no topo, coração de patchouli, íris e café, e fundo ambarado-amadeirado com benjoim e ládano. Batente pesado, com fixação acima de 12 horas.",
+      "quando_usar": "Perfume potente para clima frio, noite, eventos e ocasiões especiais; evitar calor e excesso de sprays, já que o rastro é intenso."
+    },
+    "SO CANDID POUR HOMME": {
+      "nome_oficial": "So Candid Pour Homme (Maison Alhambra) — reformulação/renomeação do Candid Pour Homme (2024)",
+      "marca": "Maison Alhambra",
+      "genero": "Masculino",
+      "familia": "Fougère Oriental Doce",
+      "inspirado_em": "Jean Paul Gaultier Scandal Pour Homme",
+      "concentracao": "Eau de Parfum",
+      "volume": "100ml",
+      "ano": "2024",
+      "notas_saida": [
+        "Mandarina",
+        "Sálvia Esclaréia"
+      ],
+      "notas_coracao": [
+        "Caramelo",
+        "Fava Tonka"
+      ],
+      "notas_fundo": [
+        "Vetiver"
+      ],
+      "fixacao": "8-10h",
+      "silagem": "Intensa",
+      "descricao": "Oriental fougère doce inspirado no Scandal Pour Homme: abre cítrico-aromático, evolui para caramelo envolvente com fava tonka e fecha em vetiver. A descrição do vendedor (flores suaves, baunilha cremosa) não corresponde às notas reais.",
+      "quando_usar": "Ideal para climas frios e amenos e uso noturno, em encontros e festas; a fixação e a projeção fortes garantem presença."
+    },
+    "SO CANDID ROUGE": {
+      "nome_oficial": "So Candid Rouge",
+      "marca": "Maison Alhambra (grupo Lattafa)",
+      "genero": "Feminino",
+      "familia": "Floral Gourmand",
+      "inspirado_em": "Jean Paul Gaultier So Scandal!",
+      "concentracao": "Eau de Parfum",
+      "volume": "100ml",
+      "ano": "2024",
+      "notas_saida": [
+        "Framboesa",
+        "Tangerina",
+        "Pimenta Rosa"
+      ],
+      "notas_coracao": [
+        "Rosa",
+        "Jasmim",
+        "Caramelo"
+      ],
+      "notas_fundo": [
+        "Baunilha",
+        "Almíscar",
+        "Patchouli"
+      ],
+      "fixacao": "7h",
+      "silagem": "Intensa",
+      "descricao": "Variação 'Rouge' da linha So Candid, inspirada no So Scandal! da JPG. Frutas vermelhas e pimenta rosa no topo, coração floral com caramelo e fundo doce de baunilha, almíscar e patchouli.",
+      "quando_usar": "Dulçor gourmand com presença, ótimo para noite, festas e encontros; clima frio a ameno, evitando calor extremo."
+    },
+    "THE KINGDOM": {
+      "nome_oficial": "The Kingdom For Men",
+      "marca": "Lattafa Perfumes",
+      "genero": "Masculino",
+      "familia": "Aromático Adocicado",
+      "inspirado_em": "Jean Paul Gaultier Le Male Elixir",
+      "concentracao": "Eau de Parfum",
+      "volume": "100ml",
+      "ano": "2024",
+      "notas_saida": [
+        "Hortelã",
+        "Lavanda",
+        "Sálvia"
+      ],
+      "notas_coracao": [
+        "Baunilha",
+        "Tabaco",
+        "Flor de Laranjeira"
+      ],
+      "notas_fundo": [
+        "Fava Tonka",
+        "Benjoim",
+        "Ládano"
+      ],
+      "fixacao": "8-10h",
+      "silagem": "Forte",
+      "descricao": "Aromático e adocicado, é o dupe do Jean Paul Gaultier Le Male Elixir: abertura fresca de lavanda, menta e sálvia, coração quente de tabaco e baunilha e base resinosa de fava tonka, benjoim e ládano.",
+      "quando_usar": "Ideal para noite, encontros, festas e clima frio (outono/inverno); a projeção forte pede cautela no uso diurno ou no trabalho."
+    },
+    "THE KINGDOM FEMININO": {
+      "nome_oficial": "The Kingdom For Women (também vendido como Kingdom Women)",
+      "marca": "Lattafa Perfumes",
+      "genero": "Feminino",
+      "familia": "Floral Frutado Gourmand",
+      "inspirado_em": "",
+      "concentracao": "Eau de Parfum",
+      "volume": "100ml",
+      "ano": "2024",
+      "notas_saida": [
+        "Pera",
+        "Peônia",
+        "Groselha-preta (Cassis)"
+      ],
+      "notas_coracao": [
+        "Pralinê",
+        "Fava Tonka",
+        "Jasmim"
+      ],
+      "notas_fundo": [
+        "Baunilha",
+        "Almíscar",
+        "Sândalo",
+        "Âmbar"
+      ],
+      "fixacao": "6-8h",
+      "silagem": "Moderada",
+      "descricao": "Floral frutado gourmand, a versão feminina de The Kingdom: abertura frutada de pera, peônia e cassis, coração doce de pralinê e jasmim e base quente de baunilha, âmbar, sândalo e almíscar.",
+      "quando_usar": "Versátil, funciona de dia (trabalho, uso diário) e à noite em encontros; clima ameno a frio, principalmente outono e inverno."
+    },
+    "TOFY CARAMEL": {
+      "nome_oficial": "Tofy Caramel",
+      "marca": "Fragrance World",
+      "genero": "Feminino/Unissex",
+      "familia": "Chipre Oriental (toque gourmand)",
+      "inspirado_em": "",
+      "concentracao": "Eau de Parfum",
+      "volume": "100ml",
+      "ano": "2023",
+      "notas_saida": [
+        "Jasmim Francês",
+        "Trufa Negra",
+        "Ylang-Ylang",
+        "Groselha Negra",
+        "Cítricos"
+      ],
+      "notas_coracao": [
+        "Acordes Florais",
+        "Acordes Frutados",
+        "Madeira de Lótus"
+      ],
+      "notas_fundo": [
+        "Patchouli",
+        "Sândalo",
+        "Chocolate Amargo",
+        "Incenso",
+        "Âmbar",
+        "Vetiver",
+        "Baunilha",
+        "Bálsamo"
+      ],
+      "fixacao": "6-8h",
+      "silagem": "Forte",
+      "descricao": "Chipre oriental doce da Fragrance World, com abertura floral-cítrica e de trufa, coração frutado e base cremosa e envolvente de chocolate, baunilha, âmbar e bálsamo. O vendedor descreve apenas o lado gourmand (caramelo/baunilha/âmbar/almíscar); a marca divulga composição mais complexa.",
+      "quando_usar": "Doce e aconchegante, indicado para noite e clima frio a ameno; ótimo para encontros, festas e uso diário no inverno — evitar dias muito quentes."
+    },
+    "TRUE WORD": {
+      "nome_oficial": "True Word",
+      "marca": "Maison Alhambra (Lattafa)",
+      "genero": "Unissex",
+      "familia": "Amadeirado Oriental",
+      "inspirado_em": "",
+      "concentracao": "Eau de Parfum",
+      "volume": "100ml",
+      "ano": "2023",
+      "notas_saida": [
+        "Cardamomo",
+        "Abacaxi"
+      ],
+      "notas_coracao": [
+        "Sálvia",
+        "Baunilha",
+        "Incenso"
+      ],
+      "notas_fundo": [
+        "Patchouli",
+        "Fava Tonka",
+        "Sândalo"
+      ],
+      "fixacao": "5-6h",
+      "silagem": "Moderada",
+      "descricao": "Amadeirado oriental unissex da Maison Alhambra com abertura de cardamomo e abacaxi; coração de sálvia, baunilha e incenso; base de patchouli, fava tonka e sândalo. A descrição do vendedor (âmbar e almíscar) não consta nas notas oficiais.",
+      "quando_usar": "Indicado para clima ameno a frio e uso noturno; também funciona para o dia a dia e ocasiões casuais."
+    },
+    "VENENO BIANCO": {
+      "nome_oficial": "Veneno Bianco",
+      "marca": "French Avenue (Fragrance World)",
+      "genero": "Compartilhável (Unissex)",
+      "familia": "Floral",
+      "inspirado_em": "Sunkissed Goddess (Lancôme)",
+      "concentracao": "Eau de Parfum",
+      "volume": "100 ml",
+      "ano": "2025",
+      "notas_saida": [
+        "Néroli",
+        "Bergamota",
+        "Leite"
+      ],
+      "notas_coracao": [
+        "Flores Brancas",
+        "Tiaré",
+        "Ylang Ylang"
+      ],
+      "notas_fundo": [
+        "Coco",
+        "Baunilha",
+        "Ládano",
+        "Madeira Guaiac"
+      ],
+      "fixacao": "7-10 horas",
+      "silagem": "Moderada",
+      "descricao": "Perfume floral cremoso e solar: abre cítrico e lácteo com néroli e bergamota, desabrocha em flores brancas e tiaré e seca em base de coco, baunilha, ládano e madeira guaiac, como pele aquecida pelo sol.",
+      "quando_usar": "Ideal para clima quente e ensolarado (primavera/verão), uso diurno, passeios, praia e momentos descontraídos, mas também funciona à noite."
+    },
+    "VICTOR HOME": {
+      "nome_oficial": "Victor Homme (provável referência; 'Victor Home' não consta em bases internacionais)",
+      "marca": "Arqus (provável)",
+      "genero": "Masculino",
+      "familia": "Amadeirado Especiado",
+      "inspirado_em": "",
+      "concentracao": "Eau de Parfum",
+      "volume": "100ml",
+      "ano": "",
+      "notas_saida": [
+        "Especiarias",
+        "Bergamota"
+      ],
+      "notas_coracao": [
+        "Lavanda",
+        "Acorde de Couro"
+      ],
+      "notas_fundo": [
+        "Sândalo",
+        "Patchouli",
+        "Âmbar"
+      ],
+      "fixacao": "",
+      "silagem": "",
+      "descricao": "[produto provavelmente o Arqus Victor Homme; não listado em Fragrantica/Parfumo, notas conforme descrição de varejista] Amadeirado-especiado com abertura de especiarias e bergamota, coração de lavanda e couro e fundo de sândalo, patchouli e âmbar. 'Baunilha' e 'almíscar' citados pelo vendedor não constam na composição verificada.",
+      "quando_usar": "Clima frio e noite; indicado para encontros e eventos, e também para o dia em ambientes informais, por ser caloroso e elegante."
+    },
+    "VULCAN BAIE": {
+      "nome_oficial": "Vulcan Baie",
+      "marca": "French Avenue",
+      "genero": "Unissex (tende ao feminino)",
+      "familia": "Floral Frutado",
+      "inspirado_em": "Stéphane Humbert Lucas 777 Pink Boa",
+      "concentracao": "Eau de Parfum",
+      "volume": "100ml",
+      "ano": "2025",
+      "notas_saida": [
+        "Amora",
+        "Cassis",
+        "Alecrim",
+        "Bergamota"
+      ],
+      "notas_coracao": [
+        "Framboesa",
+        "Vodka",
+        "Manjericão",
+        "Lírio do Vale"
+      ],
+      "notas_fundo": [
+        "Morango",
+        "Almíscar",
+        "Pêssego",
+        "Âmbar",
+        "Sândalo",
+        "Patchouli",
+        "Incenso"
+      ],
+      "fixacao": "5-7h",
+      "silagem": "Moderada",
+      "descricao": "Abertura de limonada rosa espumante: frutas vermelhas (framboesa, amora, cassis) com bergamota e alecrim; coração de framboesa com vodka e toques florais; secagem frutada e quente com almíscar, sândalo, âmbar e incenso. Réplica do DNA frutado 'pink lemonade com vodka' de Pink Boa.",
+      "quando_usar": "Clima quente, verão e primavera; uso diurno e eventos sociais descontraídos, passeios e encontros."
+    },
+    "VULCAN BLACK": {
+      "nome_oficial": "Vulcan Black (também chamado Vulcan Black Friday)",
+      "marca": "French Avenue",
+      "genero": "Masculino",
+      "familia": "Couro (couro-especiado)",
+      "inspirado_em": "Xerjoff Deified (Tony Iommi)",
+      "concentracao": "Extrait de Parfum",
+      "volume": "100ml",
+      "ano": "2025",
+      "notas_saida": [
+        "Açafrão",
+        "Maçã",
+        "Canela"
+      ],
+      "notas_coracao": [
+        "Couro",
+        "Rosa"
+      ],
+      "notas_fundo": [
+        "Patchouli",
+        "Musgo",
+        "Almíscar",
+        "Papiro"
+      ],
+      "fixacao": "6-9h",
+      "silagem": "Forte",
+      "descricao": "Abre especiado com açafrão, canela e maçã verde; coração de couro escuro e rosa; secagem terrosa de patchouli, musgo, papiro e almíscar. Réplica do DNA couro-rosado escuro de Xerjoff Deified, bem potente.",
+      "quando_usar": "Clima frio, outono e inverno, noite; festas, encontros e eventos especiais. Não é perfume de trabalho/escritório."
+    },
+    "VULCAN FEU": {
+      "nome_oficial": "Vulcan Feu",
+      "marca": "French Avenue (Fragrance World)",
+      "genero": "Compartilhável (Unissex)",
+      "familia": "Floral Frutado",
+      "inspirado_em": "God of Fire (Stéphane Humbert Lucas 777)",
+      "concentracao": "Eau de Parfum",
+      "volume": "100 ml",
+      "ano": "2025",
+      "notas_saida": [
+        "Manga",
+        "Limão",
+        "Gengibre",
+        "Ruibarbo"
+      ],
+      "notas_coracao": [
+        "Pimenta Rosa",
+        "Jasmim",
+        "Violeta",
+        "Pralinê"
+      ],
+      "notas_fundo": [
+        "Fava Tonka",
+        "Cedro",
+        "Âmbar Cinzento",
+        "Musgo"
+      ],
+      "fixacao": "6-10 horas",
+      "silagem": "Forte",
+      "descricao": "Gourmand frutado dominado por manga madura e suculenta com frescor de limão e gengibre, coração floral adocicado com pralinê e base ambarada amadeirada.",
+      "quando_usar": "Ótimo para clima ameno a quente e uso diário; projeta forte, então evite excesso de borrifadas. Funciona bem em encontros e ocasiões casuais."
+    },
+    "WATANI PURPLE": {
+      "nome_oficial": "Watani Purple (Al Wataniah)",
+      "marca": "Al Wataniah",
+      "genero": "Feminino",
+      "familia": "Aromática Frutada",
+      "inspirado_em": "",
+      "concentracao": "Eau de Parfum",
+      "volume": "100ml",
+      "ano": "2022",
+      "notas_saida": [
+        "Frutas Tropicais",
+        "Notas Herbais"
+      ],
+      "notas_coracao": [
+        "Caramelo",
+        "Notas Florais",
+        "Frutas"
+      ],
+      "notas_fundo": [
+        "Almíscar",
+        "Âmbar",
+        "Notas Doces"
+      ],
+      "fixacao": "6h",
+      "silagem": "Moderada",
+      "descricao": "Perfume feminino da casa saudita Al Wataniah, lançado em 2022. Abertura tropical-herbácea, coração doce de caramelo e florais, base de almíscar, âmbar e notas doces; a descrição do vendedor (frutas escuras, especiarias orientais) diverge da pirâmide oficial.",
+      "quando_usar": "Versátil para dia e noite, ocasiões casuais e saídas; agrada mais em clima ameno a quente, leve e fácil de usar."
+    },
+    "YARA TOUS": {
+      "nome_oficial": "Yara Tous",
+      "marca": "Lattafa",
+      "genero": "Feminino",
+      "familia": "Frutal Floral (tropical, acordes gourmand e baunilha)",
+      "inspirado_em": "Paco Rabanne Fame (comparado também a Mugler Alien Goddess)",
+      "concentracao": "EDP",
+      "volume": "100ml",
+      "ano": "2023",
+      "notas_saida": [
+        "Manga",
+        "Coco",
+        "Maracujá"
+      ],
+      "notas_coracao": [
+        "Jasmim",
+        "Flor de Laranjeira",
+        "Heliotrópio"
+      ],
+      "notas_fundo": [
+        "Baunilha",
+        "Almíscar",
+        "Cashmeran"
+      ],
+      "fixacao": "~8h",
+      "silagem": "Moderada",
+      "descricao": "Flanker tropical da linha Yara. Abre com manga, coco e maracujá sobre coração floral cremoso e seca em base adocicada de baunilha, almíscar e cashmeran. A opção mais solar e frutada da coleção Yara, ideal para climas quentes.",
+      "quando_usar": "Dia, clima quente e uso diário. Solar e leve: perfeito para trabalho, passeio, praia e ocasiões casuais. Boa opção de verão."
+    },
+    "ZIMAYA HAWWA PINK": {
+      "nome_oficial": "Hawwa Pink (Zimaya)",
+      "marca": "Zimaya (grupo Afnan)",
+      "genero": "Feminino",
+      "familia": "Floral Frutado",
+      "inspirado_em": "Parfums de Marly Delina La Rosée (comparação, não clone oficial)",
+      "concentracao": "Eau de Parfum",
+      "volume": "100ml",
+      "ano": "2024",
+      "notas_saida": [
+        "Rosa",
+        "Lichia",
+        "Pera",
+        "Bergamota"
+      ],
+      "notas_coracao": [
+        "Rosa Turca",
+        "Peônia"
+      ],
+      "notas_fundo": [
+        "Almíscar Branco",
+        "Vetiver Haitiano",
+        "Notas Amadeiradas"
+      ],
+      "fixacao": "5-6h",
+      "silagem": "Moderada",
+      "descricao": "Floral frutado feminino (2024) com abertura fresca de lichia, pera, rosa e bergamota, coração rosado e fundo amadeirado-mosqueteado com vetiver, lembrando Delina La Rosée. A Zimaya pertence ao grupo Afnan (não à Lattafa).",
+      "quando_usar": "Ideal para clima quente e ameno, uso diário e encontros; feminino e leve, funciona bem de dia e de noite."
+    },
+    "ZIMAYA RABAB GEMS": {
+      "nome_oficial": "Rabab Gems (Zimaya)",
+      "marca": "Zimaya (grupo Lattafa Perfumes)",
+      "genero": "Unissex",
+      "familia": "Oriental Baunilha",
+      "inspirado_em": "",
+      "concentracao": "Eau de Parfum",
+      "volume": "100ml",
+      "ano": "2023",
+      "notas_saida": [
+        "Jacinto",
+        "Abacaxi"
+      ],
+      "notas_coracao": [
+        "Íris",
+        "Jasmim",
+        "Pimenta Rosa"
+      ],
+      "notas_fundo": [
+        "Almíscar",
+        "Baunilha",
+        "Âmbar",
+        "Vetiver",
+        "Patchouli"
+      ],
+      "fixacao": "8h",
+      "silagem": "Moderada",
+      "descricao": "Oriental baunilha lançado em 2023 pela Zimaya, sublinha do grupo Lattafa. Abre frutado (abacaxi/jacinto) e seca em um fundo doce de baunilha, âmbar e almíscar com toque amadeirado.",
+      "quando_usar": "Perfume versátil, agrada em clima ameno a frio; ótimo para o dia a dia e ocasiões casuais, funciona bem como assinatura discreta."
+    },
+    "ZIMAYA ROYAL LEATHER": {
+      "nome_oficial": "Royal Leather (Zimaya)",
+      "marca": "Zimaya (grupo Afnan)",
+      "genero": "Masculino",
+      "familia": "Couro",
+      "inspirado_em": "",
+      "concentracao": "Eau de Parfum",
+      "volume": "100ml",
+      "ano": "2023",
+      "notas_saida": [
+        "Couro",
+        "Zimbro",
+        "Mate"
+      ],
+      "notas_coracao": [
+        "Agarwood (Oud)",
+        "Âmbar",
+        "Fava Tonka"
+      ],
+      "notas_fundo": [
+        "Açafrão",
+        "Praliné",
+        "Rosa"
+      ],
+      "fixacao": "",
+      "silagem": "Suave",
+      "descricao": "Couro masculino (2023) com abertura de couro, zimbro e mate, coração âmbar-oud com fava tonka e base de açafrão, praliné e rosa. A descrição do vendedor difere parcialmente: especiarias orientais e almíscar não constam nas notas oficiais.",
+      "quando_usar": "Recomendado para clima frio e ameno, uso noturno e ocasiões formais; perfil imponente para eventos e encontros."
+    },
+    "ZIMAYA ZUKRUF": {
+      "nome_oficial": "Zukhruf (linha da Zimaya, marca do grupo ETA/Lattafa; dados da Zukhruf Pink, a original da linha)",
+      "marca": "Zimaya (grupo Lattafa)",
+      "genero": "Feminino",
+      "familia": "Doce Aveludado (gourmand leve)",
+      "inspirado_em": "Lattafa Yara (semelhante, por comparações de usuários; não é clone oficial)",
+      "concentracao": "Eau de Parfum",
+      "volume": "100ml",
+      "ano": "2023",
+      "notas_saida": [
+        "Baunilha",
+        "Heliotrópio",
+        "Orquídea"
+      ],
+      "notas_coracao": [
+        "Leite de Amêndoas",
+        "Marshmallow",
+        "Almíscar"
+      ],
+      "notas_fundo": [
+        "Baunilha",
+        "Sândalo",
+        "Âmbar"
+      ],
+      "fixacao": "6-7h",
+      "silagem": "Moderada",
+      "descricao": "Doce, aveludado e levemente atalcado, lembra o Lattafa Yara: baunilha, orquídea e heliotrópio na saída, coração cremoso de marshmallow e leite de amêndoas e fundo de sândalo e âmbar.",
+      "quando_usar": "Ótimo para uso diário e ocasiões casuais, de dia ou noite; clima ameno a frio (primavera, outono e inverno)."
+    }
+  }
+}
