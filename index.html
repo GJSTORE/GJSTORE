@@ -2886,10 +2886,12 @@
         const params = "f_auto,q_auto" + (w ? ",w_" + w : "");
         return url.replace("/upload/", "/upload/" + params + "/");
       }
-      // Openinary — já usa /t/ pra transforms, injeta params se não tiver
+      // Openinary — formato é /t/<transform>/<pasta>/<arquivo>; transform vai
+      // como segmento próprio ANTES da pasta, senão vira 404 (pasta some
+      // dentro do param de transform, ex: /t/f_auto,q_auto,gjstore/arquivo)
       if (url.includes("/t/") && !url.includes("/t/f_")) {
         const params = "f_auto,q_auto" + (w ? ",w_" + w : "");
-        return url.replace("/t/", "/t/" + params + ",");
+        return url.replace("/t/", "/t/" + params + "/");
       }
       return url;
     }
