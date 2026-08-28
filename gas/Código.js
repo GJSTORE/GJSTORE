@@ -176,6 +176,7 @@ function handleAction(p) {
       case "identificarProduto":   result = identificarProduto(p);              break;
       case "atualizarNomeProduto": result = atualizarNomeProduto(p);            break;
       case "salvarProdutosBatch":  result = salvarProdutosBatch(p);             break;
+      case "_corrigirIdsVazios":   result = _corrigirIdsVazios();               break;
       case "atualizarProdutosBatch": result = atualizarProdutosBatch(p);        break;
       case "excluirProdutosBatch":  result = excluirProdutosBatch(p);            break;
       case "fixarIDsVazios":        result = fixarIDsVazios();                   break;
@@ -1027,8 +1028,12 @@ function salvarProduto(p) {
   const sh = getSheet("Produtos");
   const headers = getHeaders("Produtos");
   const id = p.id || p["ID"] || "";
+  // BUG-ID-VAZIO (2026-08-27): antes checava p[h] pra coluna "ID" igual as outras colunas —
+  // se quem chamou mandou "id" minúsculo (não "ID"), p["ID"] vinha undefined e a linha
+  // gravava ID em branco no update, apagando o produto de qualquer busca por ID depois.
+  // Agora sempre usa o `id` já resolvido (aceita os dois formatos) e só gera novo se vazio.
   const row = headers.map(h => {
-    if (h === "ID" && !id) return newId("P");
+    if (h === "ID") return id || newId("P");
     if (p[h] !== undefined) return p[h];
     return "";
   });
@@ -4878,6 +4883,24 @@ function atualizarNomeProduto(p) {
     if (col > 0) found.sh.getRange(found.rowNum, col).setValue(valor);
   }
   return { ok: true, id: id, atualizados: Object.keys(updates) };
+}
+
+// Fix pontual (2026-08-27): corrige linhas com ID vazio deixadas pelo bug do salvarProduto
+// (ver comentário BUG-ID-VAZIO acima, em salvarProduto). Só usa a 1 vez, não precisa manter depois.
+function _corrigirIdsVazios() {
+  const sh = getSheet("Produtos");
+  const headers = getHeaders("Produtos");
+  const idCol = headers.indexOf("ID") + 1;
+  const data = sh.getDataRange().getValues();
+  let corrigidos = 0;
+  const baseTs = Date.now();
+  for (let i = 1; i < data.length; i++) {
+    if (String(data[i][idCol - 1]).trim() === "") {
+      sh.getRange(i + 1, idCol).setValue("P" + (baseTs + corrigidos));
+      corrigidos++;
+    }
+  }
+  return { ok: true, corrigidos: corrigidos };
 }
 
 // ── BATCH INSERT PRODUTOS (upload em lote) ──
