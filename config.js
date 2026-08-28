@@ -16,4 +16,7 @@ const CFG_CLOUDINARY_CLOUD  = "eslbyl14";
 const CFG_CLOUDINARY_PRESET = "gjstore2";
 
 // Openinary — self-hosted no Nuvário (substitui Cloudinary pra imagens do catálogo)
-const CFG_OPENINARY_URL = "https://servidor-1.tailc513c6.ts.net:3100";
+// 2026-08-28: porta 3100 NUNCA foi alcançável por cliente real de fora (Tailscale
+// Funnel só autoriza 443/8443/10000) — migrado pra caminho /img sob a 8443 (mesma
+// porta do Nuvário, path-based). Ver mind/errors-to-avoid.md / home_nas_infra.
+const CFG_OPENINARY_URL = "https://servidor-1.tailc513c6.ts.net:8443/img";
