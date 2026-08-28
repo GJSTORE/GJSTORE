@@ -940,7 +940,9 @@ function getProdutos(p) {
   const isAll = p.verTodos === "1";
   const catKey = (p.categoria && p.categoria !== "todos") ? _normCat(p.categoria) : "";
   const searchKey = p.busca || "";
-  const cacheKey = !isAll && catKey && !searchKey && p.recentes !== "1" ? "cat_" + catKey + "_v3" : null;
+  // marca (filtro de sub-marca dentro de Perfumes) não usa cache — o cache é só por categoria e
+  // devolveria a lista inteira sem aplicar o filtro de marca (que roda depois, mais abaixo)
+  const cacheKey = !isAll && catKey && !searchKey && !p.marca && p.recentes !== "1" ? "cat_" + catKey + "_v3" : null;
   const offset = Number(p.offset) || 0;
   const limit = Number(p.limit) || 0;
   // Tenta cache do CacheService
@@ -980,6 +982,18 @@ function getProdutos(p) {
   }
   if (catKey) {
     list = list.filter(r => _normCat(r["Categoria"]) === catKey);
+  }
+  // Filtro de marca (dentro de Perfumes) — lê de Tags_Personalizadas, não é coluna própria.
+  // "outros" = não bate com nenhuma marca conhecida (produto sem marca identificada).
+  const marcaKey = (p.marca || "").toLowerCase();
+  const MARCAS_CONHECIDAS = ["lattafa", "la-rive", "paris-elysees"];
+  if (marcaKey === "outros") {
+    list = list.filter(r => {
+      const tags = String(r["Tags_Personalizadas"] || "").toLowerCase();
+      return !MARCAS_CONHECIDAS.some(m => tags.includes(m));
+    });
+  } else if (marcaKey) {
+    list = list.filter(r => String(r["Tags_Personalizadas"] || "").toLowerCase().includes(marcaKey));
   }
   if (searchKey) {
     const q = searchKey.toLowerCase();
