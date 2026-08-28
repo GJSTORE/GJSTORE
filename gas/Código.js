@@ -986,7 +986,7 @@ function getProdutos(p) {
   // Filtro de marca (dentro de Perfumes) — lê de Tags_Personalizadas, não é coluna própria.
   // "outros" = não bate com nenhuma marca conhecida (produto sem marca identificada).
   const marcaKey = (p.marca || "").toLowerCase();
-  const MARCAS_CONHECIDAS = ["lattafa", "la-rive", "paris-elysees"];
+  const MARCAS_CONHECIDAS = ["lattafa", "la-rive", "paris-elysees", "armaf"];
   if (marcaKey === "outros") {
     list = list.filter(r => {
       const tags = String(r["Tags_Personalizadas"] || "").toLowerCase();
