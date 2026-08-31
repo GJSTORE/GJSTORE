@@ -2517,9 +2517,9 @@
           <div class="cc-ico">📱</div>
           <div class="cc-lbl">Eletrônicos</div>
         </div>
-        <div class="cc" data-cat="iPhone">
+        <div class="cc" data-cat="Celular">
           <div class="cc-ico">📱</div>
-          <div class="cc-lbl">iPhone</div>
+          <div class="cc-lbl">Celular</div>
         </div>
         <div class="cc" data-cat="Games">
           <div class="cc-ico">🎮</div>
@@ -2551,7 +2551,7 @@
         </div>
       </div>
     </div>
-    <!-- Sub-filtro de marca — só visível dentro da categoria Perfumes -->
+    <!-- Sub-filtro de marca — visível dentro de Perfumes e Celular, conteúdo trocado via JS (MARCAS_POR_CATEGORIA) -->
     <div id="marcaTrack">
       <div class="mc on" data-marca="">Todas as marcas</div>
       <div class="mc" data-marca="paris-elysees">Paris Elysees</div>
@@ -2882,6 +2882,44 @@
     const TTL = 5 * 60 * 1000;
     let cfg = {}, prods = [], allProds = [], allCats = [], fretes = [], banners = [];
     let _prodsTotal = 0, _prodsLimit = 30, _loadMoreLimit = 50;
+    // Marcas por categoria (sub-filtro dentro de #marcaTrack) — cada valor de data-marca
+    // precisa bater com a tag salva em Tags_Personalizadas do produto (ver GAS getProdutos).
+    const MARCAS_POR_CATEGORIA = {
+      "Perfumes": [
+        { slug: "", label: "Todas as marcas" },
+        { slug: "paris-elysees", label: "Paris Elysees" },
+        { slug: "lattafa", label: "Lattafa" },
+        { slug: "la-rive", label: "La Rive" },
+        { slug: "armaf", label: "Armaf" },
+        { slug: "fragrance-world", label: "Fragrance World" },
+        { slug: "al-wataniah", label: "Al Wataniah" },
+        { slug: "zimaya", label: "Zimaya" },
+        { slug: "orientica", label: "Orientica" },
+        { slug: "rasasi", label: "Rasasi" },
+        { slug: "afnan", label: "Afnan" },
+        { slug: "paris-corner", label: "Paris Corner" },
+        { slug: "ard-al-zaafaran", label: "Ard Al Zaafaran" }
+      ],
+      "Celular": [
+        { slug: "", label: "Todas as marcas" },
+        { slug: "apple", label: "Apple" },
+        { slug: "samsung", label: "Samsung" },
+        { slug: "xiaomi", label: "Xiaomi" },
+        { slug: "motorola", label: "Motorola" },
+        { slug: "poco", label: "Poco" },
+        { slug: "realme", label: "Realme" }
+      ]
+    };
+    function renderMarcaTrack(cat) {
+      const track = document.getElementById("marcaTrack");
+      if (!track) return;
+      const lista = MARCAS_POR_CATEGORIA[cat];
+      if (!lista) { track.style.display = "none"; return; }
+      track.innerHTML = lista.map((m, i) =>
+        `<div class="mc${i === 0 ? " on" : ""}" data-marca="${m.slug}">${m.label}</div>`
+      ).join("");
+      track.style.display = "flex";
+    }
     let catA = "", marcaA = "", searchQ = "", priceMax = 0, cart = JSON.parse(localStorage.getItem("gjc") || "[]");
     let cup = null, freteA = null, pagS = "PIX", prodA = null, cIdx = 0, cMedia = [];
     let banIdx = 0;
@@ -4786,14 +4824,9 @@
         if (!cc) return;
         track.querySelectorAll(".cc").forEach(x => x.classList.remove("on"));
         cc.classList.add("on"); catA = cc.dataset.cat || "";
-        // marca só existe dentro de Perfumes — reseta sempre que troca de categoria
+        // marca só existe dentro de Perfumes/Celular (ver MARCAS_POR_CATEGORIA) — reseta sempre que troca de categoria
         marcaA = "";
-        const marcaTrack = document.getElementById("marcaTrack");
-        if (marcaTrack) {
-          marcaTrack.style.display = (catA === "Perfumes") ? "flex" : "none";
-          marcaTrack.querySelectorAll(".mc").forEach(x => x.classList.remove("on"));
-          marcaTrack.querySelector('.mc[data-marca=""]')?.classList.add("on");
-        }
+        renderMarcaTrack(catA);
         if (catA) {
           await _loadCatProds();
         } else {
