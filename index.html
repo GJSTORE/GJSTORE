@@ -4434,12 +4434,37 @@
     // saldo/quitado). Estilos inline fixos (não usam var(--) do tema) p/ a imagem sair
     // idêntica em qualquer tema. Único botão: baixar/compartilhar imagem.
     const _RC_STORE = "GJ STORE";
+    // Catálogo completo (inclui inativos) dedicado ao recibo — allProds do grid é só produto
+    // ativo, então pedido antigo com produto já descontinuado/renomeado nunca batia o nome
+    // e ficava sem foto no recibo.
+    let _rcCatalogFull = null;
+    async function _rcGetCatalog() {
+      if (_rcCatalogFull) return _rcCatalogFull;
+      try {
+        const r = await fetch(`${API}?action=getProdutos&verTodos=1`);
+        const d = await r.json();
+        _rcCatalogFull = d.produtos || allProds;
+      } catch (e) { _rcCatalogFull = allProds; }
+      return _rcCatalogFull;
+    }
+    // Espera as <img> do card carregarem (ou falharem) antes do html2canvas capturar — sem
+    // isso o recibo exportado saía sem foto quando a imagem ainda não tinha terminado de
+    // baixar do Openinary no instante do clique em "Baixar/Compartilhar imagem".
+    function _waitImgsLoaded(el, timeoutMs) {
+      const imgs = Array.from(el.querySelectorAll("img"));
+      if (!imgs.length) return Promise.resolve();
+      return Promise.race([
+        Promise.all(imgs.map(img => img.complete ? Promise.resolve() : new Promise(res => { img.onload = img.onerror = res; }))),
+        new Promise(res => setTimeout(res, timeoutMs || 4000))
+      ]);
+    }
     function _rcProdImg(nome) {
-      if (!allProds.length || !nome) return "";
+      const prods = (_rcCatalogFull && _rcCatalogFull.length) ? _rcCatalogFull : allProds;
+      if (!prods.length || !nome) return "";
       const n = String(nome).toLowerCase().trim();
-      const f = allProds.find(p => String(p["Nome do Produto"] || p["Nome"] || "").toLowerCase().trim() === n)
-        || allProds.find(p => { const pn = String(p["Nome do Produto"] || p["Nome"] || "").toLowerCase().trim(); return pn && (pn.includes(n) || n.includes(pn)); });
-      return f ? String(f["Imagem 1 (URL)"] || f["Imagem URL"] || "").trim() : "";
+      const f = prods.find(p => String(p["Nome do Produto"] || p["Nome"] || "").toLowerCase().trim() === n)
+        || prods.find(p => { const pn = String(p["Nome do Produto"] || p["Nome"] || "").toLowerCase().trim(); return pn && (pn.includes(n) || n.includes(pn)); });
+      return f ? cldOpt(String(f["Imagem 1 (URL)"] || f["Imagem URL"] || "").trim(), 150) : "";
     }
     function _rcDate(v) {
       if (!v) return "—";
@@ -4457,9 +4482,10 @@
       return { pagas, pendentes, totalPago, saldo, pct, quitado: saldo <= 0.01 };
     }
 
-    function verRecibo(id) {
+    async function verRecibo(id) {
       const p = _mcPedidos[id];
       if (!p) return;
+      await _rcGetCatalog();
       const nome = p.nome || "—";
       const pag = p.formaPagamento || "—";
       const dtPed = p.data || "—";
@@ -4670,6 +4696,7 @@
         await _loadH2C();
         var el = document.getElementById("rcCardCli");
         if (!el) throw new Error("recibo nao encontrado");
+        await _waitImgsLoaded(el);
         var canvas = await html2canvas(el, { backgroundColor: "#04090f", scale: 2, useCORS: true });
         canvas.toBlob(async function(blob) {
           var file = new File([blob], "recibo-gj-store.png", { type: "image/png" });
@@ -4702,7 +4729,9 @@
       if (btn) { btn.textContent = "⏳ Gerando..."; btn.disabled = true; }
       try {
         await _loadH2C();
-        const canvas = await html2canvas(document.getElementById("rcCardCli"), { backgroundColor: "#04090f", scale: 2, useCORS: true });
+        const rcCardCliEl = document.getElementById("rcCardCli");
+        await _waitImgsLoaded(rcCardCliEl);
+        const canvas = await html2canvas(rcCardCliEl, { backgroundColor: "#04090f", scale: 2, useCORS: true });
         // W3: manda texto junto (dataset já preenchido por atualizarReciboCliente) — mesma legenda do botão "Enviar recibo"
         const reciboTxt = (() => { try { return decodeURIComponent(document.getElementById("okrecibo")?.dataset.recibo || ""); } catch(e) { return ""; } })();
         canvas.toBlob(blob => {
