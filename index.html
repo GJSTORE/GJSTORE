@@ -3127,20 +3127,16 @@
           logAcao("PAGE_VIEW", document.referrer ? "referrer:" + document.referrer.split("/")[2] : "direct");
         }
 
-        // Categorias dinâmicas
+        // Categorias dinâmicas — sempre a partir do getCategorias fresco (já roda em paralelo
+        // no Promise.all acima, não atrasa o boot). Pintar antes com um cache em localStorage
+        // (gj_cats) mostrava categoria já desabilitada pelo dono por um instante, até a
+        // resposta fresca chegar e corrigir — flash real, removido (E5.2 fica obsoleto).
         try {
-          const cats = JSON.parse(localStorage.getItem("gj_cats") || "[]");
-          if (cats.length) { allCats = cats; renderDynCats(cats); applyF(); }
           const rc = catR || {};
           if (rc.categorias && rc.categorias.length) {
-            const novo = JSON.stringify(rc.categorias);
-            // E5.2 anti-flicker: só re-renderiza se categorias mudaram de fato
-            if (novo !== JSON.stringify(cats)) {
-              localStorage.setItem("gj_cats", novo);
-              allCats = rc.categorias;
-              renderDynCats(rc.categorias);
-              applyF();
-            }
+            allCats = rc.categorias;
+            renderDynCats(rc.categorias);
+            applyF();
           }
         } catch(e) {}
 
