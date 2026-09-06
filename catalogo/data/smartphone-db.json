@@ -1,0 +1,463 @@
+{
+  "_meta": {
+    "tipo": "catalogo-smartphones",
+    "projeto": "GJ STORE",
+    "data": "2026-08-30",
+    "fonte_primaria": "catalogo_smartphones.md (custo/venda e specs base — nunca alterados)",
+    "fonte_enriquecimento": "GSMArena (specs tecnicas verificadas por modelo, quando o doc original era incompleto)",
+    "nota": "Custo e venda sao copiados exatamente do catalogo_smartphones.md. Specs tecnicas enriquecidas via GSMArena quando necessario (campo specs_fonte indica origem). Nenhum dado inventado sem verificacao publica. Apple/iPhone fora de escopo."
+  },
+  "smartphones": {
+    "MOTOROLA": [
+      {
+        "modelo": "Moto G86 5G 512GB",
+        "marca": "Motorola",
+        "specs": {
+          "armazenamento": "512GB",
+          "ram": "8GB (+16GB RAM virtual)",
+          "tela": "6.67\" pOLED FHD+, 120Hz, ate 4500 nits, Gorilla Glass 7i",
+          "bateria": "5200mAh, carregamento 30W",
+          "camera": "50MP principal (Sony LYT-600) + 8MP ultrawide/macro; frontal 32MP",
+          "chip": "MediaTek Dimensity 7300"
+        },
+        "specs_fonte": "doc + GSMArena (verificado 2026-08-30)",
+        "custo": "R$ 1.959,00",
+        "venda": "R$ 2.809,00",
+        "descricao_curta": "📱 Topo de linha Motorola: tela pOLED 120Hz, câmera 50MP e 512GB pra nunca mais se preocupar com espaço.",
+        "descricao_longa": "O Moto G86 5G é o topo da linha G da Motorola e entrega uma tela pOLED de 120Hz com brilho de até 4500 nits, perfeita para uso sob sol forte. A câmera principal de 50MP com sensor Sony LYT-600 garante fotos nítidas em qualquer situação, enquanto o processador Dimensity 7300 dá fôlego de sobra para jogos e multitarefas pesadas. Com certificação IP68/IP69 e resistência militar MIL-STD-810H, aguenta poeira, água e o dia a dia sem susto. Os 512GB de armazenamento eliminam de vez a preocupação de ficar sem espaço para fotos, vídeos e aplicativos.",
+        "destaques": ["5G", "pOLED 120Hz", "IP68/IP69", "50MP", "512GB"],
+        "kit_inclui": null
+      },
+      {
+        "modelo": "Moto G86 5G 256GB",
+        "marca": "Motorola",
+        "specs": {
+          "armazenamento": "256GB",
+          "ram": "8GB (+16GB RAM virtual)",
+          "tela": "6.67\" pOLED FHD+, 120Hz, ate 4500 nits, Gorilla Glass 7i",
+          "bateria": "5200mAh, carregamento 30W",
+          "camera": "50MP principal (Sony LYT-600) + 8MP ultrawide/macro; frontal 32MP",
+          "chip": "MediaTek Dimensity 7300"
+        },
+        "specs_fonte": "doc + GSMArena (verificado 2026-08-30)",
+        "custo": "R$ 1.776,67",
+        "venda": "R$ 2.626,67",
+        "descricao_curta": "📱 Moto G86 5G: tela pOLED 120Hz turbinada e câmera de 50MP com acabamento premium por um preço mais em conta.",
+        "descricao_longa": "Versão 256GB do topo de linha Motorola, o Moto G86 5G mantém a mesma tela pOLED de 120Hz com brilho altíssimo e a câmera de 50MP com sensor Sony LYT-600. O Dimensity 7300 entrega desempenho de intermediário premium para jogos, redes sociais e streaming sem travamentos. A bateria de 5200mAh com carregamento de 30W sustenta um dia inteiro de uso intenso. Certificação IP68/IP69 e resistência MIL-STD-810H garantem durabilidade acima da média da categoria, com acabamento que passa a impressão de aparelho mais caro.",
+        "destaques": ["5G", "pOLED 120Hz", "IP68/IP69", "50MP", "256GB"],
+        "kit_inclui": null
+      },
+      {
+        "modelo": "Moto G86 5G + Moto Buds",
+        "marca": "Motorola",
+        "specs": {
+          "armazenamento": "256GB",
+          "ram": "8GB (+16GB RAM virtual)",
+          "tela": "6.67\" pOLED FHD+, 120Hz, ate 4500 nits, Gorilla Glass 7i",
+          "bateria": "5200mAh, carregamento 30W",
+          "camera": "50MP principal (Sony LYT-600) + 8MP ultrawide/macro; frontal 32MP",
+          "chip": "MediaTek Dimensity 7300"
+        },
+        "specs_fonte": "doc + GSMArena (verificado 2026-08-30)",
+        "custo": "R$ 1.599,00",
+        "venda": "R$ 2.449,00",
+        "descricao_curta": "🎧 Moto G86 5G + Moto Buds: aparelho topo de linha e fone bluetooth no kit, pronto pra usar.",
+        "descricao_longa": "Esse kit combina o Moto G86 5G — com tela pOLED de 120Hz, câmera de 50MP e processador Dimensity 7300 — com o fone de ouvido bluetooth Moto Buds já incluso, sem custo extra. É a opção com melhor valor percebido da linha G86: além do aparelho premium com bateria de 5200mAh e certificação IP68/IP69, o cliente sai da loja com o acessório que normalmente compraria à parte. Ideal para quem quer presentear ou para o vendedor destacar o kit como oferta completa.",
+        "destaques": ["5G", "Kit c/ Moto Buds", "pOLED 120Hz", "50MP", "256GB"],
+        "kit_inclui": "Fone de ouvido Bluetooth Moto Buds"
+      },
+      {
+        "modelo": "Moto G56 5G",
+        "marca": "Motorola",
+        "specs": {
+          "armazenamento": "256GB",
+          "ram": "8GB (+16GB RAM virtual)",
+          "tela": "6.72\" LCD FHD+, 120Hz, ate 1000 nits, Gorilla Glass 7i",
+          "bateria": "5200mAh, carregamento 33W",
+          "camera": "50MP (Sony LYT-600) + 8MP ultrawide; frontal 32MP",
+          "chip": "MediaTek Dimensity 7060"
+        },
+        "specs_fonte": "doc + GSMArena (verificado 2026-08-30)",
+        "custo": "R$ 1.499,00",
+        "venda": "R$ 2.349,00",
+        "descricao_curta": "🔋 Moto G56 5G: bateria de 5200mAh, tela 120Hz e câmera de 50MP com ótimo custo-benefício.",
+        "descricao_longa": "O Moto G56 5G é o intermediário equilibrado da Motorola: tela de 6.72\" com 120Hz de fluidez, câmera de 50MP com sensor Sony LYT-600 e processador Dimensity 7060 recém-lançado para dar conta do uso diário sem gargalos. A bateria de 5200mAh com carregamento de 33W aguenta tranquilamente um dia cheio de uso. Também traz certificações IP68/IP69 e MIL-STD-810H, resistência normalmente reservada a aparelhos mais caros. É a escolha certa para quem quer 5G e tela boa sem pagar o preço do topo de linha.",
+        "destaques": ["5G", "120Hz", "5200mAh", "IP68/IP69"],
+        "kit_inclui": null
+      },
+      {
+        "modelo": "Moto G47 5G",
+        "marca": "Motorola",
+        "specs": {
+          "armazenamento": "128GB",
+          "ram": "12GB (4GB + 8GB RAM virtual)",
+          "tela": "6.67\" LCD FHD+, 120Hz, Gorilla Glass 7i",
+          "bateria": "5200mAh, carregamento 18W",
+          "camera": "108MP principal + 2MP macro; frontal 8MP",
+          "chip": "MediaTek Dimensity 6300"
+        },
+        "specs_fonte": "doc + GSMArena (verificado 2026-08-30)",
+        "custo": "R$ 1.160,29",
+        "venda": "R$ 2.010,29",
+        "descricao_curta": "📸 Moto G47 5G: câmera de 108MP e bateria de 5200mAh num intermediário com preço de entrada.",
+        "descricao_longa": "O Moto G47 5G surpreende na faixa de preço com uma câmera principal de 108MP com zoom sem perdas de 3x, algo raro em aparelhos dessa faixa. A tela de 120Hz deixa a navegação fluida e a bateria de 5200mAh garante autonomia tranquila para o dia todo. Com 12GB de RAM (4GB físicos + 8GB virtuais) o multitarefas fica leve mesmo com vários apps abertos. Ótima entrada para quem valoriza fotos com mais detalhe sem gastar muito.",
+        "destaques": ["5G", "108MP", "120Hz", "5200mAh"],
+        "kit_inclui": null
+      },
+      {
+        "modelo": "Moto G35 5G 256GB",
+        "marca": "Motorola",
+        "specs": {
+          "armazenamento": "256GB",
+          "ram": "12GB (4GB + 8GB RAM virtual)",
+          "tela": "6.72\" LCD FHD+, 120Hz, HDR10, 1000 nits",
+          "bateria": "5000mAh, carregamento 18W",
+          "camera": "50MP + 8MP ultrawide 120°; frontal 8MP",
+          "chip": "Unisoc T760"
+        },
+        "specs_fonte": "doc + GSMArena (verificado 2026-08-30)",
+        "custo": "R$ 999,00",
+        "venda": "R$ 1.849,00",
+        "descricao_curta": "💰 Moto G35 5G: 5G, tela 120Hz e câmera dupla por menos de R$ 1.900.",
+        "descricao_longa": "O Moto G35 5G é a porta de entrada da Motorola para o 5G com boa entrega de tela: 120Hz, HDR10 e 1000 nits de brilho para uso externo. A câmera dupla de 50MP + 8MP ultrawide cobre bem o uso do dia a dia, e os 256GB de armazenamento com 12GB de RAM dão espaço de sobra para fotos, apps e jogos leves. Ótimo custo-benefício para quem quer entrar no 5G sem gastar muito.",
+        "destaques": ["5G", "120Hz", "256GB", "Custo-benefício"],
+        "kit_inclui": null
+      },
+      {
+        "modelo": "Moto G35 5G 128GB Grafite",
+        "marca": "Motorola",
+        "specs": {
+          "armazenamento": "128GB",
+          "ram": "12GB (4GB + 8GB RAM virtual)",
+          "tela": "6.72\" LCD FHD+, 120Hz, HDR10, 1000 nits",
+          "bateria": "5000mAh, carregamento 18W",
+          "camera": "50MP + 8MP ultrawide 120°; frontal 8MP",
+          "cor": "Grafite"
+        },
+        "specs_fonte": "doc + GSMArena (verificado 2026-08-30)",
+        "custo": "R$ 999,89",
+        "venda": "R$ 1.849,89",
+        "descricao_curta": "⚫ Moto G35 5G Grafite: visual sóbrio, 5G e tela 120Hz por menos de R$ 1.900.",
+        "descricao_longa": "Mesma proposta do Moto G35 5G — 5G, tela de 120Hz com HDR10 e câmera dupla de 50MP — na cor Grafite, acabamento discreto e elegante que agrada quem prefere tons neutros. Os 128GB de armazenamento com 12GB de RAM (parte virtual) atendem bem ao uso diário de redes sociais, apps e fotos. Excelente opção de entrada para quem quer 5G sem abrir mão de uma tela fluida.",
+        "destaques": ["5G", "120Hz", "Grafite", "Custo-benefício"],
+        "kit_inclui": null
+      },
+      {
+        "modelo": "Moto G06 128GB Azul",
+        "marca": "Motorola",
+        "specs": {
+          "armazenamento": "128GB",
+          "ram": "4GB",
+          "tela": "6.88\" LCD HD+, 120Hz, Gorilla Glass 3",
+          "bateria": "5200mAh, carregamento 10W",
+          "camera": "50MP principal; frontal 8MP",
+          "chip": "MediaTek Helio G81 Ultra",
+          "cor": "Azul"
+        },
+        "specs_fonte": "doc + GSMArena (verificado 2026-08-30)",
+        "custo": "R$ 799,00",
+        "venda": "R$ 1.649,00",
+        "descricao_curta": "🔵 Moto G06 Azul: tela grande 120Hz e bateria de 5200mAh no preço mais acessível da linha Motorola.",
+        "descricao_longa": "O Moto G06 é a entrada da Motorola com o melhor custo-benefício do catálogo: tela grande de 6.88\" com 120Hz de fluidez, câmera de 50MP e bateria de 5200mAh que aguenta bem o dia a dia. Na cor Azul, tem visual moderno mesmo sendo o modelo mais em conta. Indicado para quem busca um segundo aparelho, uso básico com boa tela ou primeira troca para o 5G/Android atual sem gastar muito.",
+        "destaques": ["120Hz", "5200mAh", "Azul", "Entrada"],
+        "kit_inclui": null
+      }
+    ],
+    "SAMSUNG": [
+      {
+        "modelo": "Galaxy A36 5G",
+        "marca": "Samsung",
+        "specs": {
+          "armazenamento": "256GB",
+          "ram": "8GB",
+          "tela": "6.7\" Super AMOLED FHD+, 120Hz, ate 1900 nits, Gorilla Glass Victus+",
+          "bateria": "5000mAh, carregamento 45W",
+          "camera": "50MP OIS + 8MP ultrawide + 5MP macro; frontal 12MP",
+          "chip": "Snapdragon 6 Gen 3"
+        },
+        "specs_fonte": "doc + GSMArena (verificado 2026-08-30)",
+        "custo": "R$ 1.998,89",
+        "venda": "R$ 2.848,89",
+        "descricao_curta": "📱 Galaxy A36 5G: AMOLED 120Hz, Snapdragon e câmera com estabilização óptica — performance de linha alta.",
+        "descricao_longa": "O Galaxy A36 5G é o topo da linha A intermediária da Samsung: tela Super AMOLED de 120Hz com pico de 1900 nits, protegida por Gorilla Glass Victus+, e processador Snapdragon 6 Gen 3 para rodar qualquer app ou jogo sem engasgar. A câmera principal de 50MP com estabilização óptica (OIS) entrega fotos nítidas mesmo em movimento. Com bateria de 5000mAh e carregamento rápido de 45W, e proteção IP67 contra água e poeira, é a escolha de quem quer Samsung com desempenho de ponta sem pagar pela linha S.",
+        "destaques": ["5G", "AMOLED 120Hz", "OIS", "45W", "IP67"],
+        "kit_inclui": null
+      },
+      {
+        "modelo": "Galaxy A26 5G",
+        "marca": "Samsung",
+        "specs": {
+          "armazenamento": "256GB",
+          "ram": "8GB",
+          "tela": "6.7\" Super AMOLED FHD+, 120Hz",
+          "bateria": "5000mAh, carregamento 25W",
+          "camera": "50MP + 8MP ultrawide + 2MP macro; frontal 13MP",
+          "chip": "Exynos 1380"
+        },
+        "specs_fonte": "doc + GSMArena (verificado 2026-08-30)",
+        "custo": "R$ 1.999,00",
+        "venda": "R$ 2.849,00",
+        "descricao_curta": "📸 Galaxy A26 5G: câmera de 50MP e tela Super AMOLED 120Hz com a confiança da marca Samsung.",
+        "descricao_longa": "O Galaxy A26 5G traz tela Super AMOLED de 120Hz para uma experiência visual fluida em jogos, vídeos e redes sociais. A câmera tripla liderada por um sensor de 50MP cobre bem cenas do dia a dia, close-ups e paisagens amplas com a lente ultrawide. O processador Exynos 1380 junto com 8GB de RAM garante desempenho estável para multitarefas. Com certificação IP67 e a confiabilidade da marca Samsung, é opção sólida para quem prioriza câmera e tela de qualidade.",
+        "destaques": ["5G", "AMOLED 120Hz", "50MP", "IP67"],
+        "kit_inclui": null
+      },
+      {
+        "modelo": "Galaxy A37 5G",
+        "marca": "Samsung",
+        "specs": {
+          "armazenamento": "128GB",
+          "ram": "6GB",
+          "tela": "6.7\" Super AMOLED FHD+, 120Hz, ate 1900 nits, Gorilla Glass Victus+",
+          "bateria": "5000mAh, carregamento 45W",
+          "camera": "50MP + 12MP ultrawide + 5MP macro; frontal 12MP",
+          "chip": "Exynos 1480"
+        },
+        "specs_fonte": "doc + GSMArena (verificado 2026-08-30)",
+        "custo": "R$ 1.994,00",
+        "venda": "R$ 2.844,00",
+        "descricao_curta": "⚡ Galaxy A37 5G: carregamento de 45W, câmera 50MP e proteção IP68 num Samsung recente.",
+        "descricao_longa": "O Galaxy A37 5G chega com processador Exynos 1480 e carregamento rápido de 45W, um dos mais rápidos da linha A intermediária. A tela Super AMOLED de 120Hz com até 1900 nits mantém boa visibilidade mesmo sob luz forte. A câmera ultrawide de 12MP é superior à média da categoria, somada ao sensor principal de 50MP para fotos nítidas em qualquer condição. Com certificação IP68 (resistência total a poeira e submersão) e acabamento em Gorilla Glass Victus+, entrega robustez que normalmente só se vê em aparelhos mais caros.",
+        "destaques": ["5G", "45W", "IP68", "12MP ultrawide"],
+        "kit_inclui": null
+      },
+      {
+        "modelo": "Galaxy A17 5G",
+        "marca": "Samsung",
+        "specs": {
+          "armazenamento": "128GB",
+          "ram": "4GB",
+          "tela": "6.7\" Super AMOLED FHD+, 90Hz, ate 800 nits",
+          "bateria": "5000mAh, carregamento 25W",
+          "camera": "50MP OIS + 5MP ultrawide + 2MP macro; frontal 13MP",
+          "chip": "Exynos 1330"
+        },
+        "specs_fonte": "doc + GSMArena (verificado 2026-08-30)",
+        "custo": "R$ 1.058,71",
+        "venda": "R$ 1.908,71",
+        "descricao_curta": "🌟 Galaxy A17 5G: tela Super AMOLED com estabilização óptica na câmera, entrada Samsung mais em conta.",
+        "descricao_longa": "O Galaxy A17 5G é a porta de entrada da Samsung para o 5G sem abrir mão da tela Super AMOLED, item raro nessa faixa de preço. A câmera principal de 50MP conta com estabilização óptica (OIS), recurso normalmente reservado a aparelhos mais caros, o que reduz fotos tremidas. Bateria de 5000mAh com carregamento de 25W cobre bem o uso diário. Boa escolha para quem quer o nome Samsung e tela de qualidade investindo pouco.",
+        "destaques": ["5G", "Super AMOLED", "OIS", "Entrada"],
+        "kit_inclui": null
+      },
+      {
+        "modelo": "Galaxy A17 (Com IA)",
+        "marca": "Samsung",
+        "specs": {
+          "armazenamento": "256GB",
+          "ram": "8GB",
+          "tela": "6.7\" Super AMOLED FHD+, 90Hz",
+          "bateria": "5000mAh, carregamento 25W",
+          "camera": "50MP + 5MP ultrawide + 2MP macro; frontal 13MP",
+          "chip": "MediaTek Helio G99 (variante 4G da linha A17)"
+        },
+        "specs_fonte": "doc + GSMArena (verificado 2026-08-30) — nota: recursos de IA referem-se as funcoes de camera/assistente do One UI, nao ha confirmacao publica de suite completa Galaxy AI neste chipset",
+        "custo": "R$ 1.399,00",
+        "venda": "R$ 2.249,00",
+        "descricao_curta": "🤖 Galaxy A17 com mais RAM e 256GB: tela Super AMOLED e câmera de 50MP com recursos inteligentes de câmera.",
+        "descricao_longa": "Esta configuração do Galaxy A17 vem com 256GB de armazenamento e 8GB de RAM, o dobro de espaço da versão de entrada, ideal para quem tira muitas fotos e instala bastante aplicativo. Mantém a tela Super AMOLED de 90Hz e a câmera de 50MP com boa nitidez em ambientes internos e externos. O One UI da Samsung traz recursos inteligentes de câmera e organização que facilitam o uso diário. Combinação de tela boa, espaço de sobra e a confiabilidade Samsung por um preço intermediário.",
+        "destaques": ["Super AMOLED", "256GB", "50MP", "One UI"],
+        "kit_inclui": null
+      },
+      {
+        "modelo": "Galaxy A07 4G",
+        "marca": "Samsung",
+        "specs": {
+          "armazenamento": "256GB",
+          "ram": "8GB",
+          "tela": "6.7\" PLS LCD HD+, 90Hz, ate 800 nits",
+          "bateria": "5000mAh, carregamento 25W",
+          "camera": "50MP + 2MP profundidade; frontal 8MP",
+          "chip": "MediaTek Helio G99"
+        },
+        "specs_fonte": "doc + GSMArena (verificado 2026-08-30)",
+        "custo": "R$ 950,00",
+        "venda": "R$ 1.800,00",
+        "descricao_curta": "💵 Galaxy A07 4G: o Samsung mais em conta do catálogo, com tela grande e 256GB de espaço.",
+        "descricao_longa": "O Galaxy A07 4G é a opção de entrada da Samsung, com tela de 6.7\" e 90Hz de fluidez para navegação suave no dia a dia. A câmera de 50MP dá conta bem das fotos do cotidiano, e os 256GB de armazenamento com 8GB de RAM surpreendem nessa faixa de preço, evitando que o aparelho fique lento com o tempo. Traz ainda a promessa de longos anos de atualização de sistema, típica da Samsung. Ideal para quem quer o nome Samsung com o menor investimento possível.",
+        "destaques": ["4G", "256GB", "90Hz", "Custo mínimo"],
+        "kit_inclui": null
+      }
+    ],
+    "XIAOMI_REDMI": [
+      {
+        "modelo": "Redmi 15 Global",
+        "marca": "Xiaomi/Redmi",
+        "specs": {
+          "armazenamento": "256GB",
+          "ram": "8GB",
+          "tela": "6.9\" FHD+, 144Hz",
+          "bateria": "7000mAh, carregamento 33W",
+          "camera": "50MP + 2MP; frontal 8MP",
+          "chip": "Snapdragon 6s Gen 3"
+        },
+        "specs_fonte": "doc + GSMArena (verificado 2026-08-30)",
+        "custo": "R$ 1.338,00",
+        "venda": "R$ 2.188,00",
+        "descricao_curta": "🔋 Redmi 15 Global: bateria gigante de 7000mAh e tela 144Hz — dura o dia todo e ainda joga bem.",
+        "descricao_longa": "O Redmi 15 Global se destaca pela bateria de 7000mAh, uma das maiores da faixa de preço, garantindo tranquilamente mais de um dia de uso sem precisar de tomada. A tela de 6.9\" com 144Hz de taxa de atualização entrega fluidez extra em jogos e rolagem de redes sociais. O Snapdragon 6s Gen 3 equilibra bem desempenho e consumo de energia. Recomendado para quem vive fora de casa o dia inteiro e não quer depender de carregador portátil.",
+        "destaques": ["7000mAh", "144Hz", "5G", "Bateria recorde"],
+        "kit_inclui": null
+      },
+      {
+        "modelo": "Redmi 15c",
+        "marca": "Xiaomi/Redmi",
+        "specs": {
+          "armazenamento": "256GB",
+          "ram": "8GB",
+          "tela": "6.9\" HD+, 120Hz",
+          "bateria": "6000mAh, carregamento 33W",
+          "camera": "50MP; frontal 8MP",
+          "chip": "MediaTek Helio G81 Ultra",
+          "obs": "Dual Sim"
+        },
+        "specs_fonte": "doc + GSMArena (verificado 2026-08-30)",
+        "custo": "R$ 1.099,00",
+        "venda": "R$ 1.949,00",
+        "descricao_curta": "🔋 Redmi 15c: bateria de 6000mAh, tela grande 120Hz e Dual Sim por menos de R$ 2.000.",
+        "descricao_longa": "O Redmi 15c entrega bateria de 6000mAh, bem acima da média da categoria, ideal para quem usa o celular o dia inteiro sem parar para carregar. A tela grande de 6.9\" com 120Hz deixa a navegação mais suave que o padrão de entrada. Com Dual Sim e 256GB de armazenamento com 8GB de RAM, atende bem quem usa duas linhas ou trabalha com o aparelho. Ótima opção de entrada com foco total em autonomia de bateria.",
+        "destaques": ["6000mAh", "120Hz", "Dual Sim", "256GB"],
+        "kit_inclui": null
+      },
+      {
+        "modelo": "Redmi 15 Dual",
+        "marca": "Xiaomi/Redmi",
+        "specs": {
+          "armazenamento": "128GB",
+          "ram": "6GB",
+          "tela": "6.9\" IPS LCD FHD+, 144Hz",
+          "bateria": "7000mAh, carregamento 33W",
+          "camera": "50MP; frontal 8MP",
+          "chip": "Qualcomm Snapdragon 685"
+        },
+        "specs_fonte": "doc + GSMArena (verificado 2026-08-30)",
+        "custo": "R$ 1.049,90",
+        "venda": "R$ 1.899,90",
+        "descricao_curta": "🔋 Redmi 15 Dual: 7000mAh de bateria e tela 144Hz no ponto de entrada da linha Redmi 15.",
+        "descricao_longa": "O Redmi 15 Dual traz a mesma bateria robusta de 7000mAh da linha 15, capaz de sustentar dois dias de uso moderado, agora num pacote de entrada mais acessível. A tela de 6.9\" com 144Hz surpreende positivamente nessa faixa, com fluidez que poucos concorrentes entregam no preço. Ideal para quem prioriza duração de bateria acima de tudo e quer 5G disponível na linha, sem gastar muito. Bom argumento de venda: 'carrega uma vez e esquece o carregador'.",
+        "destaques": ["7000mAh", "144Hz", "Entrada", "Dual Sim"],
+        "kit_inclui": null
+      }
+    ],
+    "POCO": [
+      {
+        "modelo": "Poco M8 5G",
+        "marca": "Poco",
+        "specs": {
+          "armazenamento": "256GB",
+          "ram": "8GB",
+          "tela": "6.77\" AMOLED FHD+, 120Hz, ate 3200 nits",
+          "bateria": "5520mAh, carregamento 45W",
+          "camera": "50MP + 2MP profundidade; frontal 20MP",
+          "chip": "Snapdragon 6 Gen 3",
+          "obs": "Dual Sim"
+        },
+        "specs_fonte": "doc + GSMArena (verificado 2026-08-30)",
+        "custo": "R$ 1.620,00",
+        "venda": "R$ 2.470,00",
+        "descricao_curta": "⚡ Poco M8 5G: tela AMOLED de 120Hz com brilho recorde e carregamento de 45W para não parar.",
+        "descricao_longa": "O Poco M8 5G impressiona com tela AMOLED de 6.77\" e brilho de até 3200 nits, um dos maiores da categoria, ideal para uso embaixo de sol forte. O processador Snapdragon 6 Gen 3 entrega desempenho robusto para jogos e multitarefas. A bateria de 5520mAh com carregamento de 45W recupera energia rapidamente entre um uso e outro. Câmera frontal de 20MP também se destaca para quem usa bastante videochamada e selfies. Excelente escolha para quem quer tela e desempenho de referência na faixa intermediária.",
+        "destaques": ["5G", "AMOLED 120Hz", "45W", "20MP selfie"],
+        "kit_inclui": null
+      },
+      {
+        "modelo": "Poco C85 (kit fone + relógio)",
+        "marca": "Poco",
+        "specs": {
+          "armazenamento": "256GB",
+          "ram": "16GB",
+          "tela": "6.9\" LCD HD+, 120Hz, ate 810 nits",
+          "bateria": "6000mAh, carregamento 33W",
+          "camera": "50MP; frontal 8MP",
+          "chip": "MediaTek Helio G81 Ultra"
+        },
+        "specs_fonte": "doc + GSMArena (verificado 2026-08-30)",
+        "custo": "R$ 1.399,00",
+        "venda": "R$ 2.249,00",
+        "descricao_curta": "🎁 Poco C85 + fone + relógio: kit completo com bateria de 6000mAh e brinde de peso.",
+        "descricao_longa": "Esse kit entrega o Poco C85 — bateria de 6000mAh, tela grande de 120Hz e câmera de 50MP — acompanhado de fone de ouvido bluetooth e smartwatch, agregando valor percebido bem acima do preço do aparelho sozinho. A tela de 6.9\" com 120Hz deixa a navegação fluida mesmo em uso pesado, e os 16GB de RAM garantem multitarefas sem travar. Ótimo argumento de venda como presente completo: celular, fone e relógio em uma única compra.",
+        "destaques": ["6000mAh", "120Hz", "Kit c/ fone + relógio", "256GB"],
+        "kit_inclui": "Fone de ouvido Bluetooth + Smartwatch (kit do fornecedor)"
+      },
+      {
+        "modelo": "Poco C85 Dual Sim NFC",
+        "marca": "Poco",
+        "specs": {
+          "armazenamento": "256GB",
+          "ram": "8GB",
+          "tela": "6.9\" LCD HD+, 120Hz, ate 810 nits",
+          "bateria": "6000mAh, carregamento 33W",
+          "camera": "50MP; frontal 8MP",
+          "chip": "MediaTek Helio G81 Ultra",
+          "obs": "Dual Sim, NFC"
+        },
+        "specs_fonte": "doc + GSMArena (verificado 2026-08-30)",
+        "custo": "R$ 1.272,00",
+        "venda": "R$ 2.122,00",
+        "descricao_curta": "💳 Poco C85 com NFC: pague por aproximação, bateria de 6000mAh e tela 120Hz.",
+        "descricao_longa": "Versão do Poco C85 com NFC integrado, permitindo pagamentos por aproximação direto do celular — diferencial importante para quem usa carteira digital no dia a dia. Mantém a bateria de 6000mAh e a tela de 120Hz que marcam a linha C85, além do processador Helio G81 Ultra para tarefas do cotidiano sem travar. Dual Sim físico facilita quem usa duas linhas. Boa opção para quem quer NFC sem pagar o preço de um intermediário mais caro.",
+        "destaques": ["NFC", "6000mAh", "120Hz", "Dual Sim"],
+        "kit_inclui": null
+      },
+      {
+        "modelo": "Poco C85 (kit completo Top1)",
+        "marca": "Poco",
+        "specs": {
+          "armazenamento": "256GB",
+          "ram": "8GB",
+          "tela": "6.9\" LCD HD+, 120Hz, ate 810 nits",
+          "bateria": "6000mAh, carregamento 33W",
+          "camera": "50MP; frontal 8MP",
+          "chip": "MediaTek Helio G81 Ultra"
+        },
+        "specs_fonte": "doc + GSMArena (verificado 2026-08-30)",
+        "custo": "R$ 1.259,11",
+        "venda": "R$ 2.109,11",
+        "descricao_curta": "🎁 Poco C85 kit completo: acessórios inclusos, bateria de 6000mAh e tela 120Hz.",
+        "descricao_longa": "Kit do fornecedor Top1 com o Poco C85 acompanhado de acessórios extras — combinação que aumenta o valor percebido da compra sem sair da faixa de preço de entrada. O aparelho mantém a bateria de 6000mAh e a tela de 120Hz que são o carro-chefe da linha C85, com desempenho estável do Helio G81 Ultra para o uso diário. Boa alternativa para quem busca um pacote mais completo sem gastar muito mais que a versão avulsa.",
+        "destaques": ["Kit c/ acessórios", "6000mAh", "120Hz", "256GB"],
+        "kit_inclui": "Kit de acessórios (conforme oferta do fornecedor Top1 — capa/película/brinde, variável por lote)"
+      },
+      {
+        "modelo": "Poco C85 4G",
+        "marca": "Poco",
+        "specs": {
+          "armazenamento": "256GB",
+          "ram": "8GB (+8GB RAM virtual)",
+          "tela": "6.9\" LCD HD+, 120Hz, ate 810 nits",
+          "bateria": "6000mAh, carregamento 33W",
+          "camera": "50MP; frontal 8MP",
+          "chip": "MediaTek Helio G81 Ultra"
+        },
+        "specs_fonte": "doc + GSMArena (verificado 2026-08-30)",
+        "custo": "R$ 1.135,99",
+        "venda": "R$ 1.985,99",
+        "descricao_curta": "💰 Poco C85 4G: o mais em conta da linha C85, com bateria de 6000mAh e tela 120Hz.",
+        "descricao_longa": "Versão 4G do Poco C85, mais acessível dentro da própria linha, mas sem abrir mão da bateria de 6000mAh e da tela de 120Hz que são o grande atrativo do modelo. Os 8GB de RAM com mais 8GB virtuais ajudam a manter vários apps abertos sem travar. Indicado para quem não depende de 5G no dia a dia e quer o menor investimento da família C85 com boa autonomia de bateria.",
+        "destaques": ["6000mAh", "120Hz", "256GB", "Menor preço da linha"],
+        "kit_inclui": null
+      }
+    ],
+    "REALME": [
+      {
+        "modelo": "Realme C85 Pro",
+        "marca": "Realme",
+        "specs": {
+          "armazenamento": "256GB",
+          "ram": "8GB",
+          "tela": "6.8\" AMOLED, 120Hz, ate 4000 nits (pico, conforme fabricante)",
+          "bateria": "7000mAh (Titan Battery), carregamento 45W",
+          "camera": "50MP f/1.8; frontal 8MP",
+          "chip": "Qualcomm Snapdragon 685"
+        },
+        "specs_fonte": "doc + GSMArena (verificado 2026-08-30)",
+        "custo": "R$ 1.678,00",
+        "venda": "R$ 2.528,00",
+        "descricao_curta": "🔋 Realme C85 Pro: bateria de 7000mAh + carregamento 45W — o aparelho que dura o dia todo.",
+        "descricao_longa": "O Realme C85 Pro é a resposta da marca para quem não quer se preocupar em carregar o celular: bateria de 7000mAh (Titan Battery) com carregamento rápido de 45W, capaz de recuperar boa parte da carga em poucos minutos. A tela AMOLED de 6.8\" com 120Hz entrega imagens vibrantes com fluidez de sobra. Certificações IP69 e MIL-STD-810H garantem resistência a água, poeira e quedas acima do padrão da categoria. Principal argumento de venda: 'aparelho que dura o dia todo', reforçado pela maior bateria do catálogo.",
+        "destaques": ["7000mAh", "45W", "AMOLED 120Hz", "IP69"],
+        "kit_inclui": null
+      }
+    ]
+  }
+}

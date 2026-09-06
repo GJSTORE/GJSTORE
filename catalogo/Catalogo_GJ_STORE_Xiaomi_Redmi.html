@@ -1,0 +1,278 @@
+<!DOCTYPE html><html lang='pt-BR'><head><meta charset='utf-8'><title>GJ STORE — Catálogo Xiaomi / Redmi</title><style>
+@page { size: A4; margin: 0; }
+* { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; }
+body { font-family: 'Open Sans', 'DejaVu Sans', sans-serif; color: #241d13; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+
+.page {
+  width: 210mm; height: 297mm; position: relative; overflow: hidden;
+  background: #faf6ee; padding: 0 14mm;
+  display: flex; flex-direction: column;
+  page-break-after: always;
+}
+.page:last-child { page-break-after: auto; }
+
+.topline { height: 2.2mm; background: linear-gradient(90deg,#b8892f,#e3c887 55%,#b8892f); margin: 0 -14mm; }
+.topline-sub { height: 0.4mm; background: #d8bc7f; margin: 1mm 0 0 -14mm; }
+
+header { padding: 9mm 0 5mm; position: relative; }
+.brand {
+  font-family: 'Montserrat', sans-serif; font-weight: 700; letter-spacing: 0.42em;
+  font-size: 13pt; color: #b8892f; text-transform: uppercase;
+}
+.brand-sub { font-family: 'Open Sans', sans-serif; font-weight: 600; letter-spacing: 0.25em; font-size: 7.5pt; color: #9c8a5f; margin-top: 1mm; }
+h1 {
+  font-family: 'Noto Serif', 'Liberation Serif', serif; font-weight: 600;
+  font-size: 27pt; line-height: 1.1; margin: 2.5mm 0 0; color: #241d13; letter-spacing: 0.005em;
+}
+.meta-line { margin-top: 2.5mm; font-family: 'Montserrat', sans-serif; font-size: 8.5pt; letter-spacing: 0.12em; text-transform: uppercase; color: #7a6f58; }
+.meta-line b { color: #b8892f; }
+
+.watermark { position: absolute; right: 0; top: 8mm; font-family: 'Noto Serif', serif; font-size: 52pt; color: #efe6d2; z-index: 0; }
+header, .stage, .specs, footer { position: relative; z-index: 2; }
+
+.stage { display: flex; gap: 8mm; flex: 1 1 auto; min-height: 0; }
+.hero { width: 52%; display: flex; flex-direction: column; align-items: center; }
+.frame-main {
+  width: 100%; flex: 1 1 auto; min-height: 0; position: relative;
+  background: radial-gradient(120% 90% at 50% 30%, #ffffff 40%, #f4ebd8 100%);
+  border: 1px solid #e5d5b0; border-radius: 3mm;
+  display: flex; align-items: center; justify-content: center; padding: 4mm;
+}
+.frame-main img { max-width: 88%; max-height: 100%; object-fit: contain; }
+.insp {
+  margin-top: 4mm; width: 100%;
+  border: 1px solid #c9a24b; border-radius: 2.2mm; background: #fffaf0;
+  padding: 2.6mm 3mm; text-align: center; display: flex; align-items: center; justify-content: center; gap: 2.4mm;
+}
+.insp svg { width: 5mm; height: 5mm; color: #b8892f; flex: 0 0 auto; }
+.insp-label { font-family: 'Montserrat', sans-serif; font-size: 7pt; letter-spacing: 0.3em; color: #b8892f; }
+.insp-name { font-family: 'Noto Serif', serif; font-size: 11.5pt; font-weight: 600; color: #241d13; margin-top: 0.6mm; }
+.thumbs { display: flex; gap: 3mm; margin-top: 3.5mm; width: 100%; }
+.thumbs .thumb {
+  width: 42%; aspect-ratio: 4 / 3.4; border: 1px solid #e5d5b0; border-radius: 2mm;
+  background: #fff; display: flex; align-items: center; justify-content: center; overflow: hidden; padding: 1.5mm;
+}
+.thumbs .thumb img { max-width: 96%; max-height: 96%; object-fit: contain; }
+.thumbs .thumb.spacer { visibility: hidden; }
+
+.side { width: 48%; display: flex; flex-direction: column; gap: 3.6mm; min-height: 0; }
+.chips { display: flex; flex-wrap: wrap; gap: 1.8mm; }
+.badge {
+  font-family: 'Montserrat', sans-serif; font-size: 7pt; font-weight: 600; letter-spacing: 0.08em;
+  text-transform: uppercase; color: #6b5a33; background: #f1e7cd; border: 1px solid #ddc893;
+  border-radius: 10mm; padding: 1.4mm 3mm;
+}
+.badge.strong { color: #fff; background: linear-gradient(135deg,#b8892f,#8a6a22); border-color: #8a6a22; }
+.badge.price {
+  color: #fff; background: linear-gradient(135deg,#2f7d4f,#1f5c39); border-color: #1f5c39;
+  font-size: 8.5pt; padding: 1.8mm 4mm;
+}
+
+.desc {
+  font-size: 9.3pt; line-height: 1.5; color: #3a3125; margin: 0; text-align: justify; hyphens: auto;
+}
+.desc .lead { color: #b8892f; font-weight: 700; }
+
+.techgrid {
+  background: #fff; border: 1px solid #e5d5b0; border-radius: 2.6mm; padding: 3mm 3mm 2.5mm; flex: 0 0 auto;
+}
+.py-title { font-family: 'Montserrat', sans-serif; font-size: 7pt; letter-spacing: 0.3em; color: #b8892f; text-align: center; margin-bottom: 2.2mm; }
+.tech-row { display: flex; align-items: flex-start; gap: 2.2mm; padding: 1.5mm 0; border-top: 1px dashed #eadcbd; }
+.tech-row:first-of-type { border-top: none; }
+.tech-icon { width: 6mm; height: 6mm; color: #b8892f; flex: 0 0 auto; margin-top: 0.3mm; }
+.tech-icon svg { width: 100%; height: 100%; }
+.tech-body { flex: 1 1 auto; }
+.tech-k { font-family: 'Montserrat', sans-serif; font-size: 6.4pt; letter-spacing: 0.18em; color: #9c8a5f; text-transform: uppercase; }
+.tech-v { font-size: 8.6pt; font-weight: 700; color: #241d13; margin-top: 0.4mm; line-height: 1.3; }
+
+.destaques { display: flex; flex-wrap: wrap; gap: 1.6mm; }
+.dchip {
+  display: inline-flex; align-items: center;
+  font-size: 7.4pt; color: #3a3125; background: #f8f2e4; border: 1px solid #e3d3a9;
+  border-radius: 1.6mm; padding: 0.9mm 2.4mm; font-weight: 600;
+}
+
+.quando {
+  display: flex; align-items: center; gap: 4mm;
+  background: linear-gradient(135deg, #fffaf0, #f6ecd6);
+  border: 1.2px solid #c9a24b; border-left: 3.2mm solid #b8892f;
+  border-radius: 2.6mm; padding: 3mm 4mm; margin: 0 0 4mm;
+}
+.quando svg { width: 9mm; height: 9mm; color: #b8892f; flex: 0 0 auto; }
+.quando-titulo { font-family: 'Montserrat', sans-serif; font-size: 7.5pt; font-weight: 700; letter-spacing: 0.3em; color: #8a6a22; }
+.quando-texto { font-size: 9.3pt; line-height: 1.5; color: #3a3125; margin-top: 0.8mm; text-align: justify; }
+
+.specs {
+  display: grid; grid-template-columns: repeat(4, 1fr); gap: 1px;
+  background: #e5d5b0; border: 1px solid #e5d5b0; border-radius: 2.4mm; overflow: hidden; margin: 4mm 0 3mm;
+}
+.spec { background: #fffdf7; padding: 2.2mm 3mm; display: flex; flex-direction: column; gap: 0.6mm; }
+.spec .k { font-family: 'Montserrat', sans-serif; font-size: 6.2pt; letter-spacing: 0.2em; color: #9c8a5f; text-transform: uppercase; }
+.spec .v { font-size: 8.6pt; font-weight: 700; color: #241d13; }
+.spec.venda { background: #f3f9f4; }
+.spec.venda .v { color: #1f5c39; }
+
+footer {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 2.5mm 0 4mm; border-top: 0.4mm solid #d8bc7f;
+  font-family: 'Montserrat', sans-serif; font-size: 7pt; letter-spacing: 0.22em; color: #9c8a5f;
+}
+footer .pageno { color: #b8892f; font-weight: 700; }
+</style></head><body><svg xmlns="http://www.w3.org/2000/svg" style="display:none"><symbol id="i-tela" viewBox="0 0 24 24"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M9 21h6"/></symbol><symbol id="i-bateria" viewBox="0 0 24 24"><rect x="3" y="8" width="16" height="8" rx="1.5"/><path d="M21 10.5v3"/><path d="M6 8v8M9 8v8" opacity="0"/></symbol><symbol id="i-camera" viewBox="0 0 24 24"><path d="M4 8h3l1.5-2h7L17 8h3v11H4z"/><circle cx="12" cy="13.5" r="3.4"/></symbol><symbol id="i-chip" viewBox="0 0 24 24"><rect x="7" y="7" width="10" height="10" rx="1.2"/><path d="M9 3v3M12 3v3M15 3v3M9 18v3M12 18v3M15 18v3M3 9h3M3 12h3M3 15h3M18 9h3M18 12h3M18 15h3"/></symbol><symbol id="i-armazenamento" viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="2"/><path d="M8 4v4h8V4"/><circle cx="12" cy="14" r="2.2"/></symbol><symbol id="i-ram" viewBox="0 0 24 24"><rect x="3" y="9" width="18" height="7" rx="1.2"/><path d="M6 9V6M10 9V6M14 9V6M18 9V6M6 16v3M10 16v3M14 16v3M18 16v3"/></symbol><symbol id="i-preco" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 6.5v11M15 9.2c0-1.4-1.3-2.2-3-2.2s-3 .9-3 2.3 1.3 1.9 3 2.2c1.7.3 3 .8 3 2.2s-1.3 2.3-3 2.3-3-.8-3-2.2"/></symbol><symbol id="i-kit" viewBox="0 0 24 24"><path d="M4 8h16v11H4z"/><path d="M4 8l3-4h10l3 4"/><path d="M12 8v11" opacity="0"/></symbol><symbol id="i-temp" viewBox="0 0 24 24"><path d="M12 2a2 2 0 0 1 2 2v9.2a4 4 0 0 1-4 0V4a2 2 0 0 1 2-2z"/><path d="M12 9v4"/><path d="M9.5 13a2.5 2.5 0 1 0 5 0"/></symbol></svg>
+<section class="page">
+  <div class="topline"></div>
+  <div class="topline-sub"></div>
+  <header>
+    <div class="watermark">01</div>
+    <div class="brand">Xiaomi/Redmi</div>
+    <div class="brand-sub">SMARTPHONE · GJ STORE</div>
+    <h1>Redmi 15 Global</h1>
+    <div class="meta-line">256GB · <b>8GB RAM</b> · Snapdragon 6s Gen 3</div>
+  </header>
+
+  <div class="stage">
+    <div class="hero">
+      <div class="frame-main"><img src="file:///home/nework/%C3%81rea%20de%20trabalho/DOCUMENTOS/PROJETOS%20%2B%20MIND/GJ%20STORE/catalogo/assets/img/_cache_smartphones/xiaomi-redmi_redmi-15-global_1_gsmarena.jpg"></div>
+      
+      <div class="thumbs"><div class="thumb"><img src="file:///home/nework/%C3%81rea%20de%20trabalho/DOCUMENTOS/PROJETOS%20%2B%20MIND/GJ%20STORE/catalogo/assets/img/_cache_smartphones/xiaomi-redmi_redmi-15-global_2_gsmarena.jpg"></div></div>
+    </div>
+
+    <div class="side">
+      <div class="chips">
+        <span class="badge price">R$ 2.188,00</span>
+        <span class="badge strong">256GB</span>
+        <span class="badge">8GB RAM</span>
+      </div>
+      <p class="desc"><span class="lead">Xiaomi/Redmi</span> — O Redmi 15 Global se destaca pela bateria de 7000mAh, uma das maiores da faixa de preço, garantindo tranquilamente mais de um dia de uso sem precisar de tomada. A tela de 6.9" com 144Hz de taxa de atualização entrega fluidez extra em jogos e rolagem de redes sociais. O Snapdragon 6s Gen 3 equilibra bem desempenho e consumo de energia. Recomendado para quem vive fora de casa o dia inteiro e não quer depender de carregador portátil.</p>
+
+      <div class="techgrid">
+        <div class="py-title">FICHA TÉCNICA</div>
+        <div class="tech-row"><div class="tech-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><use href="#i-tela"/></svg></div><div class="tech-body"><div class="tech-k">Tela</div><div class="tech-v">6.9" FHD+, 144Hz</div></div></div>
+        <div class="tech-row"><div class="tech-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><use href="#i-bateria"/></svg></div><div class="tech-body"><div class="tech-k">Bateria</div><div class="tech-v">7000mAh, carregamento 33W</div></div></div>
+        <div class="tech-row"><div class="tech-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><use href="#i-camera"/></svg></div><div class="tech-body"><div class="tech-k">Câmera</div><div class="tech-v">50MP + 2MP; frontal 8MP</div></div></div>
+        <div class="tech-row"><div class="tech-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><use href="#i-chip"/></svg></div><div class="tech-body"><div class="tech-k">Chip</div><div class="tech-v">Snapdragon 6s Gen 3</div></div></div>
+      </div>
+
+      <div class="destaques"><span class="dchip">7000mAh</span><span class="dchip">144Hz</span><span class="dchip">5G</span><span class="dchip">Bateria recorde</span></div>
+    </div>
+  </div>
+
+  <div class="specs">
+    <div class="spec"><div class="k">Marca</div><div class="v">Xiaomi/Redmi</div></div>
+    <div class="spec"><div class="k">Armazenamento</div><div class="v">256GB</div></div>
+    <div class="spec"><div class="k">Memória RAM</div><div class="v">8GB</div></div>
+    <div class="spec"><div class="k">Chip</div><div class="v">Snapdragon 6s Gen 3</div></div>
+    <div class="spec"><div class="k">Tela</div><div class="v">6.9" FHD+, 144Hz</div></div>
+    <div class="spec"><div class="k">Bateria</div><div class="v">7000mAh, carregamento 33W</div></div>
+    <div class="spec"><div class="k">Câmera</div><div class="v">50MP + 2MP; frontal 8MP</div></div>
+    <div class="spec venda"><div class="k">Preço de venda</div><div class="v">R$ 2.188,00</div></div>
+  </div>
+
+  <footer><span>CATÁLOGO · SMARTPHONES XIAOMI/REDMI</span><span class="pageno">01 / 03</span></footer>
+</section>
+
+<section class="page">
+  <div class="topline"></div>
+  <div class="topline-sub"></div>
+  <header>
+    <div class="watermark">02</div>
+    <div class="brand">Xiaomi/Redmi</div>
+    <div class="brand-sub">SMARTPHONE · GJ STORE</div>
+    <h1>Redmi 15c</h1>
+    <div class="meta-line">256GB · <b>8GB RAM</b> · MediaTek Helio G81 Ultra</div>
+  </header>
+
+  <div class="stage">
+    <div class="hero">
+      <div class="frame-main"><img src="file:///home/nework/%C3%81rea%20de%20trabalho/DOCUMENTOS/PROJETOS%20%2B%20MIND/GJ%20STORE/catalogo/assets/img/_cache_smartphones/xiaomi-redmi_redmi-15c_1_gsmarena.jpg"></div>
+      
+      <div class="thumbs"><div class="thumb"><img src="file:///home/nework/%C3%81rea%20de%20trabalho/DOCUMENTOS/PROJETOS%20%2B%20MIND/GJ%20STORE/catalogo/assets/img/_cache_smartphones/xiaomi-redmi_redmi-15c_2_gsmarena.jpg"></div></div>
+    </div>
+
+    <div class="side">
+      <div class="chips">
+        <span class="badge price">R$ 1.949,00</span>
+        <span class="badge strong">256GB</span>
+        <span class="badge">8GB RAM</span>
+      </div>
+      <p class="desc"><span class="lead">Xiaomi/Redmi</span> — O Redmi 15c entrega bateria de 6000mAh, bem acima da média da categoria, ideal para quem usa o celular o dia inteiro sem parar para carregar. A tela grande de 6.9" com 120Hz deixa a navegação mais suave que o padrão de entrada. Com Dual Sim e 256GB de armazenamento com 8GB de RAM, atende bem quem usa duas linhas ou trabalha com o aparelho. Ótima opção de entrada com foco total em autonomia de bateria.</p>
+
+      <div class="techgrid">
+        <div class="py-title">FICHA TÉCNICA</div>
+        <div class="tech-row"><div class="tech-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><use href="#i-tela"/></svg></div><div class="tech-body"><div class="tech-k">Tela</div><div class="tech-v">6.9" HD+, 120Hz</div></div></div>
+        <div class="tech-row"><div class="tech-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><use href="#i-bateria"/></svg></div><div class="tech-body"><div class="tech-k">Bateria</div><div class="tech-v">6000mAh, carregamento 33W</div></div></div>
+        <div class="tech-row"><div class="tech-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><use href="#i-camera"/></svg></div><div class="tech-body"><div class="tech-k">Câmera</div><div class="tech-v">50MP; frontal 8MP</div></div></div>
+        <div class="tech-row"><div class="tech-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><use href="#i-chip"/></svg></div><div class="tech-body"><div class="tech-k">Chip</div><div class="tech-v">MediaTek Helio G81 Ultra</div></div></div>
+      </div>
+
+      <div class="destaques"><span class="dchip">6000mAh</span><span class="dchip">120Hz</span><span class="dchip">Dual Sim</span><span class="dchip">256GB</span></div>
+    </div>
+  </div>
+
+  <div class="specs">
+    <div class="spec"><div class="k">Marca</div><div class="v">Xiaomi/Redmi</div></div>
+    <div class="spec"><div class="k">Armazenamento</div><div class="v">256GB</div></div>
+    <div class="spec"><div class="k">Memória RAM</div><div class="v">8GB</div></div>
+    <div class="spec"><div class="k">Chip</div><div class="v">MediaTek Helio G81 Ultra</div></div>
+    <div class="spec"><div class="k">Tela</div><div class="v">6.9" HD+, 120Hz</div></div>
+    <div class="spec"><div class="k">Bateria</div><div class="v">6000mAh, carregamento 33W</div></div>
+    <div class="spec"><div class="k">Câmera</div><div class="v">50MP; frontal 8MP</div></div>
+    <div class="spec venda"><div class="k">Preço de venda</div><div class="v">R$ 1.949,00</div></div>
+  </div>
+
+  <footer><span>CATÁLOGO · SMARTPHONES XIAOMI/REDMI</span><span class="pageno">02 / 03</span></footer>
+</section>
+
+<section class="page">
+  <div class="topline"></div>
+  <div class="topline-sub"></div>
+  <header>
+    <div class="watermark">03</div>
+    <div class="brand">Xiaomi/Redmi</div>
+    <div class="brand-sub">SMARTPHONE · GJ STORE</div>
+    <h1>Redmi 15 Dual</h1>
+    <div class="meta-line">128GB · <b>6GB RAM</b> · Qualcomm Snapdragon 685</div>
+  </header>
+
+  <div class="stage">
+    <div class="hero">
+      <div class="frame-main"><img src="file:///home/nework/%C3%81rea%20de%20trabalho/DOCUMENTOS/PROJETOS%20%2B%20MIND/GJ%20STORE/catalogo/assets/img/_cache_smartphones/xiaomi-redmi_redmi-15-dual_1_gsmarena.jpg"></div>
+      
+      <div class="thumbs"><div class="thumb"><img src="file:///home/nework/%C3%81rea%20de%20trabalho/DOCUMENTOS/PROJETOS%20%2B%20MIND/GJ%20STORE/catalogo/assets/img/_cache_smartphones/xiaomi-redmi_redmi-15-dual_2_gsmarena.jpg"></div></div>
+    </div>
+
+    <div class="side">
+      <div class="chips">
+        <span class="badge price">R$ 1.899,90</span>
+        <span class="badge strong">128GB</span>
+        <span class="badge">6GB RAM</span>
+      </div>
+      <p class="desc"><span class="lead">Xiaomi/Redmi</span> — O Redmi 15 Dual traz a mesma bateria robusta de 7000mAh da linha 15, capaz de sustentar dois dias de uso moderado, agora num pacote de entrada mais acessível. A tela de 6.9" com 144Hz surpreende positivamente nessa faixa, com fluidez que poucos concorrentes entregam no preço. Ideal para quem prioriza duração de bateria acima de tudo e quer 5G disponível na linha, sem gastar muito. Bom argumento de venda: 'carrega uma vez e esquece o carregador'.</p>
+
+      <div class="techgrid">
+        <div class="py-title">FICHA TÉCNICA</div>
+        <div class="tech-row"><div class="tech-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><use href="#i-tela"/></svg></div><div class="tech-body"><div class="tech-k">Tela</div><div class="tech-v">6.9" IPS LCD FHD+, 144Hz</div></div></div>
+        <div class="tech-row"><div class="tech-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><use href="#i-bateria"/></svg></div><div class="tech-body"><div class="tech-k">Bateria</div><div class="tech-v">7000mAh, carregamento 33W</div></div></div>
+        <div class="tech-row"><div class="tech-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><use href="#i-camera"/></svg></div><div class="tech-body"><div class="tech-k">Câmera</div><div class="tech-v">50MP; frontal 8MP</div></div></div>
+        <div class="tech-row"><div class="tech-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><use href="#i-chip"/></svg></div><div class="tech-body"><div class="tech-k">Chip</div><div class="tech-v">Qualcomm Snapdragon 685</div></div></div>
+      </div>
+
+      <div class="destaques"><span class="dchip">7000mAh</span><span class="dchip">144Hz</span><span class="dchip">Entrada</span><span class="dchip">Dual Sim</span></div>
+    </div>
+  </div>
+
+  <div class="specs">
+    <div class="spec"><div class="k">Marca</div><div class="v">Xiaomi/Redmi</div></div>
+    <div class="spec"><div class="k">Armazenamento</div><div class="v">128GB</div></div>
+    <div class="spec"><div class="k">Memória RAM</div><div class="v">6GB</div></div>
+    <div class="spec"><div class="k">Chip</div><div class="v">Qualcomm Snapdragon 685</div></div>
+    <div class="spec"><div class="k">Tela</div><div class="v">6.9" IPS LCD FHD+, 144Hz</div></div>
+    <div class="spec"><div class="k">Bateria</div><div class="v">7000mAh, carregamento 33W</div></div>
+    <div class="spec"><div class="k">Câmera</div><div class="v">50MP; frontal 8MP</div></div>
+    <div class="spec venda"><div class="k">Preço de venda</div><div class="v">R$ 1.899,90</div></div>
+  </div>
+
+  <footer><span>CATÁLOGO · SMARTPHONES XIAOMI/REDMI</span><span class="pageno">03 / 03</span></footer>
+</section>
+</body></html>
