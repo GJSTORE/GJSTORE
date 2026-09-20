@@ -169,6 +169,9 @@ function handleAction(p) {
       case "testarBackup":         { const b = backupPlanilha(); result = b.ok ? { ok: true, msg: "Backup criado: " + b.arquivo + (b.removidos ? " · " + b.removidos + " antigo(s) removido(s)" : "") } : { ok: false, error: b.erro }; } break;
       case "excluirPedidoHard":    result = excluirPedidoHard(p);               break;
       case "getCobrancasPendentes": result = getCobrancasPendentes();           break;
+      case "getCobrancasV2":       result = getCobrancasV2(p);                  break;
+      case "receberCobranca":      result = receberCobranca(p);                 break;
+      case "adiarCobranca":        result = adiarCobranca(p);                   break;
       case "getLogAcoes":          result = getLogAcoes(p);                     break;
       case "analyticsHealth":      result = analyticsHealth();                  break;
       case "getVisitorMap":        result = getVisitorMap(p);                   break;
@@ -178,6 +181,7 @@ function handleAction(p) {
       case "salvarProdutosBatch":  result = salvarProdutosBatch(p);             break;
       case "_corrigirIdsVazios":   result = _corrigirIdsVazios();               break;
       case "atualizarProdutosBatch": result = atualizarProdutosBatch(p);        break;
+      case "atualizarConfig":       result = atualizarConfig(p);                 break;
       case "excluirProdutosBatch":  result = excluirProdutosBatch(p);            break;
       case "fixarIDsVazios":        result = fixarIDsVazios();                   break;
       case "debugFindRow":          result = debugFindRow(p);                   break;
@@ -1855,8 +1859,8 @@ function darBaixa(p) {
   // Juros
   let taxaRS = 0;
   if (p.statusPagamento === "Atrasado COM Taxa" && diasAtraso > 0) {
-    const taxaDiaria = Number(getConfigValue("TAXA_ATRASO_PADRAO_DIARIA_PERCENTUAL") || "0.33");
-    taxaRS = valorOriginal * (taxaDiaria / 100) * diasAtraso;
+    // 2026-09-20: regra do dono é R$/dia fixo (padrão R$5), igual à mensagem de cobrança e ao getCobrancasV2
+    taxaRS = _cobJurosDia() * diasAtraso;
   }
   const valorFinal = valorOriginal + taxaRS;
 
@@ -1891,7 +1895,8 @@ function darBaixa(p) {
   if (!shFin) return { error: "Aba Financeiro_Fluxo não existe. Execute setupSheets primeiro." };
 
   const statusFin = isParcial ? "Pago Parcial" : p.statusPagamento;
-  const saldoRestante = isParcial ? (valorFinal - valorPago) : 0;
+  // 2026-09-20: base é o saldo pendente (não o valorFinal) — na 2ª baixa parcial o saldo saía maior que o real
+  const saldoRestante = isParcial ? (baseValor - valorPago) : 0;
 
   // Registra pagamento (parcial ou total)
   appendRowByHeaders("Financeiro_Fluxo", {
@@ -4955,6 +4960,38 @@ function atualizarProdutosBatch(p) {
   }
   _clearProdCache();
   return { ok: true, updated: updated, notFound: notFound };
+}
+
+// Upsert de pares Chave/Valor na aba Config (cria linha se a chave não existir, atualiza se
+// existir). Usado pra edição de textos configuráveis (hero da home etc.) sem precisar abrir
+// a planilha manualmente.
+function atualizarConfig(p) {
+  if (!_checkAdmin(p)) return { ok: false, erro: "Não autorizado" };
+  const itens = p.itens || []; // [{chave, valor, descricao?}, ...]
+  if (!itens.length) return { ok: false, erro: "itens obrigatório" };
+  const sh = getSheet("Config");
+  if (!sh) return { ok: false, erro: "Aba Config não encontrada" };
+  const data = sh.getDataRange().getValues();
+  const chaveMap = {};
+  for (let i = 1; i < data.length; i++) {
+    const chave = String(data[i][0] || "");
+    if (chave) chaveMap[chave] = i + 1;
+  }
+  let updated = 0, created = 0;
+  for (const item of itens) {
+    const chave = String(item.chave || "").trim();
+    if (!chave) continue;
+    const valor = item.valor !== undefined ? item.valor : "";
+    const rowNum = chaveMap[chave];
+    if (rowNum) {
+      sh.getRange(rowNum, 2).setValue(valor);
+      updated++;
+    } else {
+      sh.appendRow([chave, valor, item.descricao || ""]);
+      created++;
+    }
+  }
+  return { ok: true, updated: updated, created: created };
 }
 
 function excluirProdutosBatch(p) {
