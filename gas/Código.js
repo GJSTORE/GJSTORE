@@ -172,6 +172,7 @@ function handleAction(p) {
       case "getCobrancasV2":       result = getCobrancasV2(p);                  break;
       case "receberCobranca":      result = receberCobranca(p);                 break;
       case "adiarCobranca":        result = adiarCobranca(p);                   break;
+      case "diagnosticoDrive":     result = diagnosticoDrive(p);                break;
       case "getLogAcoes":          result = getLogAcoes(p);                     break;
       case "analyticsHealth":      result = analyticsHealth();                  break;
       case "getVisitorMap":        result = getVisitorMap(p);                   break;

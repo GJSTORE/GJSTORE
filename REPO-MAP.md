@@ -69,3 +69,8 @@ nova. Ação do dono: abrir Apps Script → ver qual é a implantação atual �
 - recibo do gestao (verde) diferente do index (escuro) por versão presa no repo errado.
 
 → Ver `mind/decisions.md` P27 | `mind/ARQUITETURA.md`.
+
+---
+
+## 2026-09-20 — o admin usa OUTRA implantação do Apps Script (a @104, `AKfycbzKiQNj…`)
+Ao publicar a aba Cobrar, o admin deu "Ação desconhecida: getCobrancasV2": o `config.js` do repo GJSTORE-ADM aponta pra `AKfycbzKiQNj…`, não pra produção da loja (`AKfycbxA0KPHoZ…`). Correção: `clasp update-deployment -V 113 <implantação do admin>` (as duas agora rodam a MESMA versão). **Sempre que fizer `clasp create-version`, atualizar as DUAS implantações** (ou unificar os 2 config.js — decisão do dono, acima).

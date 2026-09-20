@@ -315,3 +315,29 @@ function adiarCobranca(p) {
   } catch (e) { return { ok: false, error: e.message }; }
   finally { try { lock.releaseLock(); } catch (e2) {} }
 }
+
+// Diagnóstico de por que a GRAVAÇÃO na planilha falha ("Você não tem permissão para acessar o
+// documento"): mostra se a conta que executa o script ainda é EDITORA da planilha e quanto do
+// Drive está ocupado. Só admin. E-mails mascarados.
+function diagnosticoDrive(p) {
+  if (!adminLoginId(p && p.token)) return { ok: false, error: "Não autorizado" };
+  function mask(e) { e = String(e || ""); var i = e.indexOf("@"); return i > 2 ? e.slice(0, 3) + "***" + e.slice(i) : e; }
+  var out = { ok: true };
+  try {
+    var usado = DriveApp.getStorageUsed(), limite = DriveApp.getStorageLimit();
+    out.driveUsadoGB = Math.round(usado / 1e7) / 100;
+    out.limiteContaGB = Math.round(limite / 1e7) / 100;
+    out.driveUsadoPct = limite ? Math.round(usado / limite * 1000) / 10 : null;
+  } catch (e) { out.erroQuota = e.message; }
+  try {
+    var user = Session.getEffectiveUser();
+    var f = DriveApp.getFileById(SS.getId());
+    out.executor = mask(user.getEmail());
+    out.donoPlanilha = mask(f.getOwner() ? f.getOwner().getEmail() : "");
+    out.acessoDoExecutor = String(f.getAccess(user));
+    out.compartilhamento = String(f.getSharingAccess()) + "/" + String(f.getSharingPermission());
+    out.tamanhoPlanilhaMB = Math.round(f.getSize() / 1e4) / 100;
+  } catch (e) { out.erroArquivo = e.message; }
+  try { out.abasLidas = SS.getSheets().length; } catch (e) { out.erroLeitura = e.message; }
+  return out;
+}
