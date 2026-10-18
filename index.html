@@ -4505,7 +4505,7 @@
       const nPagas = pagas.length, nPend = pendentes.length;
       // 2026-10-18: pedido com plano fixo nas Observações ("21x de R$350 + 1x de R$250") → servidor manda
       // a conta pronta (mesma da aba Cobrar): parcela atual, valor dela e vencimento mensal.
-      const cobP = (p.cob && p.cob.plano) ? p.cob : null;
+      const cobP = (p.cob && (p.cob.plano || p.cob.parcelas > 1)) ? p.cob : null;   // parcelado: conta do servidor (= aba Cobrar)
       const totalParc = (cobP && cobP.parcelas) || qtdParc || (nPagas + nPend) || 0;
       const valorParcelaCli = cobP ? cobP.valor : (totalParc > 0 ? total / totalParc : 0);
       const mkBxRow = (b, isPend, num) => {
@@ -4530,7 +4530,7 @@
           </div>
         </div>`;
       };
-      const bxHtml = [...pagas.map((b, i) => mkBxRow(b, false, i + 1)), ...pendentes.map((b, i) => mkBxRow(b, true, nPagas + i + 1))].join("");
+      const bxHtml = [...pagas.map((b, i) => mkBxRow(b, false, i + 1)), ...pendentes.map((b, i) => mkBxRow(b, true, (cobP ? cobP.parcela - 1 : nPagas) + i + 1))].join("");
       const temHist = (nPagas + nPend) > 0;
 
       // Próxima parcela a vencer
