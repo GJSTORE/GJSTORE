@@ -4503,8 +4503,11 @@
       // Saldo / parcelas
       const { pagas, pendentes, totalPago, saldo, pct, quitado } = _rcCalcSaldo(p.baixas, total);
       const nPagas = pagas.length, nPend = pendentes.length;
-      const totalParc = qtdParc || (nPagas + nPend) || 0;
-      const valorParcelaCli = totalParc > 0 ? total / totalParc : 0;
+      // 2026-10-18: pedido com plano fixo nas Observações ("21x de R$350 + 1x de R$250") → servidor manda
+      // a conta pronta (mesma da aba Cobrar): parcela atual, valor dela e vencimento mensal.
+      const cobP = (p.cob && p.cob.plano) ? p.cob : null;
+      const totalParc = (cobP && cobP.parcelas) || qtdParc || (nPagas + nPend) || 0;
+      const valorParcelaCli = cobP ? cobP.valor : (totalParc > 0 ? total / totalParc : 0);
       const mkBxRow = (b, isPend, num) => {
         const vl = Number(isPend ? (valorParcelaCli || b.Saldo_Restante || b.Valor_Original || 0) : (b.Valor_Final_Recebido || 0));
         const st = b.Status_Pagamento || "";
@@ -4534,9 +4537,10 @@
       const proxPend = pendentes[0] || null;
       const proxBanner = proxPend && !quitado ? (() => {
         const vl = Number(valorParcelaCli || proxPend.Saldo_Restante || proxPend.Valor_Original || 0);
-        const dt = _rcDate(proxPend.Proxima_Vencimento);
-        const num = nPagas + 1;
-        const isHoje = proxPend.Proxima_Vencimento && new Date(_rcDate(proxPend.Proxima_Vencimento).split("/").reverse().join("-")) <= new Date();
+        const dt = cobP && cobP.vencimento ? cobP.vencimento : _rcDate(proxPend.Proxima_Vencimento);
+        const num = cobP ? cobP.parcela : nPagas + 1;
+        const isHoje = cobP ? (cobP.diasAtraso > 0 || cobP.vencimento === new Date().toLocaleDateString("pt-BR"))
+          : (proxPend.Proxima_Vencimento && new Date(_rcDate(proxPend.Proxima_Vencimento).split("/").reverse().join("-")) <= new Date());
         return `<div style="padding:10px 16px;background:${isHoje ? "rgba(244,67,54,.15)" : "rgba(0,188,212,.08)"};border-bottom:1px solid ${isHoje ? "rgba(244,67,54,.3)" : "rgba(0,188,212,.2)"}">
           <div style="display:flex;justify-content:space-between;align-items:center">
             <div>
@@ -4582,8 +4586,8 @@
           </div>
         </div>
         ${(qtdParc > 1 || temHist) ? (() => {
-          const totalParc2 = qtdParc || (nPagas + nPend) || 1;
-          const pagas2 = nPagas;
+          const totalParc2 = totalParc || 1;
+          const pagas2 = cobP ? cobP.parcela - 1 : nPagas;
           const faltam = totalParc2 - pagas2;
           const bgC = quitado ? "rgba(0,230,118,.12)" : pagas2 > 0 ? "rgba(0,188,212,.08)" : "rgba(255,183,77,.08)";
           const borderC = quitado ? "rgba(0,230,118,.3)" : pagas2 > 0 ? "rgba(0,188,212,.2)" : "rgba(255,183,77,.2)";
