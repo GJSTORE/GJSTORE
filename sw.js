@@ -1,4 +1,4 @@
-const CACHE = 'gjstore-v25';
+const CACHE = 'gjstore-v26';
 const SHELL = ['./index.html', './config.js', './manifest.json'];
 
 self.addEventListener('install', e => {
@@ -31,7 +31,9 @@ self.addEventListener('fetch', e => {
   const isHTML = req.mode === 'navigate' || (req.headers.get('accept') || '').includes('text/html');
   if (isHTML || url.includes('config.js')) {
     e.respondWith(
-      fetch(req).then(res => {
+      // 2026-10-18: no-store — sem isso o navegador servia o HTML do cache HTTP do GitHub (até 10 min)
+      // e celular ficava com recibo antigo mesmo após "limpar dados do app".
+      fetch(req.url, { cache: "no-store" }).then(res => {   // URL (não o Request): navegação não aceita init
         const copy = res.clone();
         caches.open(CACHE).then(c => c.put(req, copy)).catch(() => {});
         return res;
