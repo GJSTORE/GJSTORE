@@ -2935,7 +2935,7 @@
       return fetch(u.toString(), { signal: ctrl.signal }).then(r => { clearTimeout(timer); if (!r.ok) throw new Error("HTTP " + r.status); return r.json(); }).catch(e => { clearTimeout(timer); throw e; });
     }
     function clearCache() { for (const k of Object.keys(sessionStorage)) { if (!k.startsWith("gjc")) sessionStorage.removeItem(k); } }
-    function fmt(v) { return "R$ " + Number(v || 0).toLocaleString("pt-BR", { minimumFractionDigits: 2 }); }
+    function fmt(v) { return "R$ " + Number(v || 0).toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
     function pf(p) { const a = Number(p["Preço (R$)"] || 0), b = Number(p["Preço Promo (R$)"] || 0); return b > 0 && b < a ? b : a; }
     // C3: nome de produto vai direto pra innerHTML em vários cards — escapar evita HTML/script quebrar o layout ou executar
     function esc(s) { const d = document.createElement("div"); d.textContent = String(s || ""); return d.innerHTML; }
@@ -3457,7 +3457,7 @@
       const estoque = temEstoque ? Number(estRaw) : null;
       const esgotado = temEstoque && estoque === 0;
       const scarc = !esgotado && estoque !== null && estoque > 0 && estoque <= 3 ? `<div class="scarcity-bar">🔥 Restam apenas ${estoque} unid.!</div>` : "";
-      const tags = String(p["Tags_Personalizadas"] || "").split(",").map(t => t.trim()).filter(Boolean);
+      const tags = String(p["Tags_Personalizadas"] || "").split(",").map(t => t.trim()).filter(t => t && t.toLowerCase() !== "atacado");
       const tagHtml = tags.length ? tags.map(t => `<span class="ptag-badge">${t}</span>`).join(" ") + " " : "";
       const d = JSON.stringify(p).replace(/'/g, "&apos;");
       const wpp = getWpp();
@@ -3476,7 +3476,7 @@
         <div class="pname">${esc(p["Nome do Produto"] || "—")}</div>
         ${pm > 0 && pm < pr ? `<div class="pold">${fmt(pr)}</div>` : ""}
         <div class="pprice">${esgotado ? `<span style="color:var(--muted);font-size:14px">Indisponível</span>` : fmt(pfv)}</div>
-        ${!esgotado && parc > 1 ? `<div class="ppar">${parc}x de ${fmt(pfv / parc)}</div>` : ""}
+        ${!esgotado && parc > 1 ? `<div class="ppar">Parcelamos sem cartão</div>` : ""}
         ${scarc}
         ${esgotado
           ? `<a href="https://wa.me/${wpp}?text=${encodeURIComponent("Olá! Quero ser avisado quando chegar: " + (p["Nome do Produto"]||""))}" target="_blank" class="padd" style="display:flex;align-items:center;justify-content:center;gap:5px;background:rgba(37,211,102,.1);color:#25d366;border-color:rgba(37,211,102,.25);text-decoration:none">💬 Avise-me</a>`
@@ -3633,7 +3633,8 @@
       document.getElementById("mname").textContent = p["Nome do Produto"] || "";
       document.getElementById("mold").textContent = pm > 0 && pm < pr ? fmt(pr) : "";
       document.getElementById("mprice").textContent = fmt(pfv);
-      document.getElementById("mpar").textContent = parc > 1 ? `ou ${parc}x de ${fmt(pfv / parc)}` : "";
+      // 2026-11-13: sem valor de parcela — o plano depende de análise do dono, caso a caso
+      document.getElementById("mpar").textContent = parc > 1 ? "Parcelamento sem cartão, sujeito a análise" : "";
       document.getElementById("mdesc").textContent = p["Descrição"] || "";
       document.getElementById("mwpp").href = `https://wa.me/${wpp}?text=Olá!+Interesse+em:+*${encodeURIComponent(p["Nome do Produto"] || "")}*`;
       // coração no modal
@@ -4023,6 +4024,9 @@
         setTimeout(() => {
           // A2: se o cliente já rolou a página (tá vendo produto/decidindo), não interrompe
           if (window.scrollY > 200) return;
+          // 2026-11-13: no máximo 1 aviso por visita — se o do Instagram já abriu, este fica pra próxima
+          const fv = document.getElementById("fvOverlay");
+          if (fv && fv.classList.contains("show")) return;
           const m = document.getElementById("wModal");
           if (m) { m.classList.remove("hidden"); document.body.style.overflow = "hidden"; }
         }, 3500); // 3.5s — cliente vê os produtos antes do modal
@@ -4946,6 +4950,8 @@
       // Não exibir se veio do instagram (já tem o banner específico)
       if (ref.includes("instagram.com")) return;
       setTimeout(() => {
+        const w = document.getElementById("wModal");
+        if ((w && !w.classList.contains("hidden")) || window.scrollY > 200) return; // tenta na próxima visita
         const ov = document.getElementById("fvOverlay");
         if (ov) ov.classList.add("show");
       }, 4000);
