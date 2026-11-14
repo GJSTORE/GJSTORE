@@ -2463,6 +2463,9 @@
     .v2mot p{font-size:14px;line-height:1.45;color:var(--muted);margin:8px 0 0}
     .v2mot b{margin-top:auto;padding-top:18px;white-space:nowrap;font:800 clamp(26px,8.2vw,36px)/1 var(--H);background:linear-gradient(90deg,var(--g),var(--c));-webkit-background-clip:text;background-clip:text;color:transparent}
     /* vitrine de celulares */
+    .v2dest{padding:22px 0 8px}
+    .v2dest[hidden]{display:none}
+    .v2astro video{display:block;width:100%;aspect-ratio:1;object-fit:cover;border-radius:16px;background:#000}
     .v2noite{padding:26px 0 20px}
     .v2noite[hidden]{display:none}
     .v2mais{background:none;border:0;cursor:pointer;font:700 13px var(--B);color:var(--g);padding:6px 0 6px 10px;white-space:nowrap}
@@ -2634,6 +2637,15 @@
     </div>
   </section>
 
+  <!-- DESTAQUE DA HOME (vídeo/promo, configurável no ADM) — logo depois da abertura -->
+  <div id="destSec" style="display:none"></div>
+
+  <!-- V2: PRODUTOS EM DESTAQUE (campo "Destaque? Sim" do produto; painel ADM → Vitrine da home) -->
+  <section class="v2dest" id="v2dest" hidden>
+    <div class="v2pad"><div class="shdr v2rv"><div class="stitle"><div class="pip" style="background:var(--o)"></div>Em destaque</div></div></div>
+    <div class="v2fila" id="v2filaDest"></div>
+  </section>
+
   <!-- V2: MOTIVOS -->
   <div class="v2banda">
     <div class="v2pad"><div class="shdr v2rv"><div class="stitle"><div class="pip"></div>Por que comprar na GJ</div></div></div>
@@ -2652,7 +2664,6 @@
   </section>
 
   <!-- DESTAQUE DINÂMICO (G5.1) -->
-  <div id="destSec" style="display:none"></div>
 
   <!-- RECENT PRODUCTS -->
   <div id="recentSec" style="display:none">
@@ -5264,25 +5275,59 @@
       const p = achar(id);
       if (p) { vitCfg = usavel(p) ? p : null; return; }
       if (buscouCfg || pool.length < 200) return;
-      buscouCfg = true; // fora dos 200 primeiros: procura nas páginas seguintes do catálogo, uma vez só
-      (async () => {
-        for (let off = 200; off < 2000; off += 200) {
+      buscouCfg = true; // fora dos 200 primeiros: espera o resto do catálogo (uma vez só)
+      carregaResto().then(() => { produtoDaConfig(); pintaAstro(); });
+    }
+    // 200 primeiros vêm rápido; o resto do catálogo chega em segundo plano (destaques e celulares fora dos 200 primeiros)
+    let restoP = null;
+    const redeFraca = () => { const c = navigator.connection || {}; return !!c.saveData || /(^|-)2g$/.test(c.effectiveType || ""); };
+    function carregaResto() {
+      return restoP ||= (async () => {
+        if (pool.length < 200 || redeFraca()) return false; // conexão fraca: fica com os 200 primeiros
+        for (let off = pool.length; off < 2000;) {
           const r = await apiG("getProdutos", {limit: 200, offset: off}), l = (r && r.produtos) || [];
-          const q = l.find(x => String(x["ID"]) === id);
-          if (q) { if (usavel(q)) { vitCfg = q; pintaAstro(); } return; }
-          if (l.length < 200) return;
+          const tem = new Set(pool.map(x => String(x["ID"])));
+          pool = pool.concat(l.filter(x => !tem.has(String(x["ID"]))));
+          off += l.length;
+          if (l.length < 200) break;
         }
-      })().catch(() => {});
+        return true;
+      })().catch(() => false);
+    }
+    const ehVideo = u => /\.(mp4|webm|mov)(\?|$)/i.test(u || "");
+    let semVideo = false, ultimoCard = "";
+    // mídia do card: do Destaque (foto escolhida ou arquivo enviado) ou da escolha do painel (Config ABERTURA_MIDIA:
+    // "foto:N" | "video:produto" | "url:<arquivo enviado>"). Vídeo só com rede boa; senão (ou se falhar) vale a foto.
+    function midiaDoCard(d, p) {
+      const fotos = [p["Imagem 1 (URL)"], p["Imagem 2 (URL)"], p["Imagem 3 (URL)"]].filter(Boolean);
+      let u = "";
+      if (d) u = d.mediaCustom || fotos[d.imagemIdx] || "";
+      else if (p === vitCfg) {
+        const v = String(cfg.ABERTURA_MIDIA || "").trim();
+        if (v.startsWith("foto:")) u = fotos[Number(v.slice(5))] || "";
+        else if (v === "video:produto") u = p["Vídeo (URL)"] || "";
+        else if (v.startsWith("url:")) u = v.slice(4);
+      }
+      u = u || fotos[0] || "";
+      const video = ehVideo(u) && !semVideo && !redeFraca() && !reduz;
+      return { video, src: video ? u : cldOpt(ehVideo(u) ? fotos[0] || "" : u, 600), poster: fotos[0] ? cldOpt(fotos[0], 600) : "" };
     }
     function pintaAstro() {
       const d = destCena[destI % (destCena.length || 1)], p = d ? d.produto : vitCfg || vitAuto, el = $("#v2astro");
       if (!p) return;
-      const fotos = [p["Imagem 1 (URL)"], p["Imagem 2 (URL)"], p["Imagem 3 (URL)"]].filter(Boolean);
-      const custom = d && d.mediaCustom && !/\.(mp4|webm|mov)/i.test(d.mediaCustom) ? d.mediaCustom : "";
-      const src = cldOpt(custom || (d && fotos[d.imagemIdx]) || fotos[0] || "", 600);
-      const cheio = Number(p["Preço (R$)"] || 0), v = pf(p);
-      el.innerHTML = `<img src="${h(src)}" alt="${h(nome(p))}" onerror="imgRetry(this)">${d && d.texto ? `<div class="t">${h(d.texto)}</div>` : ""}
-        <div class="n">${h(nome(p))}</div><div class="v">${v < cheio ? `<s>${fmt(cheio)}</s>` : ""}${fmt(v)}</div>`;
+      const m = midiaDoCard(d, p), cheio = Number(p["Preço (R$)"] || 0), v = pf(p);
+      const chave = [p["ID"], m.src, m.video, d && d.id, d && d.texto, v].join("|");
+      if (chave === ultimoCard) return; // nada mudou (o catálogo chega em partes): não pisca
+      ultimoCard = chave;
+      el.innerHTML = (m.video ? `<video src="${h(m.src)}" poster="${h(m.poster)}" autoplay muted loop playsinline preload="metadata" aria-label="${h(nome(p))}"></video>`
+        : `<img src="${h(m.src)}" alt="${h(nome(p))}" onerror="imgRetry(this)">`)
+        + `${d && d.texto ? `<div class="t">${h(d.texto)}</div>` : ""}<div class="n">${h(nome(p))}</div><div class="v">${v < cheio ? `<s>${fmt(cheio)}</s>` : ""}${fmt(v)}</div>`;
+      const vd = el.querySelector("video");
+      if (vd) {
+        vd.addEventListener("error", () => { semVideo = true; ultimoCard = ""; pintaAstro(); }, {once: true});
+        // vários destaques: o vídeo vai até o fim antes de trocar (não corta no meio)
+        if (destCena.length > 1) { vd.loop = false; vd.addEventListener("ended", () => { destI++; pintaAstro(); }, {once: true}); }
+      }
       el.onclick = () => { if (d) logAcao("DESTAQUE_CLICK", d.id); openP(p); };
       if (el.animate && !reduz) el.animate([{opacity: .35}, {opacity: 1}], 320);
     }
@@ -5291,12 +5336,13 @@
       const doCard = d => d && d.tipo === "Produto" && d.produto;
       destCena = (lista || []).filter(doCard); destI = 0;
       clearInterval(destT);
-      if (destCena.length > 1) destT = setInterval(() => { destI++; pintaAstro(); }, 6000);
+      if (destCena.length > 1) destT = setInterval(() => { if ($("#v2astro video")) return; destI++; pintaAstro(); }, 6000);
       pintaAstro();
       destaquesOriginal((lista || []).filter(d => !doCard(d))); // produto vai pro card; vídeo e promo seguem no bloco de sempre
     };
 
     /* monta o que depende do catálogo */
+    const cardV2 = p => `<button class="v2cel v2rv" data-v2p="${h(p["ID"])}"><img src="${h(foto(p, 400))}" alt="" loading="lazy" onerror="imgRetry(this)"><div><div class="n">${h(nome(p))}</div><div class="v">${fmt(pf(p))}</div>${Number(p["Parcelas Máx"]) > 1 ? `<div class="s">Parcelamos sem cartão</div>` : ""}</div></button>`;
     function monta() {
       const ok = pool.filter(p => !esg(p) && pf(p) > 0 && p["Imagem 1 (URL)"] && catAtiva(p["Categoria"]));
       if (!ok.length) return;
@@ -5315,11 +5361,16 @@
       $("#v2stories").onclick = e => { const b = e.target.closest(".v2st"); if (!b) return;
         b.classList.add("visto"); try { localStorage.setItem("gj_v2_st", JSON.stringify([...new Set([...vistos, GRUPOS[+b.dataset.g][0]])])); } catch (e) {}
         story(+b.dataset.g, 0); };
+      // produtos em destaque (campo "Destaque? Sim"): seção própria na home, não só selo no card
+      const estrelas = ok.filter(p => String(p["Destaque?"] || "").trim().toLowerCase() === "sim").slice(0, 10);
+      $("#v2dest").hidden = !estrelas.length;
+      $("#v2filaDest").innerHTML = estrelas.map(cardV2).join("");
+      if (estrelas.length) revela();
       // celulares
       const cels = (porCat["Celular"] || []).slice(0, 8);
       if (cels.length >= 2) {
         $("#v2noite").hidden = false;
-        $("#v2fila").innerHTML = cels.map(p => `<button class="v2cel v2rv" data-v2p="${h(p["ID"])}"><img src="${h(foto(p, 400))}" alt="" loading="lazy" onerror="imgRetry(this)"><div><div class="n">${h(nome(p))}</div><div class="v">${fmt(pf(p))}</div>${Number(p["Parcelas Máx"]) > 1 ? `<div class="s">Parcelamos sem cartão</div>` : ""}</div></button>`).join("");
+        $("#v2fila").innerHTML = cels.map(cardV2).join("");
         $("#v2verCel").onclick = () => { const c = [...document.querySelectorAll("#catTrack .cc")].find(x => x.dataset.cat === "Celular"); if (c) c.click(); $("#psec").scrollIntoView({behavior: "smooth"}); };
         new IntersectionObserver(es => document.body.classList.toggle("noite", es[0].isIntersecting), {rootMargin: "-35% 0px -35% 0px"}).observe($("#v2noite"));
         revela();
@@ -5334,7 +5385,10 @@
       const ts = $("#idxThemeSel"); if (ts) ts.value = document.documentElement.className.replace("theme-", "") || "cyberpunk";
       const g = cfg.TERMOS_GARANTIA || cfg.TERMO_GARANTIA_GLOBAL; if (g) $("#v2garantia").textContent = g + ".";
       pool = allProds.slice(); try { monta(); } catch (e) { console.error("[v2] monta", e); }
-      apiG("getProdutos", {limit: 200}).then(r => { if (r && r.produtos && r.produtos.length > pool.length) { pool = r.produtos; monta(); } }).catch(() => {});
+      apiG("getProdutos", {limit: 200}).then(r => {
+        if (r && r.produtos && r.produtos.length > pool.length) { pool = r.produtos; monta(); }
+        (window.requestIdleCallback || (fn => setTimeout(fn, 1500)))(() => carregaResto().then(ok => ok && monta()));
+      }).catch(() => {});
     }, 300);
   })();
   </script>
