@@ -5255,9 +5255,27 @@
 
     /* card da abertura: configurável no painel ADM, tela Destaques (tipo Produto, com texto, datas e status).
        Vários ativos revezam a cada 6 s. Nenhum ativo: cai no produto automático. */
-    let vitAuto = null, destCena = [], destI = 0, destT = 0;
+    let vitAuto = null, vitCfg = null, buscouCfg = false, destCena = [], destI = 0, destT = 0;
+    // produto escolhido no painel ADM (aba "Produto da abertura" → Config PRODUTO_ABERTURA). Ordem: Destaque ativo > esta escolha > automático
+    function produtoDaConfig() {
+      const id = String(cfg.PRODUTO_ABERTURA || "").trim();
+      if (!id || id === "AUTO") { vitCfg = null; return; }
+      const usavel = p => p && !esg(p) && pf(p) > 0 && p["Imagem 1 (URL)"] && catAtiva(p["Categoria"]);
+      const p = achar(id);
+      if (p) { vitCfg = usavel(p) ? p : null; return; }
+      if (buscouCfg || pool.length < 200) return;
+      buscouCfg = true; // fora dos 200 primeiros: procura nas páginas seguintes do catálogo, uma vez só
+      (async () => {
+        for (let off = 200; off < 2000; off += 200) {
+          const r = await apiG("getProdutos", {limit: 200, offset: off}), l = (r && r.produtos) || [];
+          const q = l.find(x => String(x["ID"]) === id);
+          if (q) { if (usavel(q)) { vitCfg = q; pintaAstro(); } return; }
+          if (l.length < 200) return;
+        }
+      })().catch(() => {});
+    }
     function pintaAstro() {
-      const d = destCena[destI % (destCena.length || 1)], p = d ? d.produto : vitAuto, el = $("#v2astro");
+      const d = destCena[destI % (destCena.length || 1)], p = d ? d.produto : vitCfg || vitAuto, el = $("#v2astro");
       if (!p) return;
       const fotos = [p["Imagem 1 (URL)"], p["Imagem 2 (URL)"], p["Imagem 3 (URL)"]].filter(Boolean);
       const custom = d && d.mediaCustom && !/\.(mp4|webm|mov)/i.test(d.mediaCustom) ? d.mediaCustom : "";
@@ -5284,6 +5302,7 @@
       if (!ok.length) return;
       // produto da cena: o automático só vale enquanto o painel ADM não tiver Destaque ativo do tipo Produto
       vitAuto = ok.find(p => Number(p["Parcelas Máx"]) >= 10) || ok[0];
+      produtoDaConfig();
       pintaAstro();
       // novidades
       const porCat = {}; ok.forEach(p => (porCat[p["Categoria"]] ||= []).push(p));
