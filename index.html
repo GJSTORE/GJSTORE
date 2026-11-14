@@ -2447,6 +2447,8 @@
       transform:translate(-50%,-50%) perspective(900px) rotateY(calc((.5 - var(--p))*52deg)) rotateX(calc((.5 - var(--p))*-12deg)) scale(calc(.74 + var(--p)*.32));will-change:transform}
     .v2astro:empty{display:none}
     .v2astro img{display:block;width:100%;height:auto;aspect-ratio:1;object-fit:contain}
+    .v2astro .t{display:inline-block;background:#c24a00;color:#fff;font-size:12px;font-weight:700;padding:3px 9px;border-radius:99px;margin-top:8px}
+    .v2astro s{font-size:12.5px;font-weight:500;color:#5b6577;margin-right:6px;letter-spacing:0}
     .v2astro .n{font-size:13px;color:#5b6577;margin-top:6px}
     .v2astro .v{font-size:20px;font-weight:800;letter-spacing:-.02em;color:#0070e0}
     .v2desce{position:absolute;left:0;right:0;bottom:118px;text-align:center;font-size:12.5px;font-weight:600;color:var(--muted);opacity:calc(1 - var(--p)*6)}
@@ -5251,14 +5253,38 @@
     function fechaStory() { clearTimeout(sT); $("#v2sv").hidden = true; document.body.style.overflow = ""; }
     addEventListener("keydown", e => { if ($("#v2sv").hidden) return; if (e.key === "Escape") fechaStory(); if (e.key === "ArrowRight") story(sg, si + 1); if (e.key === "ArrowLeft") story(sg, si - 1); });
 
+    /* card da abertura: configurável no painel ADM, tela Destaques (tipo Produto, com texto, datas e status).
+       Vários ativos revezam a cada 6 s. Nenhum ativo: cai no produto automático. */
+    let vitAuto = null, destCena = [], destI = 0, destT = 0;
+    function pintaAstro() {
+      const d = destCena[destI % (destCena.length || 1)], p = d ? d.produto : vitAuto, el = $("#v2astro");
+      if (!p) return;
+      const fotos = [p["Imagem 1 (URL)"], p["Imagem 2 (URL)"], p["Imagem 3 (URL)"]].filter(Boolean);
+      const custom = d && d.mediaCustom && !/\.(mp4|webm|mov)/i.test(d.mediaCustom) ? d.mediaCustom : "";
+      const src = cldOpt(custom || (d && fotos[d.imagemIdx]) || fotos[0] || "", 600);
+      const cheio = Number(p["Preço (R$)"] || 0), v = pf(p);
+      el.innerHTML = `<img src="${h(src)}" alt="${h(nome(p))}" onerror="imgRetry(this)">${d && d.texto ? `<div class="t">${h(d.texto)}</div>` : ""}
+        <div class="n">${h(nome(p))}</div><div class="v">${v < cheio ? `<s>${fmt(cheio)}</s>` : ""}${fmt(v)}</div>`;
+      el.onclick = () => { if (d) logAcao("DESTAQUE_CLICK", d.id); openP(p); };
+      if (el.animate && !reduz) el.animate([{opacity: .35}, {opacity: 1}], 320);
+    }
+    const destaquesOriginal = renderDestaques;
+    window.renderDestaques = renderDestaques = function (lista) {
+      const doCard = d => d && d.tipo === "Produto" && d.produto;
+      destCena = (lista || []).filter(doCard); destI = 0;
+      clearInterval(destT);
+      if (destCena.length > 1) destT = setInterval(() => { destI++; pintaAstro(); }, 6000);
+      pintaAstro();
+      destaquesOriginal((lista || []).filter(d => !doCard(d))); // produto vai pro card; vídeo e promo seguem no bloco de sempre
+    };
+
     /* monta o que depende do catálogo */
     function monta() {
       const ok = pool.filter(p => !esg(p) && pf(p) > 0 && p["Imagem 1 (URL)"] && catAtiva(p["Categoria"]));
       if (!ok.length) return;
-      // produto da cena
-      const vit = ok.find(p => Number(p["Parcelas Máx"]) >= 10) || ok[0];
-      $("#v2astro").innerHTML = `<img src="${h(foto(vit, 600))}" alt="${h(nome(vit))}" onerror="imgRetry(this)"><div class="n">${h(nome(vit))}</div><div class="v">${fmt(pf(vit))}</div>`;
-      $("#v2astro").onclick = () => openP(vit);
+      // produto da cena: o automático só vale enquanto o painel ADM não tiver Destaque ativo do tipo Produto
+      vitAuto = ok.find(p => Number(p["Parcelas Máx"]) >= 10) || ok[0];
+      pintaAstro();
       // novidades
       const porCat = {}; ok.forEach(p => (porCat[p["Categoria"]] ||= []).push(p));
       const cats = Object.keys(porCat).sort((a, b) => porCat[b].length - porCat[a].length);
